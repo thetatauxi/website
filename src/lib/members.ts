@@ -679,7 +679,7 @@ export const members: Member[] = [
   {
     id: 94,
     name: "Brady Mayer",
-    imageUrl: "/spring25_headshots/TT.webp",
+    imageUrl: "/fall25pc/Brady_Mayer.webp",
     pledgeClass: "Fall 2025",
     linkedinUrl: "https://www.linkedin.com/in/thetatauxi/",
   },
