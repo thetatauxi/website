@@ -12,16 +12,16 @@ export function Footer() {
                     <div className="flex flex-col gap-2">
                         <h3 className="text-lg font-semibold">Resources</h3>
                         <nav className="flex flex-col gap-2">
-                            <Link className="text-sm text-muted-foreground hover:text-primary transition-colors" href="/about">
+                            <Link className="text-sm text-gray-600 hover:text-gray-900 transition-colors" href="/about">
                                 About Us
                             </Link>
-                            <Link className="text-sm text-muted-foreground hover:text-primary transition-colors" href="/blog">
+                            <Link className="text-sm text-gray-600 hover:text-gray-900 transition-colors" href="/blog">
                                 Blog
                             </Link>
-                            <Link className="text-sm text-muted-foreground hover:text-primary transition-colors" href="/members">
+                            <Link className="text-sm text-gray-600 hover:text-gray-900 transition-colors" href="/members">
                                 Members
                             </Link>
-                            <Link className="text-sm text-muted-foreground hover:text-primary transition-colors" href="/sponsorship">
+                            <Link className="text-sm text-gray-600 hover:text-gray-900 transition-colors" href="/sponsorship">
                                 Sponsorship
                             </Link>
                         </nav>
@@ -30,7 +30,7 @@ export function Footer() {
                         <h3 className="text-lg font-semibold">Contact</h3>
                         <a
                             href="mailto:contact@thetatau.org"
-                            className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
+                            className="text-sm text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-2"
                         >
                             <Mail className="h-5 w-5" />
                             Email
@@ -39,7 +39,7 @@ export function Footer() {
                             href="https://www.instagram.com/thetatauxi/"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
+                            className="text-sm text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-2"
                         >
                             <Camera className="h-5 w-5" />
                             Instagram
@@ -48,7 +48,7 @@ export function Footer() {
                             href="https://www.linkedin.com/in/thetatauxi/"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
+                            className="text-sm text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-2"
                         >
                             <Briefcase className="h-5 w-5" />
                             LinkedIn
@@ -68,16 +68,16 @@ export function Footer() {
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                         <div className="flex items-center gap-4">
 
-                            <p className="text-sm text-muted-foreground text-center md:text-left">
+                            <p className="text-sm text-gray-600 text-center md:text-left">
                                 © {new Date().getFullYear()} Theta Tau Engineering Fraternity. All rights reserved.
                             </p>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
                             <a
                                 href="https://github.com/thetatauxi/website"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="hover:text-primary transition-colors flex items-center gap-1"
+                                className="hover:text-gray-900 transition-colors flex items-center gap-1"
                             >
                                 <Code className="h-4 w-4" />
                                 View on GitHub

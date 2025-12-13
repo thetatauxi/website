@@ -110,7 +110,8 @@ export function HomeHeroSection() {
               alt="Theta Tau members"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
-            <div className="absolute inset-0  from-background via-transparent to-transparent opacity-60" />
+            {/* Gold-red gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#8B0000]/30 via-transparent to-[#D4AF37]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           </div>
         </div>
       </div>
