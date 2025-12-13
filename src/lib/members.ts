@@ -103,9 +103,9 @@ export const members: Member[] = [
   {
     id: 12,
     name: "Eliza Robinson",
-    imageUrl: "/spring25_headshots/TT.webp",
+    imageUrl: "/spring25_headshots/LizaR.webp",
     pledgeClass: "Spring 2023",
-    linkedinUrl: "https://www.linkedin.com/in/thetatauxi/",
+    linkedinUrl: "https://www.linkedin.com/in/eliza-robinson-94a240261/",
   },
   {
     id: 13,
@@ -653,7 +653,7 @@ export const members: Member[] = [
     name: "Andrew Wolf",
     imageUrl: "/fall25pc/Andrew_Wolf.webp",
     pledgeClass: "Fall 2025",
-    linkedinUrl: "https://www.linkedin.com/in/thetatauxi/",
+    linkedinUrl: "https://www.linkedin.com/in/wolfandrew00/",
   },
   {
     id: 91,
@@ -674,21 +674,21 @@ export const members: Member[] = [
     name: "Bella Belgiorno",
     imageUrl: "/fall25pc/Bella_Belgiorno.webp",
     pledgeClass: "Fall 2025",
-    linkedinUrl: "https://www.linkedin.com/in/thetatauxi/",
+    linkedinUrl: "https://www.linkedin.com/in/isabella-belgiorno/",
   },
   {
     id: 94,
     name: "Brady Mayer",
     imageUrl: "/fall25pc/Brady_Mayer.webp",
     pledgeClass: "Fall 2025",
-    linkedinUrl: "https://www.linkedin.com/in/thetatauxi/",
+    linkedinUrl: "http://linkedin.com/in/brady-mayer",
   },
   {
     id: 95,
     name: "Bridget Jensen",
     imageUrl: "/fall25pc/Bridget_Jensen.webp",
     pledgeClass: "Fall 2025",
-    linkedinUrl: "https://www.linkedin.com/in/thetatauxi/",
+    linkedinUrl: "https://www.linkedin.com/in/bridget-jensen-886113319",
   },
   {
     id: 96,
@@ -751,7 +751,7 @@ export const members: Member[] = [
     name: "Kaitlin Gish",
     imageUrl: "/fall25pc/Kaitlin_Gish.webp",
     pledgeClass: "Fall 2025",
-    linkedinUrl: "https://www.linkedin.com/in/thetatauxi/",
+    linkedinUrl: "https://www.linkedin.com/in/kaitlingish/",
   },
   {
     id: 105,
@@ -793,13 +793,13 @@ export const members: Member[] = [
     name: "Sullivan Neumeier",
     imageUrl: "/fall25pc/Sullivan_Neumeier.webp",
     pledgeClass: "Fall 2025",
-    linkedinUrl: "https://www.linkedin.com/in/thetatauxi/",
+    linkedinUrl: "https://www.linkedin.com/in/sullivan-neumeier",
   },
   {
     id: 111,
     name: "Will Quinn",
     imageUrl: "/fall25pc/Will_Quinn.webp",
     pledgeClass: "Fall 2025",
-    linkedinUrl: "https://www.linkedin.com/in/thetatauxi/",
+    linkedinUrl: "https://www.linkedin.com/in/WillQuinn1",
   },
 ]
