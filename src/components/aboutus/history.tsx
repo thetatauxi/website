@@ -48,7 +48,7 @@ const historyImages = [
     const historyRef = useRef<HTMLElement>(null)
 
     return (
-        <section ref={historyRef} className="mb-16">
+        <section ref={historyRef} className="mx-16 mb-16">
           <div className="text-center mb-16">
             <h2 className="text-5xl font-bold text-red-900 mb-4">Our History</h2>
             <div className="w-24 h-1 bg-gradient-to-r from-red-600 to-red-800 mx-auto rounded-full"></div>

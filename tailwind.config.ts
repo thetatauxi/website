@@ -102,7 +102,6 @@ const config = {
 	plugins: [
 		require("tailwindcss-animate"),
 		addVariablesForColors,
-		require('@tailwindcss/typography')
 	],
 } satisfies Config
 

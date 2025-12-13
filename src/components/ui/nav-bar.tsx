@@ -45,12 +45,15 @@ export default function Navbar() {
           {/* Menu panel */}
           <div className="fixed top-0 right-0 h-full w-[300px] sm:w-[400px] bg-white dark:bg-gray-900 shadow-xl z-50 transform transition-transform duration-300">
             <nav className="flex flex-col gap-4 mt-20 px-6">
+            <NavLink href="/" onClick={() => setIsOpen(false)}>
+                <span className="text-lg">Home</span>
+              </NavLink>
               <NavLink href="/about" onClick={() => setIsOpen(false)}>
                 <span className="text-lg">About Us</span>
               </NavLink>
-              <NavLink href="/rush" onClick={() => setIsOpen(false)}>
+              {/* <NavLink href="/rush" onClick={() => setIsOpen(false)}>
                 <span className="text-lg">Rush</span>
-              </NavLink>
+              </NavLink> */}
               <NavLink href="/blog" onClick={() => setIsOpen(false)}>
                 <span className="text-lg">Blog</span>
               </NavLink>

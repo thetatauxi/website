@@ -105,7 +105,7 @@ export default function SponsorshipPage() {
         <section className="mb-16">
           <h2 className="text-3xl font-semibold text-gray-800 text-center mb-8">Why Sponsor Us?</h2>
           <div className="flex flex-col lg:flex-row items-start gap-12">
-            <div className="flex-1">
+            <div className="flex-1 my-auto">
               <p className="text-xl text-gray-600 mb-6">
                 Partnering with our chapter is an opportunity to support the development of future engineers while
                 increasing your organization’s visibility on campus. Sponsorships directly fund our professional
@@ -171,7 +171,7 @@ export default function SponsorshipPage() {
 
 
         {/* Call to Action Section */}
-        <section className="text-center bg-gradient-to-r from-red-600 to-yellow-500 p-12 rounded-lg shadow-xl mt-16">
+        <section className="text-center bg-gradient-to-r from-red-400 to-yellow-500 p-12 rounded-lg shadow-xl mt-16">
           <h3 className="text-2xl font-semibold text-white mb-4">Ready to Join Our Sponsor Family?</h3>
           <p className="text-gray-100 mb-6">
             Contact us today to learn more about our sponsorship packages and partnership opportunities.

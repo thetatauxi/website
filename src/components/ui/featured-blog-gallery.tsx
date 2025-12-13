@@ -59,23 +59,23 @@ export function FeaturedBlogGallery({ posts }: FeaturedBlogGalleryProps) {
 
                 {/* Featured badge */}
                 <div className="absolute top-6 left-6 z-10">
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/90 backdrop-blur-sm text-accent-foreground text-sm font-semibold">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/90 backdrop-blur-sm text-white text-sm font-semibold">
                     Featured
                   </div>
                 </div>
 
                 {/* Gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/40 to-transparent" />
 
                 {/* Content overlay */}
-                <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12 z-10">
+                <div className="absolute bottom-0 left-0 right-0 p-2 md:p-24 z-10">
                   <p className="text-white/80 text-sm font-medium uppercase tracking-wider mb-4">{currentPost.date}</p>
 
-                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight mb-2 text-balance">
+                  <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold text-white leading-tight mb-2 text-balance">
                     {currentPost.title}
                   </h2>
 
-                  <p className="text-white/90 text-lg leading-relaxed text-pretty max-w-3xl mb-6">
+                  <p className="hidden md:block text-white/90 text-lg leading-relaxed text-pretty max-w-3xl mb-6">
                     {currentPost.description}
                   </p>
 

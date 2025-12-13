@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Instagram, Github, Linkedin, Mail } from "lucide-react"
+import { Camera, Code, Briefcase, Mail } from "lucide-react"
 
 export function Footer() {
     return (
@@ -12,14 +12,17 @@ export function Footer() {
                     <div className="flex flex-col gap-2">
                         <h3 className="text-lg font-semibold">Resources</h3>
                         <nav className="flex flex-col gap-2">
+                            <Link className="text-sm text-muted-foreground hover:text-primary transition-colors" href="/about">
+                                About Us
+                            </Link>
                             <Link className="text-sm text-muted-foreground hover:text-primary transition-colors" href="/blog">
                                 Blog
                             </Link>
-                            <Link className="text-sm text-muted-foreground hover:text-primary transition-colors" href="#events">
-                                Events
+                            <Link className="text-sm text-muted-foreground hover:text-primary transition-colors" href="/members">
+                                Members
                             </Link>
-                            <Link className="text-sm text-muted-foreground hover:text-primary transition-colors" href="#faq">
-                                FAQ
+                            <Link className="text-sm text-muted-foreground hover:text-primary transition-colors" href="/sponsorship">
+                                Sponsorship
                             </Link>
                         </nav>
                     </div>
@@ -38,7 +41,7 @@ export function Footer() {
                             rel="noopener noreferrer"
                             className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
                         >
-                            <Instagram className="h-5 w-5" />
+                            <Camera className="h-5 w-5" />
                             Instagram
                         </a>
                         <a
@@ -47,7 +50,7 @@ export function Footer() {
                             rel="noopener noreferrer"
                             className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
                         >
-                            <Linkedin className="h-5 w-5" />
+                            <Briefcase className="h-5 w-5" />
                             LinkedIn
                         </a>
                     </div>
@@ -71,12 +74,12 @@ export function Footer() {
                         </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <a
-                                href="https://github.com/henryczup/theta-tau"
+                                href="https://github.com/thetatauxi/website"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="hover:text-primary transition-colors flex items-center gap-1"
                             >
-                                <Github className="h-4 w-4" />
+                                <Code className="h-4 w-4" />
                                 View on GitHub
                             </a>
                         </div>

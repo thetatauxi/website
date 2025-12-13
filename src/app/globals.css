@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -150,11 +151,37 @@
     }
   }
 
+  @keyframes scroll-centered {
+    0% {
+      transform: translateX(-25%);
+    }
+    100% {
+      transform: translateX(-75%);
+    }
+  }
+
   .logo-track {
     animation: scroll 40s linear infinite;
   }
 
-  .logo-track.paused {
+  .logo-track-centered {
+    animation: scroll-centered 40s linear infinite;
+  }
+
+  .logo-track.paused,
+  .logo-track-centered.paused {
     animation-play-state: paused;
   }
+}
+
+/* Blog post content styling - allow custom grid layouts */
+.blog-content > div.grid {
+  max-width: none !important;
+  width: 100% !important;
+  margin: 2rem auto !important;
+}
+
+.blog-content > div.grid img {
+  max-width: 100% !important;
+  height: auto !important;
 }

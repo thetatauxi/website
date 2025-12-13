@@ -54,9 +54,9 @@ export function XiChapter() {
         <section ref={xiChapterRef} className="mb-32">
           <div className="text-center mb-16">
             <h2 className="text-5xl font-bold text-red-900 mb-4">Xi Chapter</h2>
-            <div className="w-24 h-1 bg-gradient-to-r from-red-600 to-red-800 mx-auto rounded-full"></div>
+            <div className="w-24 h-1 bg-linear-to-r from-red-600 to-red-800 mx-auto rounded-full"></div>
           </div>
-            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden mx-0 lg:mx-16">
             <div className="flex flex-col lg:flex-row">
               <div className="lg:w-1/2 p-8 lg:p-12">
                 <div className="h-full flex flex-col justify-center">
