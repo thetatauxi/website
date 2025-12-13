@@ -44,7 +44,7 @@ export function HomeOurNetwork() {
         {rows.map((row, rowIndex) => (
           <div
             key={rowIndex}
-            className="mb-12"
+            className="mb-12 overflow-hidden"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
           >
@@ -76,7 +76,24 @@ export function HomeOurNetwork() {
                 {row.map((logo, index) => (
                   <div
                     key={`duplicate-${index}`}
-                    className="w-[200px] h-[100px] flex items-center justify-center flex-shrink-0 mx-8 transition-all duration-300 hover:scale-110 hover:brightness-150 hover:drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]"
+                    className="w-[200px] h-[100px] flex items-center justify-center shrink-0 mx-8 transition-all duration-300 hover:scale-110 hover:brightness-150 hover:drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]"
+                  >
+                    <div className="relative w-[200px] h-[100px] transition-opacity duration-300">
+                      <Image
+                        src={logo.src || "/placeholder.svg"}
+                        alt={logo.alt}
+                        fill
+                        className="object-contain"
+                        sizes="200px"
+                      />
+                    </div>
+                  </div>
+                ))}
+                {/* Third set to ensure seamless infinite loop */}
+                {row.map((logo, index) => (
+                  <div
+                    key={`duplicate-2-${index}`}
+                    className="w-[200px] h-[100px] flex items-center justify-center shrink-0 mx-8 transition-all duration-300 hover:scale-110 hover:brightness-150"
                   >
                     <div className="relative w-[200px] h-[100px] transition-opacity duration-300">
                       <Image
