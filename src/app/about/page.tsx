@@ -4,7 +4,6 @@ import { Pillars } from "@/components/aboutus/pillars"
 import { OurHistory } from "@/components/aboutus/history"
 import Header from '@/components/aboutus/header';
 import React from 'react'
-import Page from "@/components/aboutus/aboutpage";
   
 export default function AboutUs() {
     return (
