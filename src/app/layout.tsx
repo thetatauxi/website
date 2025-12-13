@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter, JetBrains_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
+import { FathomAnalytics } from "./fathom"
 import Navbar from "@/components/ui/nav-bar"
 import { Footer } from "@/components/ui/footer"
 import "./globals.css"
@@ -47,6 +48,7 @@ export default function RootLayout({
         </main>
         <Footer />
         <Analytics />
+        <FathomAnalytics />
       </body>
     </html>
   )

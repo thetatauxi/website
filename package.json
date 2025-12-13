@@ -50,6 +50,7 @@
     "cmdk": "1.0.4",
     "date-fns": "4.1.0",
     "embla-carousel-react": "8.5.1",
+    "fathom-client": "^3.7.2",
     "framer-motion": "^12.23.26",
     "fs": "0.0.1-security",
     "google-auth-library": "^10.5.0",
