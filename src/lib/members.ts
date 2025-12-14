@@ -702,7 +702,7 @@ export const members: Member[] = [
     name: "Claire Casson",
     imageUrl: "/fall25pc/Claire_Casson.webp",
     pledgeClass: "Fall 2025",
-    linkedinUrl: "https://www.linkedin.com/in/thetatauxi/",
+    linkedinUrl: "https://www.linkedin.com/in/clairehcasson",
   },
   {
     id: 98,
@@ -737,7 +737,7 @@ export const members: Member[] = [
     name: "Emma Cavazos",
     imageUrl: "/fall25pc/Emma_Cavazos.webp",
     pledgeClass: "Fall 2025",
-    linkedinUrl: "https://www.linkedin.com/in/thetatauxi/",
+    linkedinUrl: "https://www.linkedin.com/in/emma-cavazos",
   },
   {
     id: 103,
