@@ -59,9 +59,9 @@ export function HomeOurNetwork() {
                 {row.map((logo, index) => (
                   <div
                     key={index}
-                    className="w-[200px] h-[100px] flex items-center justify-center shrink-0 mx-8 transition-transform duration-300 hover:scale-110 hover:brightness-150"
+                    className="group w-[200px] h-[100px] flex items-center justify-center shrink-0 mx-8 transition-transform duration-300 hover:scale-110"
                   >
-                    <div className="relative w-[200px] h-[100px] transition-opacity duration-300">
+                    <div className="relative w-[200px] h-[100px] grayscale opacity-80 transition duration-300 group-hover:grayscale-0 group-hover:opacity-100">
                       <Image
                         src={logo.src || "/placeholder.svg"}
                         alt={logo.alt}
@@ -76,9 +76,9 @@ export function HomeOurNetwork() {
                 {row.map((logo, index) => (
                   <div
                     key={`duplicate-${index}`}
-                    className="w-[200px] h-[100px] flex items-center justify-center shrink-0 mx-8 transition-transform duration-300 hover:scale-110 hover:brightness-150 hover:drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]"
+                    className="group w-[200px] h-[100px] flex items-center justify-center shrink-0 mx-8 transition-transform duration-300 hover:scale-110"
                   >
-                    <div className="relative w-[200px] h-[100px] transition-opacity duration-300">
+                    <div className="relative w-[200px] h-[100px] grayscale opacity-80 transition duration-300 group-hover:grayscale-0 group-hover:opacity-100">
                       <Image
                         src={logo.src || "/placeholder.svg"}
                         alt={logo.alt}
@@ -93,9 +93,9 @@ export function HomeOurNetwork() {
                 {row.map((logo, index) => (
                   <div
                     key={`duplicate-2-${index}`}
-                    className="w-[200px] h-[100px] flex items-center justify-center shrink-0 mx-8 transition-transform duration-300 hover:scale-110 hover:brightness-150"
+                    className="group w-[200px] h-[100px] flex items-center justify-center shrink-0 mx-8 transition-transform duration-300 hover:scale-110"
                   >
-                    <div className="relative w-[200px] h-[100px] transition-opacity duration-300">
+                    <div className="relative w-[200px] h-[100px] grayscale opacity-80 transition duration-300 group-hover:grayscale-0 group-hover:opacity-100">
                       <Image
                         src={logo.src || "/placeholder.svg"}
                         alt={logo.alt}
