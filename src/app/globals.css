@@ -172,6 +172,19 @@
   .logo-track-centered.paused {
     animation-play-state: paused;
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    .logo-track,
+    .logo-track-centered,
+    .animate-spin-slow,
+    .animate-pulse {
+      animation: none;
+    }
+  }
+}
+
+section[id] {
+  scroll-margin-top: 6rem;
 }
 
 /* Blog post content styling - allow custom grid layouts */

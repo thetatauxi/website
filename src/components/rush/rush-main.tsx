@@ -157,13 +157,13 @@ export default function RushPage() {
                     height={720}
                     className="object-cover"
                   />
-                  <Button
-                    size="lg"
-                    className="absolute inset-0 m-auto w-16 h-16 rounded-full flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90"
-                    aria-label="Play rush video"
-                  >
-                    <Play className="w-8 h-8" />
-                  </Button>
+                   <Button
+                     size="lg"
+                     className="absolute inset-0 m-auto w-16 h-16 rounded-full flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90"
+                     aria-label="Play rush video"
+                   >
+                     <Play className="w-8 h-8" aria-hidden="true" />
+                   </Button>
                 </div>
               </div>
               <p className="text-sm text-muted-foreground">
@@ -175,7 +175,7 @@ export default function RushPage() {
         <section id="instagram" className="w-full py-12 md:py-24 bg-muted">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center space-y-4 text-center">
-              <Instagram className="h-16 w-16" />
+              <Instagram className="h-16 w-16" aria-hidden="true" />
               <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Follow Our Journey</h2>
               <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
                 Stay updated with our latest events, projects, and brotherhood activities on Instagram.

@@ -46,7 +46,7 @@ export function FeaturedBlogGallery({ posts }: FeaturedBlogGalleryProps) {
         {/* Carousel container */}
         <div className="relative overflow-hidden rounded-2xl">
           <Link href={`/blog/${currentPost.slug}`} className="group block">
-            <article className="relative bg-card border border-border rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500">
+            <article className="relative bg-card border border-border rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-500">
               {/* Image Section */}
               <div className="relative h-[350px] md:h-[400px] lg:h-[450px] overflow-hidden">
                 <Image
@@ -82,7 +82,7 @@ export function FeaturedBlogGallery({ posts }: FeaturedBlogGalleryProps) {
                   {/* Read More Link */}
                   <div className="inline-flex items-center gap-2 text-white font-medium text-base group/link">
                     <span className="group-hover/link:underline">Read article</span>
-                    <ArrowUpRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1" />
+                    <ArrowUpRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1" aria-hidden="true" />
                   </div>
                 </div>
               </div>
@@ -94,17 +94,17 @@ export function FeaturedBlogGallery({ posts }: FeaturedBlogGalleryProps) {
             <>
               <button
                 onClick={goToPrevious}
-                className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 transition-all duration-300 hover:scale-110"
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 transition-transform duration-300 hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black/50"
                 aria-label="Previous slide"
               >
-                <ChevronLeft className="h-6 w-6" />
+                <ChevronLeft className="h-6 w-6" aria-hidden="true" />
               </button>
               <button
                 onClick={goToNext}
-                className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 transition-all duration-300 hover:scale-110"
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 transition-transform duration-300 hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black/50"
                 aria-label="Next slide"
               >
-                <ChevronRight className="h-6 w-6" />
+                <ChevronRight className="h-6 w-6" aria-hidden="true" />
               </button>
             </>
           )}
@@ -117,7 +117,7 @@ export function FeaturedBlogGallery({ posts }: FeaturedBlogGalleryProps) {
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
-                className={`h-2 rounded-full transition-all duration-300 ${
+                className={`h-2 rounded-full transition-[width,background-color] duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
                   index === currentIndex ? "w-8 bg-accent" : "w-2 bg-border hover:bg-accent/50"
                 }`}
                 aria-label={`Go to slide ${index + 1}`}

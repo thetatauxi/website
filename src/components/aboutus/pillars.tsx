@@ -25,7 +25,7 @@ const pillars = [
               <div key={index} className="group">
                 <div className="relative h-full">
                   <div className="absolute -inset-1 bg-gradient-to-r from-red-400 to-red-600 rounded-2xl blur opacity-0 group-hover:opacity-25 transition duration-500"></div>
-                  <div className="relative bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 h-full">
+                  <div className="relative bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-transform duration-500 transform hover:-translate-y-2 h-full">
                     <div className="text-center mb-6">
                       <div className="text-6xl mb-4">{pillar.icon}</div>
                       <h3 className="text-2xl font-bold text-red-900 mb-4">{pillar.title}</h3>

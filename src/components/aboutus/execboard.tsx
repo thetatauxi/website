@@ -121,7 +121,7 @@ export function ExecBoard() {
               <div key={exec.name} className="group">
                 <div className="relative">
                   <div className="absolute -inset-1 bg-linear-to-r from-red-400 to-red-600 rounded-2xl blur opacity-0 group-hover:opacity-25 transition duration-500"></div>
-                  <div className="relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+                  <div className="relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-transform duration-500 transform hover:-translate-y-2">
                     <div className="text-center">
                       <div className="relative mb-4 inline-block">
                         {isPlaceholderImage(exec.image) ? (

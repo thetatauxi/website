@@ -12,7 +12,7 @@ import { members, type Member, sortPledgeClasses } from "@/lib/members"
 // Memoized Member Card Component
 const MemberCard = memo(({ member }: { member: Member }) => {
   return (
-    <Card className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
+    <Card className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-transform duration-300 transform hover:-translate-y-1">
       <CardContent className="p-4">
         <div className="relative w-full pb-[100%] mb-3 overflow-hidden rounded-md bg-gray-100">
           <Image
@@ -130,10 +130,14 @@ export default function MembersPage() {
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             {/* Search bar */}
             <div className="relative w-full md:w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} aria-hidden="true" />
               <Input
                 type="text"
-                placeholder="Search members..."
+                name="search"
+                inputMode="search"
+                autoComplete="off"
+                aria-label="Search members"
+                placeholder="Search members…"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 border-gray-300 focus:border-red-500 focus:ring-red-500"
@@ -198,10 +202,10 @@ export default function MembersPage() {
       {showScrollTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 p-3 bg-red-700 text-white rounded-full shadow-lg hover:bg-red-800 transition-colors duration-300 z-20"
+          className="fixed bottom-6 right-6 p-3 bg-red-700 text-white rounded-full shadow-lg hover:bg-red-800 transition-colors duration-300 z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300 focus-visible:ring-offset-2"
           aria-label="Scroll to top"
         >
-          <ChevronUp size={24} />
+          <ChevronUp size={24} aria-hidden="true" />
         </button>
       )}
     </div>

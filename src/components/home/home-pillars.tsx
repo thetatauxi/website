@@ -25,7 +25,7 @@ export function HomePillarsSection() {
           {/* --- Pillar 1 --- */}
           <Card className="border-2 border-[#750901]/20 bg-white/10 backdrop-blur-sm 
             hover:border-[#750901] hover:shadow-2xl hover:shadow-[#750901]/20 
-            transition-all duration-300 hover:-translate-y-2 group text-white">
+            transition-transform duration-300 hover:-translate-y-2 group text-white">
             <CardContent className="p-8 space-y-4">
               <div className="h-14 w-14 rounded-xl bg-[#750901]/20 
                   flex items-center justify-center 
@@ -43,7 +43,7 @@ export function HomePillarsSection() {
           {/* --- Pillar 2 --- */}
           <Card className="border-2 border-[#750901]/20 bg-white/10 backdrop-blur-sm 
             hover:border-[#750901] hover:shadow-2xl hover:shadow-[#750901]/20 
-            transition-all duration-300 hover:-translate-y-2 group text-white">
+            transition-transform duration-300 hover:-translate-y-2 group text-white">
             <CardContent className="p-8 space-y-4">
               <div className="h-14 w-14 rounded-xl bg-[#8B0000]/20 
                   flex items-center justify-center 
@@ -61,7 +61,7 @@ export function HomePillarsSection() {
           {/* --- Pillar 3 --- */}
           <Card className="border-2 border-[#750901]/20 bg-white/10 backdrop-blur-sm 
             hover:border-[#750901] hover:shadow-2xl hover:shadow-[#750901]/20 
-            transition-all duration-300 hover:-translate-y-2 group text-white">
+            transition-transform duration-300 hover:-translate-y-2 group text-white">
             <CardContent className="p-8 space-y-4">
               <div className="h-14 w-14 rounded-xl bg-[#750901]/20 
                   flex items-center justify-center 

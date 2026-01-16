@@ -62,13 +62,12 @@ export default function RushWhyUs() {
               {/* Button Section with Gap */}
               <div className="mt-4">
                 <a
-                  href="https://thetatau.org/" // Replace with your desired link
+                  href="https://thetatau.org/"
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center bg-blue-800 text-white py-2 px-6 rounded-md hover:bg-blue-900 transition-colors border-2 border-blue-800 hover:border-blue-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-2"
                 >
-                  <button className="bg-blue-800 text-white py-2 px-6 rounded-md hover:bg-blue-900 transition-all border-2 border-blue-800 hover:border-blue-900">
-                    Learn More About θT
-                  </button>
+                  Learn More About θT
                 </a>
               </div>
             </div>

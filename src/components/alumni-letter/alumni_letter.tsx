@@ -50,7 +50,7 @@ export default function AlumniLetterPage() {
               className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 hover:text-yellow-700"
             >
               <a href={pdfUrl} download>
-                <Download className="mr-2 h-4 w-4" />
+                <Download className="mr-2 h-4 w-4" aria-hidden="true" />
                 Download Letter
               </a>
             </Button>
@@ -63,7 +63,7 @@ export default function AlumniLetterPage() {
               className="border border-red-800 shadow-md"
               loading={
                 <div className="flex justify-center items-center h-[600px] w-full">
-                  <div className="animate-pulse text-red-700">Loading PDF...</div>
+                  <div className="animate-pulse text-red-700">Loading PDF…</div>
                 </div>
               }
               error={
@@ -90,7 +90,7 @@ export default function AlumniLetterPage() {
                   disabled={pageNumber <= 1}
                   className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 hover:text-yellow-700 disabled:opacity-50 disabled:border-gray-300 disabled:text-gray-400"
                 >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  <ChevronLeft className="h-4 w-4 mr-1" aria-hidden="true" />
                   Previous
                 </Button>
 
@@ -106,7 +106,7 @@ export default function AlumniLetterPage() {
                   className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 hover:text-yellow-700 disabled:opacity-50 disabled:border-gray-300 disabled:text-gray-400"
                 >
                   Next
-                  <ChevronRight className="h-4 w-4 ml-1" />
+                  <ChevronRight className="h-4 w-4 ml-1" aria-hidden="true" />
                 </Button>
               </div>
             )}

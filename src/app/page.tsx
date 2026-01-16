@@ -1,5 +1,3 @@
-"use client"
-
 //import { HomeNavigation } from "@/components/home/home-navigation"
 import { HomeHeroSection } from "@/components/home/home-header"
 import { HomePillarsSection } from "@/components/home/home-pillars"

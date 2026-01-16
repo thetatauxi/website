@@ -1,5 +1,3 @@
-"use client"
-
 export function HomeAboutSection() {
   return (
     <section
@@ -19,6 +17,9 @@ export function HomeAboutSection() {
             <img
               src="/nationals2025.JPEG"
               alt="Brotherhood"
+              width="1200"
+              height="900"
+              loading="lazy"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
             {/* Gold-red gradient overlay */}
@@ -52,7 +53,7 @@ export function HomeAboutSection() {
 
             <div className="pt-4">
               <blockquote className="border-l-4 border-[#D4AF37] pl-6 italic text-lg text-gray-100">
-                "Whatsoever thy hand findeth to do, do it with thy might..."
+                "Whatsoever thy hand findeth to do, do it with thy might…"
                 <footer className="text-sm text-gray-300 mt-2">
                   — Ecclesiastes 9:10
                 </footer>

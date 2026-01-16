@@ -19,7 +19,11 @@ export function HomeHeroSection() {
       <div className="absolute inset-0 bg-gradient-to-br from-[#8B0000]/10 to-[#D4AF37]/10 opacity-30 z-0"></div>
 
       {/* Engineering-themed lines */}
-      <svg className="absolute inset-0 w-full h-full opacity-15 z-0" viewBox="0 0 1200 800">
+      <svg
+        className="absolute inset-0 w-full h-full opacity-15 z-0"
+        viewBox="0 0 1200 800"
+        aria-hidden="true"
+      >
         <path d="M0 200 Q300 150 600 200 T1200 200" stroke="#D4AF37" strokeWidth="2" fill="none" />
         <path d="M0 600 Q300 550 600 600 T1200 600" stroke="#D4AF37" strokeWidth="1" fill="none" />
         <path d="M200 0 Q250 200 300 400 T400 800" stroke="#D4AF37" strokeWidth="1" fill="none" />
@@ -48,11 +52,11 @@ export function HomeHeroSection() {
       <div className="container mx-auto relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div
-            className={`space-y-8 transition-all duration-1000 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+            className={`space-y-8 transition-[opacity,transform] duration-1000 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
           >
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/5">
-                <Sparkles className="h-4 w-4 text-[#D4AF37]" />
+                <Sparkles className="h-4 w-4 text-[#D4AF37]" aria-hidden="true" />
                 <span className="text-sm text-[#D4AF37]">Since 1904</span>
               </div>
               <h1 className="text-5xl md:text-7xl font-bold leading-tight text-balance">
@@ -66,16 +70,17 @@ export function HomeHeroSection() {
                 brotherhood.
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/about">
-                <Button
-                 size="lg"
+             <div className="flex flex-col sm:flex-row gap-4">
+              <Button
+                size="lg"
                 className="text-lg h-14 px-8 bg-[#8B0000] hover:bg-[#A52A2A] text-white group"
-                >
-                Learn More
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </Link>
+                asChild
+              >
+                <Link href="/about">
+                  Learn More
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
+                </Link>
+              </Button>
               {/* <Link href="/rush">
                 <Button
                   size="lg"
@@ -108,6 +113,8 @@ export function HomeHeroSection() {
             <img
               src="/fall25pcbanquet.webp"
               alt="Theta Tau members"
+              width="1200"
+              height="800"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
             {/* Gold-red gradient overlay */}

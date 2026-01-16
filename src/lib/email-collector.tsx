@@ -17,9 +17,14 @@ interface EmailCollectorProps {
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending}>
-      {pending ? "Subscribing..." : "Subscribe"}
-    </Button>
+    <>
+      <Button type="submit" disabled={pending} aria-live="polite">
+        {pending ? "Subscribing…" : "Subscribe"}
+      </Button>
+      <span className="sr-only" aria-live="polite">
+        {pending ? "Submitting your subscription" : ""}
+      </span>
+    </>
   );
 }
 
@@ -105,15 +110,19 @@ export function EmailCollector({ source, className = "" }: EmailCollectorProps) 
     <div className={className}>
       <form onSubmit={handleEmailSubmit} className="space-y-4">
         <div className="flex flex-col sm:flex-row gap-2">
-          <Input
-            type="email"
-            name="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email"
-            className="flex-1"
-            required
-          />
+            <Input
+              type="email"
+              name="email"
+              inputMode="email"
+              autoComplete="email"
+              spellCheck={false}
+              aria-label="Email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@thetatau.org…"
+              className="flex-1"
+              required
+            />
           <SubmitButton />
         </div>
       </form>
@@ -162,9 +171,9 @@ export function EmailCollector({ source, className = "" }: EmailCollectorProps) 
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" aria-live="polite">
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Subscribing...
+                    Subscribing…
                   </div>
                 ) : (
                   "Subscribe"

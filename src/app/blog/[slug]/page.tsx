@@ -22,7 +22,7 @@ export default async function BlogPost({ params }: { params: { slug: string } })
           href="/blog"
           className="inline-flex items-center gap-2 text-gray-600 hover:text-red-800 transition-colors mb-8 group"
         >
-          <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
+          <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" aria-hidden="true" />
           <span className="font-medium">Back to Blog</span>
         </Link>
 

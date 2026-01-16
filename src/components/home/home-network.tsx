@@ -59,7 +59,7 @@ export function HomeOurNetwork() {
                 {row.map((logo, index) => (
                   <div
                     key={index}
-                    className="w-[200px] h-[100px] flex items-center justify-center shrink-0 mx-8 transition-all duration-300 hover:scale-110 hover:brightness-150"
+                    className="w-[200px] h-[100px] flex items-center justify-center shrink-0 mx-8 transition-transform duration-300 hover:scale-110 hover:brightness-150"
                   >
                     <div className="relative w-[200px] h-[100px] transition-opacity duration-300">
                       <Image
@@ -76,7 +76,7 @@ export function HomeOurNetwork() {
                 {row.map((logo, index) => (
                   <div
                     key={`duplicate-${index}`}
-                    className="w-[200px] h-[100px] flex items-center justify-center shrink-0 mx-8 transition-all duration-300 hover:scale-110 hover:brightness-150 hover:drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]"
+                    className="w-[200px] h-[100px] flex items-center justify-center shrink-0 mx-8 transition-transform duration-300 hover:scale-110 hover:brightness-150 hover:drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]"
                   >
                     <div className="relative w-[200px] h-[100px] transition-opacity duration-300">
                       <Image
@@ -93,7 +93,7 @@ export function HomeOurNetwork() {
                 {row.map((logo, index) => (
                   <div
                     key={`duplicate-2-${index}`}
-                    className="w-[200px] h-[100px] flex items-center justify-center shrink-0 mx-8 transition-all duration-300 hover:scale-110 hover:brightness-150"
+                    className="w-[200px] h-[100px] flex items-center justify-center shrink-0 mx-8 transition-transform duration-300 hover:scale-110 hover:brightness-150"
                   >
                     <div className="relative w-[200px] h-[100px] transition-opacity duration-300">
                       <Image

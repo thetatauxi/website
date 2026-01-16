@@ -12,15 +12,18 @@ export default function Navbar() {
       <nav className="sticky top-0 z-50 w-full backdrop-blur-md bg-white/30 dark:bg-gray-900/30">
         <div className="container max-w-7xl mx-auto">
           <div className="flex items-center justify-between h-20 px-3">
-            <Link href="/" className="flex-shrink-0">
+            <Link href="/" className="flex-shrink-0" aria-label="Theta Tau home">
               <LogoIcon className="h-10 w-10 text-primary" />
             </Link>
 
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              aria-label="Toggle menu"
-            >
+              <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className="p-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900"
+                aria-label="Toggle menu"
+                aria-expanded={isOpen}
+                aria-controls="mobile-menu"
+              >
               <svg
                 className="h-6 w-6"
                 fill="none"
@@ -29,6 +32,7 @@ export default function Navbar() {
                 strokeWidth="2"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
+                aria-hidden="true"
               >
                 {isOpen ? <path d="M6 18L18 6M6 6l12 12" /> : <path d="M4 6h16M4 12h16M4 18h16" />}
               </svg>
@@ -40,12 +44,17 @@ export default function Navbar() {
       {isOpen && (
         <>
           {/* Backdrop */}
-          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setIsOpen(false)} />
+          <button
+            type="button"
+            aria-label="Close menu"
+            className="fixed inset-0 bg-black/50 z-40"
+            onClick={() => setIsOpen(false)}
+          />
 
           {/* Menu panel */}
           <div className="fixed top-0 right-0 h-full w-[300px] sm:w-[400px] bg-white dark:bg-gray-900 shadow-xl z-50 transform transition-transform duration-300">
-            <nav className="flex flex-col gap-4 mt-20 px-6">
-            <NavLink href="/" onClick={() => setIsOpen(false)}>
+            <nav id="mobile-menu" className="flex flex-col gap-4 mt-20 px-6">
+              <NavLink href="/" onClick={() => setIsOpen(false)}>
                 <span className="text-lg">Home</span>
               </NavLink>
               <NavLink href="/about" onClick={() => setIsOpen(false)}>
@@ -76,7 +85,7 @@ function NavLink({ href, children, onClick }: { href: string; children: React.Re
     <Link
       href={href}
       onClick={onClick}
-      className="text-gray-700 dark:text-gray-200 hover:text-red-800 dark:hover:text-primary-light flex items-center px-3 py-2 rounded-md text-sm font-medium nav-link"
+      className="text-gray-700 dark:text-gray-200 hover:text-red-800 dark:hover:text-primary-light flex items-center px-3 py-2 rounded-md text-sm font-medium nav-link focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900"
     >
       {children}
     </Link>
@@ -92,6 +101,7 @@ function LogoIcon(props: React.SVGProps<SVGSVGElement>) {
       viewBox="0 0 500 500"
       preserveAspectRatio="xMidYMid meet"
       shapeRendering="geometricPrecision"
+      aria-hidden="true"
       {...props}
     >
       <g

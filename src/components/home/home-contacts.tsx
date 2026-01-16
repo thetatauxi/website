@@ -15,9 +15,9 @@ export function ContactSection() {
             <div className="space-y-4">
               <Link
                 href="mailto:contact@thetatau.org"
-                className="flex items-center gap-2 text-gray-200 hover:text-white transition-colors"
+                className="flex items-center gap-2 text-gray-200 hover:text-white transition-colors focus-visible:outline-none focus-visible:underline"
               >
-                <Mail className="h-5 w-5 text-[#ff6b6b]" />
+                <Mail className="h-5 w-5 text-[#ff6b6b]" aria-hidden="true" />
                 <span>contact@thetatau.org</span>
               </Link>
             </div>
@@ -26,27 +26,27 @@ export function ContactSection() {
                 href="https://www.instagram.com/thetatauxi/?hl=en"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-10 w-10 items-center justify-center rounded-md border border-[#8B0000] text-[#ff6b6b] transition-colors hover:bg-[#8B0000]/10"
+                className="flex h-10 w-10 items-center justify-center rounded-md border border-[#8B0000] text-[#ff6b6b] transition-colors hover:bg-[#8B0000]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b6b] focus-visible:ring-offset-2"
               >
-                <Instagram className="h-5 w-5" />
+                <Instagram className="h-5 w-5" aria-hidden="true" />
                 <span className="sr-only">Instagram</span>
               </Link>
               <Link
                 href="https://www.linkedin.com/in/thetatauxi/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-10 w-10 items-center justify-center rounded-md border border-[#8B0000] text-[#ff6b6b] transition-colors hover:bg-[#8B0000]/10"
+                className="flex h-10 w-10 items-center justify-center rounded-md border border-[#8B0000] text-[#ff6b6b] transition-colors hover:bg-[#8B0000]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b6b] focus-visible:ring-offset-2"
               >
-                <Linkedin className="h-5 w-5" />
+                <Linkedin className="h-5 w-5" aria-hidden="true" />
                 <span className="sr-only">LinkedIn</span>
               </Link>
               <Link
                 href="https://github.com/aadya-g/theta-tau"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-10 w-10 items-center justify-center rounded-md border border-[#8B0000] text-[#ff6b6b] transition-colors hover:bg-[#8B0000]/10"
+                className="flex h-10 w-10 items-center justify-center rounded-md border border-[#8B0000] text-[#ff6b6b] transition-colors hover:bg-[#8B0000]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b6b] focus-visible:ring-offset-2"
               >
-                <Github className="h-5 w-5" />
+                <Github className="h-5 w-5" aria-hidden="true" />
                 <span className="sr-only">GitHub</span>
               </Link>
             </div>
@@ -59,8 +59,11 @@ export function ContactSection() {
                 </label>
                 <input
                   id="name"
+                  name="name"
+                  autoComplete="name"
                   className="flex h-10 w-full rounded-md border border-[#3d0c0c] bg-[#1a0505] px-3 py-2 text-sm text-white ring-offset-[#8B0000] placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8B0000] focus-visible:ring-offset-2"
-                  placeholder="Your name"
+                  placeholder="Jane Doe…"
+                  required
                 />
               </div>
               <div className="space-y-2">
@@ -69,9 +72,14 @@ export function ContactSection() {
                 </label>
                 <input
                   id="email"
+                  name="email"
                   type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  spellCheck={false}
                   className="flex h-10 w-full rounded-md border border-[#3d0c0c] bg-[#1a0505] px-3 py-2 text-sm text-white ring-offset-[#8B0000] placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8B0000] focus-visible:ring-offset-2"
-                  placeholder="Your email"
+                  placeholder="you@thetatau.org…"
+                  required
                 />
               </div>
             </div>
@@ -81,8 +89,11 @@ export function ContactSection() {
               </label>
               <input
                 id="subject"
+                name="subject"
+                autoComplete="off"
                 className="flex h-10 w-full rounded-md border border-[#3d0c0c] bg-[#1a0505] px-3 py-2 text-sm text-white ring-offset-[#8B0000] placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8B0000] focus-visible:ring-offset-2"
-                placeholder="Subject"
+                placeholder="Sponsorship inquiry…"
+                required
               />
             </div>
             <div className="space-y-2">
@@ -91,8 +102,11 @@ export function ContactSection() {
               </label>
               <textarea
                 id="message"
+                name="message"
+                autoComplete="off"
                 className="flex min-h-[120px] w-full rounded-md border border-[#3d0c0c] bg-[#1a0505] px-3 py-2 text-sm text-white ring-offset-[#8B0000] placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8B0000] focus-visible:ring-offset-2"
-                placeholder="Your message"
+                placeholder="Tell us how we can help…"
+                required
               ></textarea>
             </div>
             <Button className="w-full bg-[#8B0000] hover:bg-[#a50000] text-white">Send Message</Button>

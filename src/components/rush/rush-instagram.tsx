@@ -28,7 +28,7 @@ export default function RushInstagram() {
       >
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center space-y-4 text-center">
-            <Instagram className="h-16 w-16" />
+            <Instagram className="h-16 w-16" aria-hidden="true" />
             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Follow Our Journey</h2>
             <p className="mx-auto max-w-[700px] text-blue-100 md:text-xl">
               Stay updated with our latest events, projects, and brotherhood activities on Instagram.

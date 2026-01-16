@@ -66,7 +66,7 @@ export default function SponsorshipPage() {
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-red-700 to-yellow-500 opacity-15 z-0"></div>
       {/* Circuit board pattern */}
       <div className="absolute inset-0 opacity-10">
-        <svg className="w-full h-full" viewBox="0 0 1200 800" fill="none">
+        <svg className="w-full h-full" viewBox="0 0 1200 800" fill="none" aria-hidden="true">
           <defs>
             <pattern id="circuit" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
               <path d="M20 20h60v60h-60z" stroke="currentColor" strokeWidth="1" fill="none" />
@@ -87,7 +87,7 @@ export default function SponsorshipPage() {
       <div className="absolute top-1/2 right-1/4 w-16 h-16 bg-amber-400 opacity-10 rotate-45"></div>
 
       {/* Engineering-themed lines */}
-      <svg className="absolute inset-0 w-full h-full opacity-15" viewBox="0 0 1200 800">
+      <svg className="absolute inset-0 w-full h-full opacity-15" viewBox="0 0 1200 800" aria-hidden="true">
         <path d="M0 200 Q300 150 600 200 T1200 200" stroke="rgb(251 191 36)" strokeWidth="2" fill="none" />
         <path d="M0 600 Q300 550 600 600 T1200 600" stroke="rgb(251 191 36)" strokeWidth="1" fill="none" />
         <path d="M200 0 Q250 200 300 400 T400 800" stroke="rgb(251 191 36)" strokeWidth="1" fill="none" />
@@ -117,6 +117,10 @@ export default function SponsorshipPage() {
             <div className="flex-1 lg:max-w-2xl">
               <img
                 src="/spr25initiation.jpeg"
+                alt="Spring 2025 initiation"
+                width="1200"
+                height="800"
+                loading="lazy"
                 className="w-full h-full object-cover rounded-lg shadow-lg"
               />
             </div>
@@ -132,7 +136,7 @@ export default function SponsorshipPage() {
     {sponsors.map((sponsor, index) => (
       <div
         key={index}
-        className="flex-1 min-w-[320px] max-w-lg bg-white rounded-lg shadow-xl p-10 text-center border border-red-300 hover:shadow-2xl transition-all duration-300"
+        className="flex-1 min-w-[320px] max-w-lg bg-white rounded-lg shadow-xl p-10 text-center border border-red-300 hover:shadow-2xl transition-shadow duration-300"
       >
         <div className="mb-6">
           <Badge
@@ -147,7 +151,10 @@ export default function SponsorshipPage() {
           <img
             src={sponsor.logo || "/placeholder.svg"}
             alt={`${sponsor.name} logo`}
-            className="h-28 mx-auto object-contain mb-6" // ⬅️ increased from h-16 → h-28
+            width="280"
+            height="112"
+            loading="lazy"
+            className="h-28 mx-auto object-contain mb-6"
           />
           <h3 className="text-2xl font-semibold text-gray-800">
             {sponsor.name}

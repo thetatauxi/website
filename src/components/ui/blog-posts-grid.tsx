@@ -23,7 +23,7 @@ export function BlogPostsGrid({ posts, columns = 3, showArrow = false, fixedHeig
         <Link
           key={post.slug}
           href={`/blog/${post.slug}`}
-          className="group relative block overflow-hidden rounded-lg border-2 border-[#8B0000]/20 bg-gradient-to-br from-white/80 to-[#FFF5D7]/50 backdrop-blur-sm transition-all duration-300 hover:border-[#D4AF37] hover:shadow-xl hover:shadow-[#D4AF37]/20 hover:-translate-y-1"
+          className="group relative block overflow-hidden rounded-lg border-2 border-[#8B0000]/20 bg-gradient-to-br from-white/80 to-[#FFF5D7]/50 backdrop-blur-sm transition duration-300 hover:border-[#D4AF37] hover:shadow-xl hover:shadow-[#D4AF37]/20 hover:-translate-y-1"
         >
           {/* Background gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-br from-[#8B0000]/5 to-[#D4AF37]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
@@ -47,7 +47,7 @@ export function BlogPostsGrid({ posts, columns = 3, showArrow = false, fixedHeig
             <div className="flex items-center justify-between mb-3">
               <time className="text-sm text-muted-foreground">{post.date}</time>
               {showArrow && (
-                <ArrowRight className="w-5 h-5 text-[#8B0000] group-hover:text-[#D4AF37] transition-all duration-300 group-hover:translate-x-1" />
+                <ArrowRight className="w-5 h-5 text-[#8B0000] group-hover:text-[#D4AF37] transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
               )}
             </div>
             <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-[#8B0000] transition-colors duration-300">
