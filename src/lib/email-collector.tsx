@@ -128,7 +128,7 @@ export function EmailCollector({ source, className = "" }: EmailCollectorProps) 
       </form>
 
       <Dialog open={showCategoryDialog} onOpenChange={handleDialogClose}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-white text-gray-900 border border-gray-200 shadow-xl dark:bg-gray-950 dark:text-gray-100 dark:border-gray-800">
           {dialogStatus === "selecting" && (
             <>
               <DialogHeader>

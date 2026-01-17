@@ -29,7 +29,7 @@ export default function RushVideo() {
 
       <section id="rush-video" className="w-full py-12 md:py-24 z-10 relative">
         <div className="mt-44">{/* Your next section content goes here */}</div>
-        <div className="container px-4 md:px-6">
+        <div className="container max-w-7xl mx-auto px-4 md:px-6">
           <div className="flex flex-col items-center space-y-4 text-center">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-black">
               Experience θΤ Rush

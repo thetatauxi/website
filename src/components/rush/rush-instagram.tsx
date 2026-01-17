@@ -26,7 +26,7 @@ export default function RushInstagram() {
         id="instagram"
         className="w-full py-6 md:py-12 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900 text-white relative z-10"
       >
-        <div className="container px-4 md:px-6">
+        <div className="container max-w-7xl mx-auto px-4 md:px-6">
           <div className="flex flex-col items-center space-y-4 text-center">
             <Instagram className="h-16 w-16" aria-hidden="true" />
             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Follow Our Journey</h2>

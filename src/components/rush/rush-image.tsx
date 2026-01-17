@@ -43,7 +43,7 @@ export default function RushPage() {
 
   return (
     <section className="w-full py-12 md:py-24 bg-white relative">
-      <div className="container px-4 md:px-6">
+      <div className="container max-w-7xl mx-auto px-4 md:px-6">
         <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8 text-center text-maroon-700">
           Life at Theta Tau
         </h2>

@@ -4,7 +4,7 @@ export default function RushFlyer() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <section className="w-full py-12 md:py-24 bg-muted">
-        <div className="container px-4 md:px-6">
+        <div className="container max-w-7xl mx-auto px-4 md:px-6">
           {/* <div className="space-y-4 text-center mb-8">
                         <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">Rush Flyer</h2>
                         <p className="text-muted-foreground">

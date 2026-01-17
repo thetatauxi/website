@@ -22,7 +22,7 @@ export default function RushWhyUs() {
       <div className="absolute bottom-10 left-10 w-8 h-8 bg-blue-800 opacity-20 rotate-45"></div>
 
       <section id="why-us" className="w-full py-12 md:py-24 z-10 relative">
-        <div className="container px-4 md:px-6">
+        <div className="container max-w-7xl mx-auto px-4 md:px-6">
           <div className="flex flex-col md:flex-row gap-8 items-center">
             {/* Image Section */}
             <div className="md:w-1/2 aspect-square overflow-hidden rounded-xl">

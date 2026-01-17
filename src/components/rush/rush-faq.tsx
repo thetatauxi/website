@@ -42,11 +42,24 @@ export function RushFAQ() {
           <AccordionItem value="item-2">
             <AccordionTrigger>Who can join Theta Tau?</AccordionTrigger>
             <AccordionContent>
-              Students in the following engineering majors at UW-Madison are eligible to join: • Aerospace Engineering •
-              Biomedical Engineering • Chemical Engineering • Civil Engineering • Computer Engineering • Computer
-              Science • Electrical Engineering • Engineering Mechanics • Environmental Engineering • Geological
-              Engineering • Industrial Engineering • Materials Science and Engineering • Mechanical Engineering •
-              Nuclear Engineering
+              Students in the following engineering majors at UW-Madison are eligible to join: 
+              <br /><br />
+              <ul className="list-disc list-inside">
+                <li>Aerospace Engineering</li>
+                <li>Biomedical Engineering</li>
+                <li>Chemical Engineering</li>
+                <li>Civil Engineering</li>
+                <li>Computer Engineering</li>
+                <li>Computer Science</li>
+                <li>Electrical Engineering</li>
+                <li>Engineering Mechanics</li>
+                <li>Environmental Engineering</li>
+                <li>Geological Engineering</li>
+                <li>Industrial Engineering</li>
+                <li>Materials Science and Engineering</li>
+                <li>Mechanical Engineering</li>
+                <li>Nuclear Engineering</li>
+              </ul>
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="item-3">
