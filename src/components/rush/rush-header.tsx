@@ -101,18 +101,18 @@ export function RecruitmentHero() {
       <div className="absolute bottom-20 left-1/4 w-20 h-20 border-2 border-yellow-500 opacity-20 rotate-12"></div>
       <div className="absolute bottom-10 right-10 w-8 h-8 bg-yellow-500 opacity-20 rotate-45"></div>
 
-      <div className="h-full md:flex md:items-center md:justify-between md:gap-8 z-10 relative">
-        <div className="flex-1 space-y-8 pt-20 md:pt-0">
-          <div className="space-y-4">
+      <div className="h-full lg:flex lg:items-center lg:justify-between lg:gap-8 z-10 relative">
+        <div className="flex-1 space-y-8 pt-20 lg:pt-0">
+          <div className="text-center p-4 lg:text-left space-y-4">
             <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tighter text-yellow-500">
               Unsung Heroes
             </h1>
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-gray-800">Rush Theta Tau</h2>
-            <p className="text-gray-600 md:text-xl max-w-[600px]">
+            <p className="mx-auto text-gray-600 md:text-xl max-w-[600px]">
               Join a brotherhood of engineers dedicated to academic excellence, professional development, and community service. Follow our Instagram for more information and enter your email to get notified about rush.
             </p>
           </div>
-          <div className="w-full max-w-sm space-y-2">
+          <div className="space-y-2 text-center lg:text-left">
             <a 
               href="https://docs.google.com/forms/d/1F3PW5Ye29jUTyRqRyF0LhV2pCIDeCz_wsnE1jnYtmQs/edit" 
               target="_blank" 

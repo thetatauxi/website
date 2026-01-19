@@ -1,4 +1,4 @@
-import {RecruitmentHero} from "@/components/rush/rush-header"
+import { RecruitmentHero}  from "@/components/rush/rush-header"
 import  RushWhyUs  from "@/components/rush/rush-why-us"
 import RushVideo from "@/components/rush/rush-video"
 import RushInstagram from "@/components/rush/rush-instagram"
