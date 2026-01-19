@@ -13,7 +13,7 @@ export default function RushPage() {
       description:
         "Connect with successful θT alumni. Gain skills and connections to jumpstart your career. Learn more about our professional network on our ",
       image: "/fall24elections.jpg?height=400&width=600&text=Pro+Dev",
-      link: "https://www.linkedin.com/your-linkedin-profile",
+      link: "https://www.linkedin.com/in/thetatauxi/",
     },
     {
       title: "Food Fridays",
@@ -37,12 +37,12 @@ export default function RushPage() {
       title: "Community Service",
       description:
         "Make a positive impact on your community and grow alongside your fellow brothers while building teamwork and leadership skills.",
-      image: "/94883.jpg?height=400&width=600&text=Comm+Serve",
+      image: "/CommServeRush.jpg?height=400&width=600&text=Comm+Serve",
     },
   ]
 
   return (
-    <section className="w-full py-12 md:py-24 bg-white relative">
+    <section className="w-full bg-white py-16 relative">
       <div className="container max-w-7xl mx-auto px-4 md:px-6">
         <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8 text-center text-maroon-700">
           Life at Theta Tau
@@ -68,7 +68,7 @@ export default function RushPage() {
                       href={activity.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800"
+                      className="text-yellow-500 hover:text-yellow-600"
                     >
                       LinkedIn page
                     </a>

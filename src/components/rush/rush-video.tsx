@@ -1,37 +1,25 @@
 export default function RushVideo() {
   return (
-    <div className="min-h-screen bg-background flex flex-col relative">
+    <div className="min-h-screen bg-white flex flex-col relative">
       {/* Blueprint grid pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `
-            linear-gradient(rgba(30, 64, 175, 0.3) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(30, 64, 175, 0.3) 1px, transparent 1px)
-          `,
-            backgroundSize: "20px 20px",
-          }}
-        />
-      </div>
 
       {/* Geometric corner elements */}
-      <div className="absolute top-10 left-10 w-32 h-32 border-2 border-blue-700/20 rotate-45 z-0" />
-      <div className="absolute top-20 right-20 w-24 h-24 border-2 border-blue-700/20 z-0" />
-      <div className="absolute bottom-20 left-20 w-28 h-28 border-2 border-blue-700/20 rotate-12 z-0" />
-      <div className="absolute bottom-10 right-10 w-20 h-20 border-2 border-blue-700/20 rotate-45 z-0" />
+      <div className="absolute top-10 left-10 w-32 h-32 border-2 border-yellow-500/20 rotate-45 z-0" />
+      <div className="absolute top-20 right-20 w-24 h-24 border-2 border-yellow-500/20 z-0" />
+      <div className="absolute bottom-20 left-20 w-28 h-28 border-2 border-yellow-500/20 rotate-12 z-0" />
+      <div className="absolute bottom-10 right-10 w-20 h-20 border-2 border-yellow-500/20 rotate-45 z-0" />
 
       {/* Technical drawing lines */}
-      <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-700/20 to-transparent z-0" />
-      <div className="absolute bottom-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-700/20 to-transparent z-0" />
-      <div className="absolute left-1/4 top-0 w-px h-full bg-gradient-to-b from-transparent via-blue-700/20 to-transparent z-0" />
-      <div className="absolute right-1/4 top-0 w-px h-full bg-gradient-to-b from-transparent via-blue-700/20 to-transparent z-0" />
+      <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-yellow-500/20 to-transparent z-0" />
+      <div className="absolute bottom-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-yellow-500/20 to-transparent z-0" />
+      <div className="absolute left-1/4 top-0 w-px h-full bg-gradient-to-b from-transparent via-yellow-500/20 to-transparent z-0" />
+      <div className="absolute right-1/4 top-0 w-px h-full bg-gradient-to-b from-transparent via-yellow-500/20 to-transparent z-0" />
 
-      <section id="rush-video" className="w-full py-12 md:py-24 z-10 relative">
+      <section id="rush-video" className="w-full z-10 relative">
         <div className="mt-44">{/* Your next section content goes here */}</div>
         <div className="container max-w-7xl mx-auto px-4 md:px-6">
           <div className="flex flex-col items-center space-y-4 text-center">
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-black">
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-yellow-500">
               Experience θΤ Rush
             </h2>
             <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">

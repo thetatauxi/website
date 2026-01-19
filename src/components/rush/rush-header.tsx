@@ -79,7 +79,7 @@ import { EmailCollector } from "@/lib/email-collector";
 import Image from "next/image";
 
 export function RecruitmentHero() {
-  const imageUrl = "/Fall25RushFlyer.jpeg"
+  const imageUrl = "/Sp26Rush.png"
 
   return (
     <div className="h-[80vh] bg-white container max-w-7xl mx-auto relative">
@@ -96,28 +96,29 @@ export function RecruitmentHero() {
         />
       </div>
 
-      <div className="absolute top-10 left-10 w-16 h-16 border-2 border-blue-800 opacity-20 rotate-45"></div>
-      <div className="absolute top-1/4 right-20 w-12 h-12 border-2 border-blue-800 opacity-20"></div>
-      <div className="absolute bottom-20 left-1/4 w-20 h-20 border-2 border-blue-800 opacity-20 rotate-12"></div>
-      <div className="absolute bottom-10 right-10 w-8 h-8 bg-blue-800 opacity-20 rotate-45"></div>
+      <div className="absolute top-10 left-10 w-16 h-16 border-2 border-yellow-500 opacity-20 rotate-45"></div>
+      <div className="absolute top-1/4 right-20 w-12 h-12 border-2 border-yellow-500 opacity-20"></div>
+      <div className="absolute bottom-20 left-1/4 w-20 h-20 border-2 border-yellow-500 opacity-20 rotate-12"></div>
+      <div className="absolute bottom-10 right-10 w-8 h-8 bg-yellow-500 opacity-20 rotate-45"></div>
 
       <div className="h-full md:flex md:items-center md:justify-between md:gap-8 z-10 relative">
         <div className="flex-1 space-y-8 pt-20 md:pt-0">
           <div className="space-y-4">
-            <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tighter text-blue-900">
-              Building the Blueprint
+            <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tighter text-yellow-500">
+              Unsung Heroes
             </h1>
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-gray-800">Rush Theta Tau</h2>
             <p className="text-gray-600 md:text-xl max-w-[600px]">
-              Join a brotherhood of engineers dedicated to academic excellence, professional development, and community service. Follow our instagram for more information and enter your email to get notified about rush.
+              Join a brotherhood of engineers dedicated to academic excellence, professional development, and community service. Follow our Instagram for more information and enter your email to get notified about rush.
             </p>
           </div>
           <div className="w-full max-w-sm space-y-2">
-            <EmailCollector
-              source="recruitment_hero"
-              className="[&_button]:bg-blue-800 [&_button]:text-white [&_button]:hover:bg-blue-900"
-            />
-            <p className="text-xs text-blue-600">Sign up to get notified about our rush events and deadlines.</p>
+            <a 
+              href="https://docs.google.com/forms/d/1F3PW5Ye29jUTyRqRyF0LhV2pCIDeCz_wsnE1jnYtmQs/edit" 
+              target="_blank" 
+              className="bg-yellow-500 text-white hover:bg-yellow-600 px-4 py-3 rounded-md text-center">
+                Fill out the Interest Form
+            </a>
           </div>
         </div>
         <div className="mt-8 md:mt-16 flex items-center justify-center md:justify-end">
@@ -125,14 +126,13 @@ export function RecruitmentHero() {
             <Image
               src={imageUrl || "/placeholder.svg"}
               alt="Rush Theta Tau"
-              className="w-full h-full object-contain scale-105 rounded-lg"
+              className="w-full h-full object-contain rounded-lg"
               width={650}
               height={650}
             />
           </div>
         </div>
       </div>
-      <div className="mt-16">{/* Your next section content goes here */}</div>
     </div>
   )
 }

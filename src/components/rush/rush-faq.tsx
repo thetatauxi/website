@@ -4,7 +4,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 
 export function RushFAQ() {
   return (
-    <section className="w-full py-12 md:py-24 lg:py-32 bg-white relative">
+    <section className="w-full py-12 md:py-16 lg:py-24 bg-white relative">
       <div className="absolute inset-0 opacity-10">
         <div
           className="w-full h-full"
@@ -18,19 +18,19 @@ export function RushFAQ() {
         />
       </div>
 
-      <div className="absolute top-20 left-10 w-16 h-16 border-2 border-blue-800 opacity-20 rotate-45"></div>
-      <div className="absolute top-1/3 right-20 w-12 h-12 border-2 border-blue-800 opacity-20"></div>
-      <div className="absolute bottom-20 left-1/4 w-20 h-20 border-2 border-blue-800 opacity-20 rotate-12"></div>
-      <div className="absolute bottom-10 right-10 w-8 h-8 bg-blue-800 opacity-20 rotate-45"></div>
+      <div className="absolute top-20 left-10 w-16 h-16 border-2 border-yellow-500 opacity-20 rotate-45"></div>
+      <div className="absolute top-1/3 right-20 w-12 h-12 border-2 border-yellow-500 opacity-20"></div>
+      <div className="absolute bottom-20 left-1/4 w-20 h-20 border-2 border-yellow-500 opacity-20 rotate-12"></div>
+      <div className="absolute bottom-10 right-10 w-8 h-8 bg-yellow-500 opacity-20 rotate-45"></div>
 
       <div className="container max-w-7xl mx-auto md:px-6 relative z-10">
-        <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8 text-blue-900">
+        <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8 text-yellow-500">
           Frequently Asked Questions
         </h2>
         <Accordion
           type="single"
           collapsible
-          className="w-full [&_[data-state=open]]:border-blue-800 [&_.accordion-trigger]:text-blue-900 [&_.accordion-trigger:hover]:text-blue-800"
+          className="w-full [&_[data-state=open]]:border-yellow-500 [&_.accordion-trigger]:text-yellow-500 [&_.accordion-trigger:hover]:text-yellow-600"
         >
           <AccordionItem value="item-1">
             <AccordionTrigger>What is Theta Tau?</AccordionTrigger>
@@ -59,6 +59,7 @@ export function RushFAQ() {
                 <li>Materials Science and Engineering</li>
                 <li>Mechanical Engineering</li>
                 <li>Nuclear Engineering</li>
+                <li>Biological Systems Engineering</li>
               </ul>
             </AccordionContent>
           </AccordionItem>
@@ -101,16 +102,16 @@ export function RushFAQ() {
               No problem! You’re free to leave whenever you need to. Of course, we’d love for you to stay the whole time, but we know schedules can be busy.
             </AccordionContent>
           </AccordionItem>
+          <AccordionItem value="item-9">
+            <AccordionTrigger>When are the first-round applications due?</AccordionTrigger>
+            <AccordionContent>
+              The application must be submitted by Tuesday, 2/3, at 6 PM. Be sure to submit it on time, as late applications will not be accepted.
+            </AccordionContent>
+          </AccordionItem>
          <AccordionItem value="item-8">
             <AccordionTrigger>How do I know if I got an invitation to the Engineering Challenge and Food Friday?</AccordionTrigger>
             <AccordionContent>
-              Invitations will be sent to your email on Wednesday night (9/17). Be sure you’re receiving our emails and keep an eye out for your invite! Your invitation will also include the event location details.
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="item-9">
-            <AccordionTrigger>When is the application due?</AccordionTrigger>
-            <AccordionContent>
-              The application must be submitted by Tuesday, 9/16, at 5 PM, just before our Field Day event. Be sure to submit it on time, as late applications will not be accepted.
+              Invitations will be sent to your email on Wednesday night (2/4). Be sure you’re receiving our emails and keep an eye out for your invite! Your invitation will also include the event location details.
             </AccordionContent>
           </AccordionItem>
           
