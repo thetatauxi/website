@@ -1,6 +1,6 @@
 export default function RushVideo() {
   return (
-    <div className="min-h-screen bg-white flex flex-col relative">
+    <div className="pt-24 sm:pt-0 min-h-screen bg-white flex flex-col relative">
       {/* Blueprint grid pattern */}
 
       {/* Geometric corner elements */}
