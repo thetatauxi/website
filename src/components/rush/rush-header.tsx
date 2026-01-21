@@ -112,7 +112,7 @@ export function RecruitmentHero() {
               Join a brotherhood of engineers dedicated to academic excellence, professional development, and community service. Follow our Instagram for more information and enter your email to get notified about rush.
             </p>
           </div>
-          <div className="space-y-2 text-center lg:text-left">
+          <div className="text-center lg:text-left lg:ml-4">
             <a 
               href="https://docs.google.com/forms/d/1F3PW5Ye29jUTyRqRyF0LhV2pCIDeCz_wsnE1jnYtmQs/edit" 
               target="_blank" 
@@ -121,7 +121,7 @@ export function RecruitmentHero() {
             </a>
           </div>
         </div>
-        <div className="mt-8 md:mt-16 flex items-center justify-center md:justify-end">
+        <div className="mt-8 md:mt-16 flex items-center justify-center lg:justify-end">
           <div className="w-full md:w-[650px] h-[400px] md:h-[650px] max-h-[650px] rounded-xl overflow-hidden">
             <Image
               src={imageUrl || "/placeholder.svg"}
