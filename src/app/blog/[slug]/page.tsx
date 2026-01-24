@@ -41,7 +41,7 @@ export default async function BlogPost({ params }: { params: { slug: string } })
 
         {/* Featured Image */}
         {post.image && (
-          <div className="relative w-full h-[300px] md:h-[500px] rounded-xl overflow-hidden shadow-lg mb-12">
+          <div className="relative w-full h-[300px] md:h-[500px] rounded-xl overflow-hidden shadow-lg mb-12r">
             <Image
               src={post.image}
               alt={post.title}

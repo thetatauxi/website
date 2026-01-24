@@ -4,7 +4,7 @@ import { BlogPostsGrid } from "@/components/ui/blog-posts-grid"
 
 export default async function Blog() {
   const allPosts = await getSortedPostsData()
-  const remainingPosts = allPosts.slice(3)
+  const remainingPosts = allPosts
 
   return (
     <div className="min-h-screen bg-background">

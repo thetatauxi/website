@@ -6,7 +6,7 @@ export type BlogPost = {
   slug: string
   title: string
   date: string
-  description: string
+  description?: string
   excerpt: string
   image: string
   content: string
@@ -15,17 +15,45 @@ export type BlogPost = {
 
 const postsDirectory = path.join(process.cwd(), "src/content/blog")
 
-function getExcerpt(content: string, maxLength: number = 200): string {
-  // Remove markdown formatting and get plain text
-  const plainText = content
-    .replace(/[#*`\[\]()]/g, "")
-    .replace(/\n+/g, " ")
+function normalizeDate(dateValue: unknown): string {
+  if (!dateValue) return ""
+  if (dateValue instanceof Date) {
+    return dateValue.toISOString().split("T")[0]
+  }
+  if (typeof dateValue === "string") {
+    return dateValue
+  }
+  return String(dateValue)
+}
+
+function stripMarkdown(markdown: string): string {
+  return markdown
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, "") // images
+    .replace(/\[(.*?)\]\([^)]+\)/g, "$1") // links
+    .replace(/^#{1,6}\s+/gm, "") // headings
+    .replace(/^>\s?/gm, "") // blockquotes
+    .replace(/[*_`]/g, "")
+    .replace(/-{3,}/g, "")
+    .replace(/\s+/g, " ")
     .trim()
-  
+}
+
+function getExcerpt(content: string, maxLength: number = 200): string {
+  const paragraphs = content
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter((paragraph) => paragraph.length > 0)
+
+  const firstParagraph = paragraphs.find(
+    (paragraph) => !paragraph.startsWith("#") && !paragraph.startsWith("![")
+  )
+
+  const plainText = stripMarkdown(firstParagraph ?? content)
+
   if (plainText.length <= maxLength) {
     return plainText
   }
-  
+
   return plainText.substring(0, maxLength).trim() + "..."
 }
 
@@ -41,13 +69,11 @@ export async function getSortedPostsData(): Promise<BlogPost[]> {
         const { data, content } = matter(fileContents)
 
         const excerpt = getExcerpt(content)
-        const description = data.description || excerpt
-
         return {
           slug,
           title: data.title || "Untitled",
-          date: data.date || "",
-          description,
+          date: normalizeDate(data.date),
+          description: data.description,
           excerpt,
           image: data.image || "/placeholder.svg",
           content,
@@ -84,13 +110,11 @@ export async function getPostData(slug: string): Promise<BlogPost> {
     }
 
     const excerpt = getExcerpt(processedContent)
-    const description = data.description || excerpt
-
     return {
       slug,
       title,
-      date: data.date || "",
-      description,
+      date: normalizeDate(data.date),
+      description: data.description,
       excerpt,
       image: data.image || "/placeholder.svg",
       content: processedContent,
