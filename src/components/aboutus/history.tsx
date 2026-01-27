@@ -6,7 +6,7 @@ import Image from 'next/image'
 const historyImages = [
     '/rush_fall25_thouse.jpg?height=400&width=600',
     '/electionscandid.JPG?height=400&width=600',
-    '/execpic.JPG?height=400&width=600',
+    '/exec/spring26_headshots/group_horizontal.webp?height=400&width=600',
     '/IMG_6621.jpg?height=400&width=600'
   ]
 

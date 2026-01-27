@@ -18,7 +18,7 @@ export default function RushWhyUs() {
                 alt="Theta Tau members"
                 className="object-cover"
                 height="600"
-                src="/execpic.JPG?height=600&width=600"
+                src="/exec/spring26_headshots/group.webp"
                 style={{
                   aspectRatio: "1/1",
                   objectFit: "cover",

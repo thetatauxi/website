@@ -9,16 +9,16 @@ const isPlaceholderImage = (src?: string) => {
 }
 
 const executives = [
-  { name: 'Paulina Castaneda', position: 'Regent', image: '/spring25_headshots/PaulinaC.webp' },
-  { name: 'Annie Zhao', position: 'Vice Regent', image: '/spring25_headshots/AnnieZ.webp' },
-  { name: 'Sydney Magee', position: 'Corresponding Secretary', image: '/spring25_headshots/SydneyM.webp' },
-  { name: 'Ella Barsness', position: 'Scribe', image: '/spring25_headshots/EllaB.webp' },
-  { name: 'Elizabeth Risgaard', position: 'Treasurer', image: '/spring25_headshots/ElizabethR.webp' },
-  { name: 'Aadya Ganjigunta', position: 'Treasurer', image: '/spring25_headshots/AadyaG.webp' },
-  { name: 'Bryan Heaton', position: 'Marshall', image: '/spring25_headshots/TT.webp' },
-  { name: 'Kate Breisemeister', position: 'Marshall', image: '/spring25_headshots/KateB.webp' },
-  { name: 'Alex Haas', position: 'Rush Chair', image: '/spring25_headshots/AlexH.webp' },
-  { name: 'Fiona Dragan', position: 'Rush Chair', image: '/spring25_headshots/FionaD.webp' },
+  { name: 'Paulina Castaneda', position: 'Regent', image: '/exec/spring26_headshots/Paulina.webp' },
+  { name: 'Annie Zhao', position: 'Vice Regent', image: '/exec/spring26_headshots/Annie.webp' },
+  { name: 'Sydney Magee', position: 'Corresponding Secretary', image: '/exec/spring26_headshots/Sydney.webp' },
+  { name: 'Ella Barsness', position: 'Scribe', image: '/exec/spring26_headshots/Ella.webp' },
+  { name: 'Elizabeth Risgaard', position: 'Treasurer', image: '/exec/spring26_headshots/Elizabeth.webp' },
+  { name: 'Aadya Ganjigunta', position: 'Treasurer', image: '/exec/spring26_headshots/Aadya.webp' },
+  { name: 'Bryan Heaton', position: 'Marshall', image: '/exec/spring26_headshots/Bryan.webp' },
+  { name: 'Kate Briesemeister', position: 'Marshall', image: '/exec/spring26_headshots/Kate.webp' },
+  { name: 'Alex Haas', position: 'Rush Chair', image: '/exec/spring26_headshots/Alex.webp' },
+  { name: 'Fiona Dragan', position: 'Rush Chair', image: '/exec/spring26_headshots/Fiona.webp' },
 ]
 
 const regent = executives[0]
@@ -46,25 +46,24 @@ export function ExecBoard() {
                   <div className="relative bg-white rounded-3xl p-8 shadow-2xl h-full">
                     <div className="text-center">
                       <div className="relative mb-6">
-                        <div className="absolute -inset-2 bg-linear-to-r from-red-600 to-red-800 rounded-full opacity-20"></div>
                         {isPlaceholderImage(regent.image) ? (
-                          <div className="relative w-[300px] aspect-4/3 mx-auto rounded-xl bg-white/70 border-4 border-white shadow-xl overflow-hidden">
-                            <Image
-                              src={regent.image || "/placeholder.svg"}
-                              alt={regent.name}
-                              fill
-                              className="object-contain p-2"
-                              sizes="300px"
-                            />
-                          </div>
-                        ) : (
-                          <div className="relative w-[320px] h-[220px] mx-auto rounded-full border-4 border-white shadow-xl overflow-hidden">
+                          <div className="relative w-[300px] aspect-4/3 mx-auto rounded-full bg-white/70 border-[3px] border-red-200 shadow-lg overflow-hidden group-hover:border-red-400 transition-colors duration-300">
                             <Image
                               src={regent.image || "/placeholder.svg"}
                               alt={regent.name}
                               fill
                               className="object-cover"
-                              sizes="320px"
+                              sizes="300px"
+                            />
+                          </div>
+                        ) : (
+                          <div className="relative w-[220px] h-[220px] mx-auto rounded-full border-[3px] border-red-200 shadow-lg overflow-hidden group-hover:border-red-400 transition-colors duration-300">
+                            <Image
+                              src={regent.image || "/placeholder.svg"}
+                              alt={regent.name}
+                              fill
+                              className="object-cover"
+                              sizes="300px"
                             />
                           </div>
                         )}
@@ -82,26 +81,25 @@ export function ExecBoard() {
                   <div className="absolute -inset-1 bg-linear-to-r from-red-600 to-red-800 rounded-3xl blur opacity-20 group-hover:opacity-60 transition duration-1000 group-hover:duration-200"></div>
                   <div className="relative bg-white rounded-3xl p-8 shadow-2xl h-full">
                     <div className="text-center">
-                      <div className="relative mb-6">
-                        <div className="absolute -inset-2 bg-linear-to-r from-red-600 to-red-800 rounded-full opacity-15"></div>
+                      <div className=" mb-6">
                         {isPlaceholderImage(viceRegent.image) ? (
-                          <div className="relative w-[300px] aspect-4/3 mx-auto rounded-xl bg-white/70 border-4 border-white shadow-xl overflow-hidden">
-                            <Image
-                              src={viceRegent.image || "/placeholder.svg"}
-                              alt={viceRegent.name}
-                              fill
-                              className="object-contain p-2"
-                              sizes="300px"
-                            />
-                          </div>
+                          <div className="relative w-[300] aspect-4/3 mx-auto rounded-full border-[3px] border-red-200 shadow-lg overflow-hidden group-hover:border-red-400 transition-colors duration-300">
+                          <Image
+                            src={viceRegent.image || "/placeholder.svg"}
+                            alt={viceRegent.name}
+                            fill
+                            className="object-cover"
+                            sizes="220px"
+                          />
+                        </div>
                         ) : (
-                          <div className="relative w-[320px] h-[220px] mx-auto rounded-full border-4 border-white shadow-xl overflow-hidden">
+                          <div className="relative w-[220px] h-[220px] mx-auto rounded-full border-[3px] border-red-200 shadow-lg overflow-hidden group-hover:border-red-400 transition-colors duration-300">
                             <Image
                               src={viceRegent.image || "/placeholder.svg"}
                               alt={viceRegent.name}
                               fill
                               className="object-cover"
-                              sizes="320px"
+                              sizes="220px"
                             />
                           </div>
                         )}
