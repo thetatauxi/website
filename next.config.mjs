@@ -6,6 +6,7 @@ const withMDX = createMDX({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  transpilePackages: ["next-mdx-remote"],
   eslint: {
     ignoreDuringBuilds: true,
   },
