@@ -7,12 +7,8 @@ const withMDX = createMDX({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ["next-mdx-remote"],
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   images: {
     unoptimized: true,
-    domains: ["api.microlink.io"],
   },
   pageExtensions: ["js", "jsx", "ts", "tsx", "md", "mdx"],
 };

@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useCallback, useState, useEffect } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import Image from 'next/image'
 
 const historyImages = [
@@ -41,14 +41,11 @@ const historyImages = [
     </div>
   )
 }
+export function OurHistory() {
+  const historyRef = useRef<HTMLElement>(null)
 
-
-
-  export function OurHistory() {
-    const historyRef = useRef<HTMLElement>(null)
-
-    return (
-        <section ref={historyRef} className="mx-16 mb-16">
+  return (
+    <section ref={historyRef} className="mx-16 mb-16">
           <div className="text-center mb-16">
             <h2 className="text-5xl font-bold text-red-900 mb-4">Our History</h2>
             <div className="w-24 h-1 bg-gradient-to-r from-red-600 to-red-800 mx-auto rounded-full"></div>
@@ -73,6 +70,6 @@ const historyImages = [
               </div>
             </div>
           </div>
-        </section>
-    )
+    </section>
+  )
 }

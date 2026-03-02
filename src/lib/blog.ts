@@ -18,12 +18,34 @@ const postsDirectory = path.join(process.cwd(), "src/content/blog")
 function normalizeDate(dateValue: unknown): string {
   if (!dateValue) return ""
   if (dateValue instanceof Date) {
-    return dateValue.toISOString().split("T")[0]
+    return dateValue.toISOString().slice(0, 10)
   }
   if (typeof dateValue === "string") {
-    return dateValue
+    const trimmed = dateValue.trim()
+    if (!trimmed) return ""
+
+    const date = new Date(trimmed)
+    if (!Number.isNaN(date.getTime())) {
+      return date.toISOString().slice(0, 10)
+    }
+
+    const match = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/)
+    if (match) {
+      const [, year, month, day] = match
+      return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`
+    }
+
+    return trimmed
   }
   return String(dateValue)
+}
+
+function getSortTimestamp(dateValue: string): number {
+  const parsed = new Date(dateValue)
+  if (Number.isNaN(parsed.getTime())) {
+    return Number.MIN_SAFE_INTEGER
+  }
+  return parsed.getTime()
 }
 
 function stripMarkdown(markdown: string): string {
@@ -81,14 +103,7 @@ export async function getSortedPostsData(): Promise<BlogPost[]> {
         } as BlogPost
       })
 
-    // Sort posts by date (newest first)
-    return allPostsData.sort((a, b) => {
-      if (a.date < b.date) {
-        return 1
-      } else {
-        return -1
-      }
-    })
+    return allPostsData.sort((a, b) => getSortTimestamp(b.date) - getSortTimestamp(a.date))
   } catch (error) {
     console.error("Error reading blog posts:", error)
     return []
@@ -101,12 +116,11 @@ export async function getPostData(slug: string): Promise<BlogPost> {
     const fileContents = fs.readFileSync(fullPath, "utf8")
     const { data, content } = matter(fileContents)
 
-    // Remove the first heading if it matches the title
     let processedContent = content
     const title = data.title || "Untitled"
-    const titlePattern = new RegExp(`^##?\\s+${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`, 'm')
+    const titlePattern = new RegExp(`^##?\\s+${title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`, "m")
     if (titlePattern.test(processedContent)) {
-      processedContent = processedContent.replace(titlePattern, '').trim()
+      processedContent = processedContent.replace(titlePattern, "").trim()
     }
 
     const excerpt = getExcerpt(processedContent)
@@ -120,7 +134,7 @@ export async function getPostData(slug: string): Promise<BlogPost> {
       content: processedContent,
       category: data.category,
     } as BlogPost
-  } catch (error) {
+  } catch {
     throw new Error(`Post with slug "${slug}" not found`)
   }
 }

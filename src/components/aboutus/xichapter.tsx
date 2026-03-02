@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useCallback, useState, useEffect } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import Image from 'next/image'
 
 const xiChapterImages = [
@@ -44,14 +44,10 @@ function ImageCarousel({ images, name }: { images: string[], name: string }) {
 
 
 export function XiChapter() {
-    const xiChapterRef = useRef<HTMLElement>(null)
+  const xiChapterRef = useRef<HTMLElement>(null)
 
-    const scrollToSection = useCallback((ref: React.RefObject<HTMLElement>) => {
-        ref.current?.scrollIntoView({ behavior: 'smooth' })
-      }, [])
-
-      return (
-        <section ref={xiChapterRef} className="mb-32">
+  return (
+    <section ref={xiChapterRef} className="mb-32">
           <div className="text-center mb-16">
             <h2 className="text-5xl font-bold text-red-900 mb-4">Xi Chapter</h2>
             <div className="w-24 h-1 bg-linear-to-r from-red-600 to-red-800 mx-auto rounded-full"></div>
@@ -79,6 +75,6 @@ export function XiChapter() {
               </div>
             </div>
           </div>
-      </section>
-      )
-    }
+    </section>
+  )
+}

@@ -1,8 +1,7 @@
 'use server'
 
-import { google } from 'googleapis';
+import { google, type sheets_v4 } from 'googleapis';
 import { JWT } from 'google-auth-library';
-import { cookies } from 'next/headers';
 
 // Load credentials from environment variables
 const credentials = {
@@ -54,7 +53,7 @@ async function checkRateLimit(identifier: string): Promise<boolean> {
   return true;
 }
 
-async function findAndDeleteExistingEntries(sheets: any, email: string, categories: string[]) {
+async function findAndDeleteExistingEntries(sheets: sheets_v4.Sheets, email: string, categories: string[]) {
   try {
     // Get all entries
     const response = await sheets.spreadsheets.values.get({

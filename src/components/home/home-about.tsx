@@ -1,3 +1,5 @@
+import Image from "next/image"
+
 export function HomeAboutSection() {
   return (
     <section
@@ -14,12 +16,11 @@ export function HomeAboutSection() {
           {/* IMAGE */}
           <div className="relative h-[600px] rounded-2xl overflow-hidden group">
             <div className="absolute inset-0 border-2 border-[#D4AF37]/30 rounded-2xl group-hover:border-[#D4AF37] transition-colors z-10" />
-            <img
+            <Image
               src="/nationals2025.JPEG"
               alt="Brotherhood"
-              width="1200"
-              height="900"
-              loading="lazy"
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
             {/* Gold-red gradient overlay */}
@@ -53,7 +54,7 @@ export function HomeAboutSection() {
 
             <div className="pt-4">
               <blockquote className="border-l-4 border-[#D4AF37] pl-6 italic text-lg text-gray-100">
-                "Whatsoever thy hand findeth to do, do it with thy might…"
+                &ldquo;Whatsoever thy hand findeth to do, do it with thy might&hellip;&rdquo;
                 <footer className="text-sm text-gray-300 mt-2">
                   — Ecclesiastes 9:10
                 </footer>

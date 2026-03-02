@@ -34,7 +34,7 @@ export default function RushWhyUs() {
               <div className="space-y-4 text-gray-700 md:text-lg">
                 <p>
                   Theta Tau offers a unique blend of professional development, philanthropic service, and lifelong
-                  brotherhood. As a member, you'll join a community of like-minded engineers who support and inspire
+                  brotherhood. As a member, you&apos;ll join a community of like-minded engineers who support and inspire
                   each other to reach new heights in their careers and personal lives.
                 </p>
                 <p>
@@ -43,7 +43,7 @@ export default function RushWhyUs() {
                 </p>
                 <p>
                   We pride ourselves on our strong alumni network, which opens doors to internships, job opportunities,
-                  and mentorship. By joining Theta Tau, you're not just part of a college organization—you're joining a
+                  and mentorship. By joining Theta Tau, you&apos;re not just part of a college organization; you&apos;re joining a
                   lifelong community.
                 </p>
               </div>

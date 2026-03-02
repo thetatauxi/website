@@ -79,7 +79,7 @@ export function RushFAQ() {
           <AccordionItem value="item-4">
             <AccordionTrigger>How long is the recruitment process?</AccordionTrigger>
             <AccordionContent>
-              The recruitment process takes two weeks. During this time, you'll attend professional and social events to
+              The recruitment process takes two weeks. During this time, you&apos;ll attend professional and social events to
               meet current members and learn about the organization. Selected candidates will then receive bids to begin
               the pledge process.
             </AccordionContent>
@@ -87,7 +87,7 @@ export function RushFAQ() {
            <AccordionItem value="item-5">
             <AccordionTrigger>What if I miss an event?</AccordionTrigger>
             <AccordionContent>
-                No worries! Just fill out our absence form and let us know why you can't make it—we understand that everyone has busy schedules.
+                No worries! Just fill out our absence form and let us know why you can&apos;t make it - we understand that everyone has busy schedules.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="item-6">

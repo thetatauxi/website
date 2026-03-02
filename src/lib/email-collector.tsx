@@ -5,7 +5,6 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import { Checkbox } from "../components/ui/checkbox";
-import { Label } from "../components/ui/label";
 import { addEmailToSheet } from "@/lib/email";
 import { useFormStatus } from "react-dom";
 
@@ -134,7 +133,7 @@ export function EmailCollector({ source, className = "" }: EmailCollectorProps) 
               <DialogHeader>
                 <DialogTitle>What interests you?</DialogTitle>
                 <DialogDescription>
-                  Select the types of updates you'd like to receive. Choose as many as you'd like.
+                  Select the types of updates you&apos;d like to receive. Choose as many as you&apos;d like.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">

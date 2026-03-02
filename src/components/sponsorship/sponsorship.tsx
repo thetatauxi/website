@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import Badge from "@/components/ui/badge"
+import Image from "next/image"
 
 export default function SponsorshipPage() {
   const sponsors = [
@@ -115,12 +116,12 @@ export default function SponsorshipPage() {
               </p>
             </div>
             <div className="flex-1 lg:max-w-2xl">
-              <img
+              <Image
                 src="/spr25initiation.jpeg"
                 alt="Spring 2025 initiation"
-                width="1200"
-                height="800"
-                loading="lazy"
+                width={1200}
+                height={800}
+                sizes="(max-width: 1024px) 100vw, 50vw"
                 className="w-full h-full object-cover rounded-lg shadow-lg"
               />
             </div>
@@ -148,12 +149,11 @@ export default function SponsorshipPage() {
           </Badge>
         </div>
         <a href={sponsor.website} target="_blank" rel="noopener noreferrer">
-          <img
+          <Image
             src={sponsor.logo || "/placeholder.svg"}
             alt={`${sponsor.name} logo`}
-            width="280"
-            height="112"
-            loading="lazy"
+            width={280}
+            height={112}
             className="h-28 mx-auto object-contain mb-6"
           />
           <h3 className="text-2xl font-semibold text-gray-800">

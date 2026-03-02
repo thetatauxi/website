@@ -3,7 +3,8 @@
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Sparkles } from "lucide-react"
 import { useEffect, useState } from "react"
-import Link from "next/link";
+import Link from "next/link"
+import Image from "next/image"
 
 
 export function HomeHeroSection() {
@@ -110,11 +111,11 @@ export function HomeHeroSection() {
           </div>
           <div className="relative h-[500px] rounded-2xl overflow-hidden group">
             <div className="absolute inset-0 border-2 border-[#D4AF37]/30 rounded-2xl group-hover:border-[#D4AF37] transition-colors z-10" />
-            <img
+            <Image
               src="/fall25pcbanquet.webp"
               alt="Theta Tau members"
-              width="1200"
-              height="800"
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
             {/* Gold-red gradient overlay */}

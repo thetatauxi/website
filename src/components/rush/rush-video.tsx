@@ -23,7 +23,7 @@ export default function RushVideo() {
               Experience θΤ Rush
             </h2>
             <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
-              Get a glimpse of what it's like to be part of Theta Tau. Watch our rush video and see why we're more than
+              Get a glimpse of what it&apos;s like to be part of Theta Tau. Watch our rush video and see why we&apos;re more than
               just a fraternity.
             </p>
             <div className="w-full max-w-4xl aspect-video overflow-hidden rounded-xl border bg-muted">

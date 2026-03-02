@@ -1,7 +1,3 @@
-'use client';
-
-import React from 'react';
-
 export default function Header() {
   return (
    <div className="bg-gradient-to-br from-red-50 via-white to-red-100">
@@ -14,12 +10,12 @@ export default function Header() {
               About <span className="text-red-200">Us</span>
             </h1>
             <p className="text-xl text-red-100 max-w-2xl mx-auto leading-relaxed">
-              Discover the legacy, leadership, and values that define Theta Tau's Xi Chapter
+              Discover the legacy, leadership, and values that define Theta Tau&apos;s Xi Chapter
             </p>
           </div>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-red-50 to-transparent"></div>
       </div>
       </div>
-  );
+  )
 }

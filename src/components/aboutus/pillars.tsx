@@ -1,7 +1,6 @@
 'use client'
 
-import { useRef, useCallback, useState, useEffect } from 'react'
-import Image from 'next/image'
+import { useRef } from 'react'
 
 const pillars = [
     { title: 'Community Service', description: 'Members of Theta Tau make an impact on the world around them through service and philanthropic acts.', icon: "🤝" },
@@ -37,17 +36,6 @@ const pillars = [
             ))}
           </div>
           </div>
-              {/* <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-                {pillars.map((pillar, index) => (
-                  <div 
-                    key={index} 
-                    className="bg-red-50 p-6 rounded-lg shadow-lg transition-transform duration-300 hover:scale-105"
-                  >
-                    <h3 className="font-semibold mb-3 text-xl text-red-700">{pillar.title}</h3>
-                    <p className="text-black-600">{pillar.description}</p>
-                  </div>
-                ))}
-              </div> */}
             </section>
     )
 }

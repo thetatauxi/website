@@ -1,36 +1,31 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter, JetBrains_Mono } from "next/font/google"
+import localFont from "next/font/local"
 import { Analytics } from "@vercel/analytics/next"
 import { FathomAnalytics } from "./fathom"
 import Navbar from "@/components/ui/nav-bar"
 import { Footer } from "@/components/ui/footer"
 import "./globals.css"
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
-const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" })
+const inter = localFont({
+  src: "../../public/fonts/GeistVF.woff",
+  variable: "--font-sans",
+  display: "swap",
+})
+
+const jetbrainsMono = localFont({
+  src: "../../public/fonts/GeistMonoVF.woff",
+  variable: "--font-mono",
+  display: "swap",
+})
 
 export const metadata: Metadata = {
   title: "Theta Tau Xi Chapter | Professional Engineering Fraternity",
   description:
     "Join Theta Tau Xi - a premier engineering fraternity dedicated to academic excellence, professional development, and lifelong brotherhood.",
-  generator: "v0.app",
   icons: {
-    icon: [
-      {
-        url: "/icon-light-32x32.png",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/icon-dark-32x32.png",
-        media: "(prefers-color-scheme: dark)",
-      },
-      {
-        url: "/icon.svg",
-        type: "image/svg+xml",
-      },
-    ],
-    apple: "/apple-icon.png",
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
   },
 }
 

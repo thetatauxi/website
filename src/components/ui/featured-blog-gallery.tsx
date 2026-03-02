@@ -3,7 +3,7 @@
 import Image from "next/image"
 import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
-import type { BlogPost } from "@/lib/types"
+import type { BlogPost } from "@/lib/blog"
 import { useState, useEffect } from "react"
 
 interface FeaturedBlogGalleryProps {

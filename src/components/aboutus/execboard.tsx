@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useCallback, useState, useEffect } from 'react'
+import { useRef } from 'react'
 import Image from 'next/image'
 
 const isPlaceholderImage = (src?: string) => {

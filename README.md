@@ -1,55 +1,54 @@
-# Theta Tau Chapter Website
+# Theta Tau Xi Website
 
-This is the official website for the Theta Tau chapter, built with modern web technologies to showcase our fraternity's activities, members, and values.
+Official website for Theta Tau Xi Chapter at UW-Madison.
 
-## Overview
+## Stack
 
-This website serves as the primary online presence for our Theta Tau chapter, featuring:
-- Chapter information and history
-- Active member profiles
-- Rush and recruitment details
-- Event showcases and photo galleries
-- Contact information
-
-## Tech Stack
-
-- **Framework**: Next.js with TypeScript
-- **Styling**: Tailwind CSS
-- **Deployment**: Vercel
-- **Analytics**: Google Analytics
+- Next.js (App Router) + TypeScript
+- Tailwind CSS v4
+- MDX blog content from `src/content/blog`
+- Vercel Analytics + Fathom page tracking
 
 ## Project Structure
 
-- `/src/app`: Main application pages
-- `/src/components`: Reusable React components
-- `/public`: Static assets (images, etc.)
-- `/src/lib`: Utility functions and shared code
-- `/src/styles`: Global styles and Tailwind configuration
-
-## Documentation
-
-Detailed documentation is available in the `/docs` folder:
-- [Getting Started Guide](docs/GETTING_STARTED.md) - Setup instructions for new website chairs
-- [Website Maintenance](docs/WEBSITE_MAINTENANCE.md) - Guide for common maintenance tasks
+- `src/app` - routes and layouts
+- `src/components` - UI and page components
+- `src/content/blog` - blog post MDX files
+- `src/lib` - data/helpers
+- `public` - static assets (images, PDFs, logos)
+- `docs` - maintenance guides
 
 ## Development
 
 ```bash
-# Install dependencies
 npm install
-
-# Run development server
 npm run dev
 ```
 
-## Contributing
+Other commands:
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+```bash
+npm run lint
+bunx tsc --noEmit
+npm run build
+```
 
-## License
+## Environment Variables
 
-This project is maintained by Theta Tau. All rights reserved.
+Only needed for the legacy Google Sheets newsletter flow in `src/lib/email.ts`:
+
+- `GOOGLE_CLIENT_EMAIL`
+- `GOOGLE_PRIVATE_KEY`
+- `SPREADSHEET_ID`
+
+If those are not set, the public website still runs; only that deferred/legacy flow is affected.
+
+## Blog URL Convention
+
+Blog filenames are the canonical URL slugs. Use:
+
+`YYYY-MM-DD-kebab-case-title.mdx`
+
+Example:
+
+`2026-03-01-meet-the-spring-26-pc.mdx` -> `/blog/2026-03-01-meet-the-spring-26-pc`
