@@ -72,6 +72,9 @@ export default function Navbar() {
               <NavLink href="/sponsorship" onClick={() => setIsOpen(false)}>
                 <span className="text-lg">Sponsorship</span>
               </NavLink>
+              <NavLink href="/newsletter" onClick={() => setIsOpen(false)}>
+                <span className="text-lg">Newsletter</span>
+              </NavLink>
             </nav>
           </div>
         </>

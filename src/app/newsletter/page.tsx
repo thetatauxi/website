@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Download, ExternalLink } from "lucide-react"
 
 export default function AlumniLetterPage() {
-  const pdfUrl = "/Semester S25 Newsletter.pdf"
+  const pdfUrl = "/newsletters/2026/feb2026.png"
   const [pdfExists, setPdfExists] = useState(true)
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export default function AlumniLetterPage() {
       <div className="max-w-5xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-4">
-          <h1 className="text-4xl font-bold text-stone-900 mb-2">Spring 2025 Newsletter</h1>
+          <h1 className="text-4xl font-bold text-stone-900 mb-2">Feburary 2026 Newsletter</h1>
           <p className="text-stone-600">Stay connected with the latest from Theta Tau</p>
         </div>
 
@@ -47,7 +47,7 @@ export default function AlumniLetterPage() {
           >
             <a href={pdfUrl} download>
               <Download className="mr-2 h-4 w-4" />
-              Download PDF
+              Download
             </a>
           </Button>
         </div>
@@ -56,10 +56,10 @@ export default function AlumniLetterPage() {
         <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-stone-200">
           <div className="h-[85vh] min-h-[600px]">
             {pdfExists ? (
-              <iframe
+              <img
                 src={`${pdfUrl}#toolbar=0&navpanes=0`}
-                className="w-full h-full"
-                title="Spring 2025 Newsletter"
+                className="w-full h-full object-contain bg-[#EBEBD7]"
+                title="February 2026 Newsletter"
               />
             ) : (
               <div className="flex flex-col justify-center items-center h-full p-8 text-center">
