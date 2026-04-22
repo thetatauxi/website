@@ -94,7 +94,7 @@ export function HomeHeroSection() {
             </div>
             <div className="flex items-center gap-8 pt-4">
               <div className="group cursor-pointer">
-                <div className="text-3xl font-bold text-[#D4AF37] group-hover:scale-110 transition-transform">90+</div>
+                <div className="text-3xl font-bold text-[#D4AF37] group-hover:scale-110 transition-transform">100+</div>
                 <div className="text-sm text-muted-foreground">Active Members</div>
               </div>
               <div className="h-12 w-px bg-[#D4AF37]/30" />
