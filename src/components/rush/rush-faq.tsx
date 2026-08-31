@@ -42,24 +42,23 @@ export function RushFAQ() {
           <AccordionItem value="item-2">
             <AccordionTrigger>Who can join Theta Tau?</AccordionTrigger>
             <AccordionContent>
-              Students in the following engineering majors at UW-Madison are eligible to join: 
+              Students in the following engineering majors at UW-Madison are eligible to join:
               <br /><br />
               <ul className="list-disc list-inside">
-                <li>Aerospace Engineering</li>
+                <li>Applied Math, Engineering, & Physics (AMEP)</li>
+                <li>Biological Systems Engineering</li>
                 <li>Biomedical Engineering</li>
                 <li>Chemical Engineering</li>
-                <li>Civil Engineering</li>
+                <li>Civil & Environmental Engineering</li>
                 <li>Computer Engineering</li>
-                <li>Computer Science</li>
                 <li>Electrical Engineering</li>
                 <li>Engineering Mechanics</li>
-                <li>Environmental Engineering</li>
                 <li>Geological Engineering</li>
-                <li>Industrial Engineering</li>
-                <li>Materials Science and Engineering</li>
+                <li>Industrial & Systems Engineering</li>
+                <li>Materials Science & Engineering</li>
                 <li>Mechanical Engineering</li>
                 <li>Nuclear Engineering</li>
-                <li>Biological Systems Engineering</li>
+                <li>Computer Science</li>
               </ul>
             </AccordionContent>
           </AccordionItem>
@@ -84,10 +83,10 @@ export function RushFAQ() {
               the pledge process.
             </AccordionContent>
           </AccordionItem>
-           <AccordionItem value="item-5">
+          <AccordionItem value="item-5">
             <AccordionTrigger>What if I miss an event?</AccordionTrigger>
             <AccordionContent>
-                No worries! Just fill out our absence form and let us know why you can&apos;t make it - we understand that everyone has busy schedules.
+              No worries! Just fill out our absence form and let us know why you can&apos;t make it - we understand that everyone has busy schedules.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="item-6">
@@ -96,7 +95,7 @@ export function RushFAQ() {
               That’s okay! Simply check in when you arrive and jump right in. We’d love to see you, even if it’s just for part of the event.
             </AccordionContent>
           </AccordionItem>
-         <AccordionItem value="item-7">
+          <AccordionItem value="item-7">
             <AccordionTrigger>What if I have to leave early?</AccordionTrigger>
             <AccordionContent>
               No problem! You’re free to leave whenever you need to. Of course, we’d love for you to stay the whole time, but we know schedules can be busy.
@@ -108,13 +107,13 @@ export function RushFAQ() {
               The application must be submitted by Tuesday, 2/3, at 6 PM. Be sure to submit it on time, as late applications will not be accepted.
             </AccordionContent>
           </AccordionItem>
-         <AccordionItem value="item-8">
+          <AccordionItem value="item-8">
             <AccordionTrigger>How do I know if I got an invitation to the Engineering Challenge and Food Friday?</AccordionTrigger>
             <AccordionContent>
               Invitations will be sent to your email on Wednesday night (2/4). Be sure you’re receiving our emails and keep an eye out for your invite! Your invitation will also include the event location details.
             </AccordionContent>
           </AccordionItem>
-          
+
         </Accordion>
       </div>
     </section>

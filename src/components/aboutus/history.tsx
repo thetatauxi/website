@@ -23,8 +23,8 @@ const historyImages = [
   return (
     <div className="relative overflow-hidden rounded-lg shadow-md w-full">
       <div 
-        className="flex transition-transform duration-500 ease-in-out"
-        style={{ transform: `translateX(-${currentIndex * 100}%)`, width: `${images.length * 25}%` }}
+        className="flex transition-transform duration-500 ease-in-out w-full"
+        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
       >
         {images.map((src, index) => (
           <div key={index} className="w-full flex-shrink-0">

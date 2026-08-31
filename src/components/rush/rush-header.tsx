@@ -2,7 +2,7 @@
 import Image from "next/image"
 
 export function RecruitmentHero() {
-  const imageUrl = "/Sp26Rush.png"
+  const imageUrl = "/Fa26Rush.jpg"
 
   return (
     <div className="h-[80vh] bg-white container max-w-7xl mx-auto relative">
@@ -28,7 +28,7 @@ export function RecruitmentHero() {
         <div className="flex-1 space-y-8 pt-20 lg:pt-0">
           <div className="text-center p-4 lg:text-left space-y-4">
             <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tighter text-yellow-500">
-              Unsung Heroes
+              Record Breaking Rush
             </h1>
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-gray-800">Rush Theta Tau</h2>
             <p className="mx-auto text-gray-600 md:text-xl max-w-[600px]">
@@ -36,11 +36,11 @@ export function RecruitmentHero() {
             </p>
           </div>
           <div className="text-center lg:text-left lg:ml-4">
-            <a 
-              href="https://docs.google.com/forms/d/1F3PW5Ye29jUTyRqRyF0LhV2pCIDeCz_wsnE1jnYtmQs/edit" 
-              target="_blank" 
+            <a
+              href="https://docs.google.com/forms/d/e/1FAIpQLSc_ja5EqrOJ6We4Mvk4xCVKMj1vbU1bV3wz6uzyqq-0NKvpKQ/viewform"
+              target="_blank"
               className="bg-yellow-500 text-white hover:bg-yellow-600 px-4 py-3 rounded-md text-center">
-                Fill out the Interest Form
+              Fill out the Interest Form
             </a>
           </div>
         </div>

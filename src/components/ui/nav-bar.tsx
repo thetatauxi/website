@@ -3,18 +3,44 @@
 import type React from "react"
 import Link from "next/link"
 import { useState } from "react"
+import { X, LogOut } from "lucide-react"
+import { usePathname } from "next/navigation"
+import { logoutAction } from "@/app/actions"
+
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
+  const pathname = usePathname()
 
   return (
     <>
       <nav className="sticky top-0 z-50 w-full backdrop-blur-md bg-white/30 dark:bg-gray-900/30">
         <div className="container max-w-7xl mx-auto">
-          <div className="flex items-center justify-between h-20 px-3">
+          <div className="flex items-center justify-between h-20 px-3 relative">
             <Link href="/" className="flex-shrink-0" aria-label="Theta Tau home">
               <LogoIcon className="h-10 w-10 text-primary" />
             </Link>
+
+            {pathname === "/members-only" && (
+              <div className="absolute left-1/2 -translate-x-1/2 pointer-events-none select-none">
+                <span className="text-sm sm:text-lg md:text-xl font-bold text-red-800 dark:text-red-500 tracking-wider whitespace-nowrap">
+                  MEMBER PORTAL
+                </span>
+              </div>
+            )}
+
+            <div className="flex items-center gap-3">
+              {pathname === "/members-only" && (
+                <form action={logoutAction}>
+                  <button
+                    type="submit"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 transition-all active:scale-95"
+                  >
+                    <LogOut className="h-3.5 w-3.5" />
+                    <span>Log Out</span>
+                  </button>
+                </form>
+              )}
 
               <button
                 type="button"
@@ -24,19 +50,20 @@ export default function Navbar() {
                 aria-expanded={isOpen}
                 aria-controls="mobile-menu"
               >
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                {isOpen ? <path d="M6 18L18 6M6 6l12 12" /> : <path d="M4 6h16M4 12h16M4 18h16" />}
-              </svg>
-            </button>
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  {isOpen ? <path d="M6 18L18 6M6 6l12 12" /> : <path d="M4 6h16M4 12h16M4 18h16" />}
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </nav>
@@ -53,7 +80,17 @@ export default function Navbar() {
 
           {/* Menu panel */}
           <div className="fixed top-0 right-0 h-full w-[300px] sm:w-[400px] bg-white dark:bg-gray-900 shadow-xl z-50 transform transition-transform duration-300">
-            <nav id="mobile-menu" className="flex flex-col gap-4 mt-20 px-6">
+            <div className="flex justify-end p-4">
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="p-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
+                aria-label="Close menu"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <nav id="mobile-menu" className="flex flex-col gap-4 mt-8 px-6">
               <NavLink href="/" onClick={() => setIsOpen(false)}>
                 <span className="text-lg">Home</span>
               </NavLink>
@@ -74,6 +111,10 @@ export default function Navbar() {
               </NavLink>
               <NavLink href="/newsletter" onClick={() => setIsOpen(false)}>
                 <span className="text-lg">Newsletter</span>
+              </NavLink>
+              <div className="my-2 border-t border-gray-200 dark:border-gray-800"></div>
+              <NavLink href="/members-only" onClick={() => setIsOpen(false)}>
+                <span className="text-lg font-semibold text-red-800 dark:text-red-400">Member Portal</span>
               </NavLink>
             </nav>
           </div>

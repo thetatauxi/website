@@ -15,7 +15,7 @@ export function HomeHeroSection() {
   }, [])
 
   return (
-    <section className="relative pt-32 pb-20 px-4 overflow-hidden bg-gradient-to-b from-white to-[#FFF5D7]">
+    <section className="relative pt-10 pb-20 px-4 overflow-hidden bg-gradient-to-b from-white to-[#FFF5D7]">
       {/* Background gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#8B0000]/10 to-[#D4AF37]/10 opacity-30 z-0"></div>
 
@@ -71,7 +71,7 @@ export function HomeHeroSection() {
                 brotherhood.
               </p>
             </div>
-             <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <Button
                 size="lg"
                 className="text-lg h-14 px-8 bg-[#8B0000] hover:bg-[#A52A2A] text-white group"
