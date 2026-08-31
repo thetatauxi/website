@@ -55,57 +55,57 @@ export function HomeOurNetwork() {
                 whiteSpace: "nowrap",
               }}
             >
-                {/* Original set */}
-                {row.map((logo, index) => (
-                  <div
-                    key={index}
-                    className="group w-[200px] h-[100px] flex items-center justify-center shrink-0 mx-8 transition-transform duration-300 hover:scale-110"
-                  >
-                    <div className="relative w-[200px] h-[100px] grayscale opacity-80 transition duration-300 group-hover:grayscale-0 group-hover:opacity-100">
-                      <Image
-                        src={logo.src || "/placeholder.svg"}
-                        alt={logo.alt}
-                        fill
-                        className="object-contain"
-                        sizes="200px"
-                      />
-                    </div>
+              {/* Original set */}
+              {row.map((logo, index) => (
+                <div
+                  key={index}
+                  className="group w-[200px] h-[100px] flex items-center justify-center shrink-0 mx-8 transition-transform duration-300 hover:scale-110"
+                >
+                  <div className="relative w-[200px] h-[100px] grayscale opacity-80 transition duration-300 group-hover:grayscale-0 group-hover:opacity-100">
+                    <Image
+                      src={logo.src || "/placeholder.svg"}
+                      alt={logo.alt}
+                      fill
+                      className="object-contain"
+                      sizes="200px"
+                    />
                   </div>
-                ))}
-                {/* Duplicate set for seamless loop */}
-                {row.map((logo, index) => (
-                  <div
-                    key={`duplicate-${index}`}
-                    className="group w-[200px] h-[100px] flex items-center justify-center shrink-0 mx-8 transition-transform duration-300 hover:scale-110"
-                  >
-                    <div className="relative w-[200px] h-[100px] grayscale opacity-80 transition duration-300 group-hover:grayscale-0 group-hover:opacity-100">
-                      <Image
-                        src={logo.src || "/placeholder.svg"}
-                        alt={logo.alt}
-                        fill
-                        className="object-contain"
-                        sizes="200px"
-                      />
-                    </div>
+                </div>
+              ))}
+              {/* Duplicate set for seamless loop */}
+              {row.map((logo, index) => (
+                <div
+                  key={`duplicate-${index}`}
+                  className="group w-[200px] h-[100px] flex items-center justify-center shrink-0 mx-8 transition-transform duration-300 hover:scale-110"
+                >
+                  <div className="relative w-[200px] h-[100px] grayscale opacity-80 transition duration-300 group-hover:grayscale-0 group-hover:opacity-100">
+                    <Image
+                      src={logo.src || "/placeholder.svg"}
+                      alt={logo.alt}
+                      fill
+                      className="object-contain"
+                      sizes="200px"
+                    />
                   </div>
-                ))}
-                {/* Third set to ensure seamless infinite loop */}
-                {row.map((logo, index) => (
-                  <div
-                    key={`duplicate-2-${index}`}
-                    className="group w-[200px] h-[100px] flex items-center justify-center shrink-0 mx-8 transition-transform duration-300 hover:scale-110"
-                  >
-                    <div className="relative w-[200px] h-[100px] grayscale opacity-80 transition duration-300 group-hover:grayscale-0 group-hover:opacity-100">
-                      <Image
-                        src={logo.src || "/placeholder.svg"}
-                        alt={logo.alt}
-                        fill
-                        className="object-contain"
-                        sizes="200px"
-                      />
-                    </div>
+                </div>
+              ))}
+              {/* Third set to ensure seamless infinite loop */}
+              {row.map((logo, index) => (
+                <div
+                  key={`duplicate-2-${index}`}
+                  className="group w-[200px] h-[100px] flex items-center justify-center shrink-0 mx-8 transition-transform duration-300 hover:scale-110"
+                >
+                  <div className="relative w-[200px] h-[100px] grayscale opacity-80 transition duration-300 group-hover:grayscale-0 group-hover:opacity-100">
+                    <Image
+                      src={logo.src || "/placeholder.svg"}
+                      alt={logo.alt}
+                      fill
+                      className="object-contain"
+                      sizes="200px"
+                    />
                   </div>
-                ))}
+                </div>
+              ))}
             </div>
           </div>
         ))}
@@ -146,4 +146,5 @@ const companyLogos = [
   { src: "/logos/Sub-Zero_(logo).svg", alt: "Sub-Zero Logo" },
   { src: "/logos/Honeywell-Logo.wine.svg", alt: "Honeywell Logo" },
   { src: "/logos/Epic_Systems.svg", alt: "Epic Systems Logo" },
+  { src: "/logos/Grainger_logo.svg", alt: "Grainger Logo" },
 ]

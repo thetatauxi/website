@@ -14,18 +14,18 @@ export default function SponsorshipPage() {
       description: "THE BOLD LOOK OF KOHLER®",
     },
     {
-      name: "Pentair",
+      name: "Grainger",
       tier: "Gold",
+      logo: "/grainger_logo.png",
+      website: "https://www.grainger.com/",
+      description: "For the ones who get it done",
+    },
+    {
+      name: "Pentair",
+      tier: "Maroon",
       logo: "/pentair_logo.png",
       website: "https://www.pentair.com/",
       description: "Move, Improve and Enjoy Water",
-    },
-    {
-      name: "Boston Scientific",
-      tier: "Maroon",
-      logo: "/boston_scientific.jpg",
-      website: "https://www.bostonscientific.com/en-US/home.html",
-      description: "Advancing Science for life",
     },
   ]
 
@@ -46,15 +46,15 @@ export default function SponsorshipPage() {
     }
   }
 
- const handleDownloadPDF = () => {
-  const link = document.createElement("a");
-  link.href = "/Theta%20Tau%20UW-Madison%202025%20Sponsorship%20packet.pdf";
-  link.download = "Theta Tau UW-Madison 2025 Sponsorship packet.pdf";
-  link.style.display = "none";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
+  const handleDownloadPDF = () => {
+    const link = document.createElement("a");
+    link.href = "/Theta%20Tau%20UW-Madison%202025%20Sponsorship%20packet.pdf";
+    link.download = "Theta Tau UW-Madison 2025 Sponsorship packet.pdf";
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
 
   return (
@@ -130,51 +130,51 @@ export default function SponsorshipPage() {
 
         {/* Sponsors Section */}
         <section>
-  <h2 className="text-3xl font-semibold text-gray-800 text-center mb-8">
-    Our Valued Sponsors
-  </h2>
-  <div className="flex flex-wrap justify-center gap-12">
-    {sponsors.map((sponsor, index) => (
-      <div
-        key={index}
-        className="flex-1 min-w-[320px] max-w-lg bg-white rounded-lg shadow-xl p-10 text-center border border-red-300 hover:shadow-2xl transition-shadow duration-300"
-      >
-        <div className="mb-6">
-          <Badge
-            className={`inline-block px-4 py-2 rounded-full text-sm ${getTierColor(
-              sponsor.tier
-            )}`}
-          >
-            {sponsor.tier}
-          </Badge>
-        </div>
-        <a href={sponsor.website} target="_blank" rel="noopener noreferrer">
-          <Image
-            src={sponsor.logo || "/placeholder.svg"}
-            alt={`${sponsor.name} logo`}
-            width={280}
-            height={112}
-            className="h-28 mx-auto object-contain mb-6"
-          />
-          <h3 className="text-2xl font-semibold text-gray-800">
-            {sponsor.name}
-          </h3>
-        </a>
-        <p className="text-gray-500 text-base mb-6">{sponsor.description}</p>
-        <Button
-          variant="outline"
-          size="sm"
-          className="border-gray-300 text-gray-700 hover:bg-gray-200 px-6 py-2 rounded-full bg-transparent"
-          asChild
-        >
-          <a href={sponsor.website} target="_blank" rel="noopener noreferrer">
-            Visit Website
-          </a>
-        </Button>
-      </div>
-    ))}
-  </div>
-</section>
+          <h2 className="text-3xl font-semibold text-gray-800 text-center mb-8">
+            Our Valued Sponsors
+          </h2>
+          <div className="flex flex-wrap justify-center gap-12">
+            {sponsors.map((sponsor, index) => (
+              <div
+                key={index}
+                className="flex-1 min-w-[320px] max-w-lg bg-white rounded-lg shadow-xl p-10 text-center border border-red-300 hover:shadow-2xl transition-shadow duration-300"
+              >
+                <div className="mb-6">
+                  <Badge
+                    className={`inline-block px-4 py-2 rounded-full text-sm ${getTierColor(
+                      sponsor.tier
+                    )}`}
+                  >
+                    {sponsor.tier}
+                  </Badge>
+                </div>
+                <a href={sponsor.website} target="_blank" rel="noopener noreferrer">
+                  <Image
+                    src={sponsor.logo || "/placeholder.svg"}
+                    alt={`${sponsor.name} logo`}
+                    width={280}
+                    height={112}
+                    className="h-28 mx-auto object-contain mb-6"
+                  />
+                  <h3 className="text-2xl font-semibold text-gray-800">
+                    {sponsor.name}
+                  </h3>
+                </a>
+                <p className="text-gray-500 text-base mb-6">{sponsor.description}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-gray-300 text-gray-700 hover:bg-gray-200 px-6 py-2 rounded-full bg-transparent"
+                  asChild
+                >
+                  <a href={sponsor.website} target="_blank" rel="noopener noreferrer">
+                    Visit Website
+                  </a>
+                </Button>
+              </div>
+            ))}
+          </div>
+        </section>
 
 
         {/* Call to Action Section */}
