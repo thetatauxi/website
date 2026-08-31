@@ -39,7 +39,7 @@ export default function SetupProfilePage() {
       setUserId(session.user.id)
 
       // Fetch the profile
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)

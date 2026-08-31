@@ -57,9 +57,9 @@ export default function AlumniLetterPage() {
           <div className="h-[85vh] min-h-[600px]">
             {pdfExists ? (
               <img
-                src={`${pdfUrl}#toolbar=0&navpanes=0`}
+                src={pdfUrl}
+                alt="February 2026 Newsletter"
                 className="w-full h-full object-contain bg-[#EBEBD7]"
-                title="February 2026 Newsletter"
               />
             ) : (
               <div className="flex flex-col justify-center items-center h-full p-8 text-center">

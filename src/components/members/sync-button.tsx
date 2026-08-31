@@ -19,8 +19,9 @@ export default function SyncButton() {
         setMessage({ type: 'success', text: `Successfully synced ${result.count} member records!` })
         router.refresh()
       }
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'Failed to sync. Please try again.' })
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to sync. Please try again.'
+      setMessage({ type: 'error', text: errorMessage })
     } finally {
       setLoading(false)
     }

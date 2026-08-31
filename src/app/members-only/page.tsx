@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { Calendar, Users, ExternalLink, Megaphone, Shield, Link as LinkIcon, GraduationCap, CheckCircle2, XCircle, Award } from 'lucide-react'
+import { Calendar, Users, ExternalLink, Megaphone, Shield, Link as LinkIcon, CheckCircle2, XCircle, Award } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getCalendarFromSheet, getLinksFromSheet } from '@/lib/google-sheets'
 import SyncButton from '@/components/members/sync-button'
