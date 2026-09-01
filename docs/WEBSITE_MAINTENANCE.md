@@ -5,10 +5,11 @@ This guide is designed to help future website chairs maintain and update the The
 ## Table of Contents
 1. [Project Structure](#project-structure)
 2. [Getting Started](#getting-started)
-3. [Common Maintenance Tasks](#common-maintenance-tasks)
-4. [Image Management](#image-management)
-5. [Content Updates](#content-updates)
-6. [Development Tips](#development-tips)
+3. [Google Sheets & Database Integrations](#google-sheets--database-integrations)
+4. [Common Maintenance Tasks](#common-maintenance-tasks)
+5. [Image Management](#image-management)
+6. [Content Updates](#content-updates)
+7. [Development Tips](#development-tips)
 
 ## Project Structure
 
@@ -35,6 +36,18 @@ The website is built using Next.js with TypeScript and Tailwind CSS. Here are th
    # Run development server
    npm run dev
    ```
+
+## Google Sheets & Database Integrations
+
+The website integrates directly with Google Sheets to sync Member Roster status, attendance points, pillar requirements, events, and rush trackers with Supabase.
+
+- **Configuration File**: [`src/config/sheets.ts`](file:///c:/Users/blake/LocalFiles/Theta%20Tau/website/src/config/sheets.ts)
+- **Comprehensive Guide**: See [`docs/GOOGLE_SHEETS_SYNC_GUIDE.md`](file:///c:/Users/blake/LocalFiles/Theta%20Tau/website/docs/GOOGLE_SHEETS_SYNC_GUIDE.md) for full instructions on creating credentials, sharing sheets, adding new tabs, and setting up automated cron jobs.
+
+To add a new Google Sheet to the portal:
+1. Share the Google Sheet with the Service Account email (`GOOGLE_CLIENT_EMAIL` in `.env.local`).
+2. Add a new configuration entry in `src/config/sheets.ts` with the Google Sheet URL or ID and column mappings.
+3. Sync from the Member Portal UI under `/members-only` -> E-Board Tools.
 
 ## Common Maintenance Tasks
 

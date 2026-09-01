@@ -3,9 +3,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { RefreshCw } from 'lucide-react'
-import { syncMemberStatusAction } from '@/app/actions'
+import { syncSheetAction } from '@/app/actions'
 
-export default function SyncButton() {
+interface SyncButtonProps {
+  sheetId?: string;
+  label?: string;
+}
+
+export default function SyncButton({ sheetId = 'roster_status', label = 'Sync Roster Data' }: SyncButtonProps) {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const router = useRouter()
@@ -14,10 +19,13 @@ export default function SyncButton() {
     setLoading(true)
     setMessage(null)
     try {
-      const result = await syncMemberStatusAction()
+      const result = await syncSheetAction(sheetId)
       if (result.success) {
-        setMessage({ type: 'success', text: `Successfully synced ${result.count} member records!` })
+        const count = result.updatedCount + result.insertedCount
+        setMessage({ type: 'success', text: `Successfully synced ${count} records!` })
         router.refresh()
+      } else {
+        setMessage({ type: 'error', text: result.errors.join('; ') || 'Sync failed.' })
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to sync. Please try again.'
@@ -35,7 +43,7 @@ export default function SyncButton() {
         className="flex items-center gap-2 text-sm text-red-700 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 font-medium disabled:opacity-50"
       >
         <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-        {loading ? 'Syncing...' : 'Sync Roster Data'}
+        {loading ? 'Syncing...' : label}
       </button>
       {message && (
         <p className={`text-xs ${message.type === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>

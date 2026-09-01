@@ -2,8 +2,9 @@ import { redirect } from 'next/navigation'
 import { Calendar, Users, ExternalLink, Megaphone, Shield, Link as LinkIcon, CheckCircle2, XCircle, Award } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getCalendarFromSheet, getLinksFromSheet } from '@/lib/google-sheets'
-import SyncButton from '@/components/members/sync-button'
+import SyncPanel from '@/components/members/sync-panel'
 import { Medal } from '@/components/members/medal'
+import CommunityLinks, { type CommunityLink } from '@/components/members/community-links'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,6 +25,14 @@ export default async function MembersOnlyPage() {
     .select('*')
     .eq('id', user.id)
     .single()
+
+  // Fetch initial community links
+  const { data: rawCommunityLinks } = await supabase
+    .from('community_links')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  const initialCommunityLinks = (rawCommunityLinks || []) as CommunityLink[]
 
   // Fetch leaderboard data
   const { data: leaderboard } = await supabase
@@ -54,6 +63,10 @@ export default async function MembersOnlyPage() {
 
   const firstName = profile?.first_name && profile.first_name !== 'TEMP'
     ? profile.first_name
+    : (profile?.username || 'Brother');
+
+  const authorDisplayName = profile?.first_name && profile.first_name !== 'TEMP'
+    ? `${profile.first_name} ${profile.last_name || ''}`.trim()
     : (profile?.username || 'Brother');
 
   return (
@@ -200,13 +213,6 @@ export default async function MembersOnlyPage() {
                   <a href="#" target="_blank" rel="noreferrer" className="inline-block text-sm font-medium text-red-700 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">View Alumni &rarr;</a>
                 </div>
 
-                {/* <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
-                  <GraduationCap className="h-8 w-8 text-red-700 dark:text-red-500 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Assessment Practice</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Study resources for exams</p>
-                  <a href="#" target="_blank" rel="noreferrer" className="inline-block text-sm font-medium text-red-700 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">View Resources &rarr;</a>
-                </div> */}
-
               </div>
 
             </div>
@@ -224,9 +230,9 @@ export default async function MembersOnlyPage() {
                     <button className="text-sm text-red-700 hover:text-red-800 dark:text-red-400">Open Dashboard &rarr;</button>
                   </div>
                   <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
-                    <h3 className="font-medium text-gray-900 dark:text-white mb-1">Sync Roster Data</h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Sync member status, dues, and attendance from the Google Sheet.</p>
-                    <SyncButton />
+                    <h3 className="font-medium text-gray-900 dark:text-white mb-1">Google Sheets Sync</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Sync member status, roster, calendar, and sheet data with Supabase.</p>
+                    <SyncPanel userRole={dbRole} />
                   </div>
                 </div>
               </div>
@@ -359,6 +365,13 @@ export default async function MembersOnlyPage() {
               </ul>
             </div>
 
+            {/* Community Links */}
+            <CommunityLinks
+              currentUserId={user.id}
+              currentAuthorName={authorDisplayName}
+              initialLinks={initialCommunityLinks}
+            />
+
           </div>
 
         </div>
@@ -366,3 +379,4 @@ export default async function MembersOnlyPage() {
     </div>
   )
 }
+

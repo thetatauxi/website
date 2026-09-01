@@ -6,11 +6,13 @@ import { useState } from "react"
 import { X, LogOut } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { logoutAction } from "@/app/actions"
+import { useAuthLoading } from "@/components/providers/auth-loading-provider"
 
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
+  const { showAuthLoading } = useAuthLoading()
 
   return (
     <>
@@ -113,7 +115,13 @@ export default function Navbar() {
                 <span className="text-lg">Newsletter</span>
               </NavLink>
               <div className="my-2 border-t border-gray-200 dark:border-gray-800"></div>
-              <NavLink href="/members-only" onClick={() => setIsOpen(false)}>
+              <NavLink
+                href="/members-only"
+                onClick={() => {
+                  setIsOpen(false)
+                  showAuthLoading()
+                }}
+              >
                 <span className="text-lg font-semibold text-red-800 dark:text-red-400">Member Portal</span>
               </NavLink>
             </nav>

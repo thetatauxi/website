@@ -1,4 +1,7 @@
-import { google } from 'googleapis';
+import { readRawSheetValues, getGoogleSheetsClient, writeSheetValues, appendSheetRows, syncSheetToSupabase, syncAllSheetsToSupabase } from './sheets/sync-engine';
+import { parseBooleanValue, parseNumberValue, extractSpreadsheetId } from './sheets/utils';
+export * from '@/config/sheets';
+export { readRawSheetValues, getGoogleSheetsClient, writeSheetValues, appendSheetRows, syncSheetToSupabase, syncAllSheetsToSupabase, extractSpreadsheetId };
 
 export interface MemberRecord {
   username: string;
@@ -6,49 +9,27 @@ export interface MemberRecord {
   role: 'member' | 'eboard' | 'rush' | 'admin';
 }
 
-export async function getMembersFromSheet(): Promise<MemberRecord[]> {
+export async function getMembersFromSheet(spreadsheetIdOrUrl?: string): Promise<MemberRecord[]> {
   try {
-    const auth = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: process.env.GOOGLE_CLIENT_EMAIL,
-        // The private key from the .env file might have escaped literal \n strings, so we replace them with actual newlines
-        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      },
-      scopes: [
-        'https://www.googleapis.com/auth/spreadsheets.readonly',
-      ],
+    const spreadsheetId = extractSpreadsheetId(
+      spreadsheetIdOrUrl || process.env.GOOGLE_MEMBER_STATUS_SPREADSHEET_ID || process.env.GOOGLE_SPREADSHEET_ID || ''
+    );
+    if (!spreadsheetId) return [];
+
+    const { values } = await readRawSheetValues({
+      spreadsheetIdOrUrl: spreadsheetId,
+      range: 'A2:C',
     });
 
-    const sheets = google.sheets({ version: 'v4', auth });
-
-    // The long ID found in your Google Sheet URL
-    const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
-
-    // First, fetch the spreadsheet info to dynamically get the name of the first tab
-    const sheetInfo = await sheets.spreadsheets.get({ spreadsheetId });
-    const firstSheetName = sheetInfo.data.sheets?.[0]?.properties?.title || 'Sheet1';
-
-    // Dynamically use the first sheet's name instead of hardcoding "Members"
-    const range = `'${firstSheetName}'!A2:C`;
-
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range,
-    });
-
-    const rows = response.data.values;
-    if (!rows || rows.length === 0) {
+    if (!values || values.length === 0) {
       return [];
     }
 
-    // Map rows to an array of useful objects
-    return rows.map((row) => ({
-      username: row[1] || '',
-      password: row[0] || '',
-      // Default to 'member' if the role column is empty or invalid
-      role: (row[2] as 'member' | 'eboard' | 'rush' | 'admin') || 'member',
+    return values.map((row) => ({
+      username: String(row[1] || ''),
+      password: String(row[0] || ''),
+      role: (String(row[2] || 'member') as 'member' | 'eboard' | 'rush' | 'admin') || 'member',
     }));
-
   } catch (error) {
     console.error('Error fetching members from Google Sheet:', error);
     return [];
@@ -63,40 +44,43 @@ export interface CalendarEvent {
   details: string;
 }
 
-export async function getCalendarFromSheet(): Promise<CalendarEvent[]> {
+export async function getCalendarFromSheet(spreadsheetIdOrUrl?: string): Promise<CalendarEvent[]> {
   try {
-    const auth = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: process.env.GOOGLE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      },
-      scopes: [
-        'https://www.googleapis.com/auth/spreadsheets.readonly',
-      ],
+    const spreadsheetId = extractSpreadsheetId(
+      spreadsheetIdOrUrl || process.env.GOOGLE_CALENDAR_LINKS_SPREADSHEET_ID || process.env.GOOGLE_SPREADSHEET_ID || ''
+    );
+    if (!spreadsheetId) return [];
+
+    const { values } = await readRawSheetValues({
+      spreadsheetIdOrUrl: spreadsheetId,
+      sheetName: 'Calendar',
+      range: 'A1:D',
     });
 
-    const sheets = google.sheets({ version: 'v4', auth });
-    const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
-    const range = `'Calendar'!A2:D`;
-
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range,
-    });
-
-    const rows = response.data.values;
-    if (!rows || rows.length === 0) {
+    if (!values || values.length <= 1) {
       return [];
     }
 
-    return rows.map((row, index) => ({
-      id: String(index + 1),
-      title: row[0] || '',
-      date: row[1] || '',
-      location: row[2] || '',
-      details: row[3] || '',
-    }));
+    // Dynamic header lookup to support: event_name, time, location, details (or title, date, etc.)
+    const headers = (values[0] || []).map((h: unknown) => String(h || '').toLowerCase().trim());
+    const titleIndex = headers.findIndex((h) => h.includes('event') || h.includes('title') || h.includes('name'));
+    const dateIndex = headers.findIndex((h) => h.includes('time') || h.includes('date'));
+    const locationIndex = headers.findIndex((h) => h.includes('location') || h.includes('place') || h.includes('room'));
+    const detailsIndex = headers.findIndex((h) => h.includes('detail') || h.includes('desc') || h.includes('note'));
 
+    const effectiveTitleIdx = titleIndex !== -1 ? titleIndex : 0;
+    const effectiveDateIdx = dateIndex !== -1 ? dateIndex : 1;
+    const effectiveLocIdx = locationIndex !== -1 ? locationIndex : 2;
+    const effectiveDetIdx = detailsIndex !== -1 ? detailsIndex : 3;
+
+    const dataRows = values.slice(1);
+    return dataRows.map((row, index) => ({
+      id: String(index + 1),
+      title: String(row[effectiveTitleIdx] || ''),
+      date: String(row[effectiveDateIdx] || ''),
+      location: String(row[effectiveLocIdx] || ''),
+      details: String(row[effectiveDetIdx] || ''),
+    }));
   } catch (error) {
     console.error('Error fetching calendar from Google Sheet:', error);
     return [];
@@ -109,45 +93,39 @@ export interface MemberLink {
   url: string;
 }
 
-export async function getLinksFromSheet(): Promise<MemberLink[]> {
+export async function getLinksFromSheet(spreadsheetIdOrUrl?: string): Promise<MemberLink[]> {
   try {
-    const auth = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: process.env.GOOGLE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      },
-      scopes: [
-        'https://www.googleapis.com/auth/spreadsheets.readonly',
-      ],
+    const spreadsheetId = extractSpreadsheetId(
+      spreadsheetIdOrUrl || process.env.GOOGLE_CALENDAR_LINKS_SPREADSHEET_ID || process.env.GOOGLE_SPREADSHEET_ID || ''
+    );
+    if (!spreadsheetId) return [];
+
+    const { values } = await readRawSheetValues({
+      spreadsheetIdOrUrl: spreadsheetId,
+      sheetName: 'Links',
+      range: 'A1:B',
     });
 
-    const sheets = google.sheets({ version: 'v4', auth });
-    const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
-    const range = `'Links'!A1:B`; // Get all rows including header
-
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range,
-    });
-
-    const rows = response.data.values;
-    if (!rows || rows.length === 0) {
+    if (!values || values.length <= 1) {
       return [];
     }
 
-    const headers = rows[0].map(h => h.toLowerCase().trim());
-    const urlIndex = headers.indexOf('url');
-    const titleIndex = headers.indexOf('label');
+    // Dynamic header lookup: label, url
+    const headers = values[0].map((h: unknown) => String(h || '').toLowerCase().trim());
+    const titleIndex = headers.findIndex((h) => h.includes('label') || h.includes('title') || h.includes('name'));
+    const urlIndex = headers.findIndex((h) => h.includes('url') || h.includes('link'));
 
-    // Parse data rows
-    const dataRows = rows.slice(1);
+    const effectiveTitleIdx = titleIndex !== -1 ? titleIndex : 0;
+    const effectiveUrlIdx = urlIndex !== -1 ? urlIndex : 1;
+
+    const dataRows = values.slice(1);
     return dataRows.map((row, index) => {
-      const title = row[titleIndex] || 'Link';
-      const url = row[urlIndex] || '#';
+      const title = row[effectiveTitleIdx] !== undefined ? String(row[effectiveTitleIdx]) : 'Link';
+      const url = row[effectiveUrlIdx] !== undefined ? String(row[effectiveUrlIdx]) : '#';
       return {
         id: String(index + 1),
         title,
-        url
+        url,
       };
     });
   } catch (error) {
@@ -162,82 +140,59 @@ export interface MemberStatusRecord {
   brotherhoodMet: boolean;
   profDevMet: boolean;
   commServiceMet: boolean;
-  attendancePoints: number;
   concessionsDone: boolean;
+  attendancePoints: number;
 }
 
-export async function getMemberStatusFromSheet(): Promise<MemberStatusRecord[]> {
+export async function getMemberStatusFromSheet(spreadsheetIdOrUrl?: string): Promise<MemberStatusRecord[]> {
   try {
-    const auth = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: process.env.GOOGLE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      },
-      scopes: [
-        'https://www.googleapis.com/auth/spreadsheets.readonly',
-      ],
+    const spreadsheetId = extractSpreadsheetId(
+      spreadsheetIdOrUrl || process.env.GOOGLE_MEMBER_STATUS_SPREADSHEET_ID || process.env.GOOGLE_SPREADSHEET_ID || ''
+    );
+    if (!spreadsheetId) return [];
+
+    const { values } = await readRawSheetValues({
+      spreadsheetIdOrUrl: spreadsheetId,
+      sheetName: 'MemberStatus',
+      range: 'A1:G',
     });
 
-    const sheets = google.sheets({ version: 'v4', auth });
-    const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
-    const range = `'MemberStatus'!A1:G`; // username, dues_paid, brotherhood_met, prof_dev_met, comm_service_met, attendance_points, concessions_done
-
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range,
-    });
-
-    const rows = response.data.values;
-    if (!rows || rows.length === 0) {
+    if (!values || values.length === 0) {
       return [];
     }
 
-    const headers = rows[0].map(h => h.toLowerCase().trim());
-    
-    // Find column indexes dynamically
-    const usernameIndex = headers.findIndex(h => h === 'username' || h === 'email' || h === 'user');
-    const duesPaidIndex = headers.findIndex(h => h.includes('dues'));
-    const brotherhoodIndex = headers.findIndex(h => h.includes('brotherhood'));
-    const profDevIndex = headers.findIndex(h => h.includes('prof') || h.includes('pd'));
-    const commServiceIndex = headers.findIndex(h => h.includes('community') || h.includes('cs') || h.includes('comm') || h.includes('service'));
-    const attendanceIndex = headers.findIndex(h => h.includes('attendance') || h.includes('point'));
-    const concessionsIndex = headers.findIndex(h => h.includes('concession'));
+    const headers = values[0].map((h: unknown) => String(h || '').toLowerCase().trim());
 
-    const isTrue = (val: string) => {
-      if (!val) return false;
-      const lower = val.toLowerCase().trim();
-      return lower === 'true' || lower === 'yes' || lower === 'y' || lower === 'x' || lower === '1';
-    };
+    const usernameIndex = headers.findIndex((h: string) => h === 'username' || h === 'email' || h === 'user');
+    const duesPaidIndex = headers.findIndex((h: string) => h.includes('dues'));
+    const brotherhoodIndex = headers.findIndex((h: string) => h.includes('brotherhood'));
+    const profDevIndex = headers.findIndex((h: string) => h.includes('prof') || h.includes('pd'));
+    const commServiceIndex = headers.findIndex((h: string) =>
+      h.includes('community') || h.includes('cs') || h.includes('comm') || h.includes('service')
+    );
+    const concessionsIndex = headers.findIndex((h: string) => h.includes('concession'));
+    const attendanceIndex = headers.findIndex((h: string) => h.includes('attendance') || h.includes('point'));
 
-    const dataRows = rows.slice(1);
+    const dataRows = values.slice(1);
     return dataRows
-      .filter(row => row[usernameIndex]) // only include rows with a username
+      .filter((row) => usernameIndex !== -1 && row[usernameIndex] !== undefined && row[usernameIndex] !== null && String(row[usernameIndex]).trim() !== '')
       .map((row) => {
-        let rawUsername = row[usernameIndex] || '';
-        // If it's a full email like "john@wisc.edu", extract the username part
+        let rawUsername = String(row[usernameIndex] || '');
         if (rawUsername.includes('@')) {
           rawUsername = rawUsername.split('@')[0];
         }
         rawUsername = rawUsername.trim().toLowerCase();
 
-        const duesPaid = duesPaidIndex !== -1 ? isTrue(row[duesPaidIndex]) : false;
-        const brotherhoodMet = brotherhoodIndex !== -1 ? isTrue(row[brotherhoodIndex]) : false;
-        const profDevMet = profDevIndex !== -1 ? isTrue(row[profDevIndex]) : false;
-        const commServiceMet = commServiceIndex !== -1 ? isTrue(row[commServiceIndex]) : false;
-        const attendancePoints = attendanceIndex !== -1 ? parseInt(row[attendanceIndex], 10) || 0 : 0;
-        const concessionsDone = concessionsIndex !== -1 ? isTrue(row[concessionsIndex]) : false;
-
         return {
           username: rawUsername,
-          duesPaid,
-          brotherhoodMet,
-          profDevMet,
-          commServiceMet,
-          attendancePoints,
-          concessionsDone,
+          duesPaid: duesPaidIndex !== -1 ? parseBooleanValue(row[duesPaidIndex]) : false,
+          brotherhoodMet: brotherhoodIndex !== -1 ? parseBooleanValue(row[brotherhoodIndex]) : false,
+          profDevMet: profDevIndex !== -1 ? parseBooleanValue(row[profDevIndex]) : false,
+          commServiceMet: commServiceIndex !== -1 ? parseBooleanValue(row[commServiceIndex]) : false,
+          concessionsDone: concessionsIndex !== -1 ? parseBooleanValue(row[concessionsIndex]) : false,
+          attendancePoints: attendanceIndex !== -1 ? parseNumberValue(row[attendanceIndex], 0) : 0,
         };
       });
-
   } catch (error) {
     console.error('Error fetching member status from Google Sheet:', error);
     return [];
