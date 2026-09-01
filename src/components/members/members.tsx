@@ -12,9 +12,9 @@ import { members, type Member, sortPledgeClasses } from "@/lib/members"
 // Memoized Member Card Component
 const MemberCard = memo(({ member }: { member: Member }) => {
   return (
-    <Card className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-transform duration-300 transform hover:-translate-y-1">
+    <Card className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
       <CardContent className="p-4">
-        <div className="relative w-full pb-[100%] mb-3 overflow-hidden rounded-md bg-gray-100">
+        <div className="relative w-full pb-[100%] mb-3 overflow-hidden rounded-md bg-gray-100 dark:bg-zinc-800">
           <Image
             src={member.imageUrl || "/placeholder.svg"}
             alt={member.name}
@@ -29,7 +29,7 @@ const MemberCard = memo(({ member }: { member: Member }) => {
           href={member.linkedinUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-center font-medium text-gray-800 hover:text-red-600 transition-colors block truncate"
+          className="text-center font-medium text-gray-900 dark:text-gray-100 hover:text-red-600 dark:hover:text-red-400 transition-colors block truncate"
           title={member.name}
         >
           {member.name}
@@ -122,10 +122,10 @@ export default function MembersPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-white text-gray-800">
-      <div className="sticky top-0 z-10 bg-white shadow-sm py-4 px-4">
+    <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-gray-100 transition-colors duration-200">
+      <div className="sticky top-0 z-10 bg-white/90 dark:bg-black/90 backdrop-blur-md border-b border-gray-100 dark:border-zinc-800 shadow-xs py-4 px-4">
         <div className="container mx-auto">
-          <h1 className="text-3xl font-bold text-center text-red-800 mb-6">Our Members</h1>
+          <h1 className="text-3xl font-bold text-center text-red-800 dark:text-red-400 mb-6">Our Members</h1>
 
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             {/* Search bar */}
@@ -140,7 +140,7 @@ export default function MembersPage() {
                 placeholder="Search members…"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 border-gray-300 focus:border-red-500 focus:ring-red-500"
+                className="pl-10 border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-900 dark:text-white focus:border-red-500 focus:ring-red-500"
               />
             </div>
 
@@ -150,10 +150,10 @@ export default function MembersPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => handleFilterChange(null)}
-                className={`hover:cursor-pointer border ${
+                className={`hover:cursor-pointer border transition-all ${
                   activeFilter === null
                     ? "bg-red-700 text-white border-transparent hover:bg-red-800"
-                    : "bg-white text-gray-700 border-gray-300 hover:text-red-700 hover:border-red-300"
+                    : "bg-white dark:bg-zinc-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-zinc-700 hover:text-red-700 dark:hover:text-red-400 hover:border-red-300 dark:hover:border-zinc-600"
                 }`}
               >
                 All
@@ -164,10 +164,10 @@ export default function MembersPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => handleFilterChange(pledgeClass)}
-                  className={`hover:cursor-pointer border ${
+                  className={`hover:cursor-pointer border transition-all ${
                     activeFilter === pledgeClass
                       ? "bg-red-700 text-white border-transparent hover:bg-red-800"
-                      : "bg-white text-gray-700 border-gray-300 hover:text-red-700 hover:border-red-300"
+                      : "bg-white dark:bg-zinc-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-zinc-700 hover:text-red-700 dark:hover:text-red-400 hover:border-red-300 dark:hover:border-zinc-600"
                   }`}
                 >
                   {pledgeClass}
@@ -182,9 +182,9 @@ export default function MembersPage() {
         {sortedPledgeClassEntries.length > 0 ? (
           sortedPledgeClassEntries.map(([pledgeClass, members]) => (
             <div key={pledgeClass} className="mb-12">
-              <h2 className="text-xl font-semibold mb-6 text-red-700 border-b border-red-200 pb-2">
+              <h2 className="text-xl font-semibold mb-6 text-red-700 dark:text-red-400 border-b border-red-200 dark:border-zinc-800 pb-2">
                 {pledgeClass}
-                <span className="text-gray-500 text-sm ml-2">({members.length} members)</span>
+                <span className="text-gray-500 dark:text-gray-400 text-sm ml-2">({members.length} members)</span>
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                 {members.map((member) => (
@@ -194,7 +194,7 @@ export default function MembersPage() {
             </div>
           ))
         ) : (
-          <div className="text-center py-12 text-gray-500">No members found matching your search.</div>
+          <div className="text-center py-12 text-gray-500 dark:text-gray-400">No members found matching your search.</div>
         )}
       </div>
 

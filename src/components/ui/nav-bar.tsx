@@ -7,7 +7,7 @@ import { X, LogOut } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { logoutAction } from "@/app/actions"
 import { useAuthLoading } from "@/components/providers/auth-loading-provider"
-
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -16,11 +16,11 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 w-full backdrop-blur-md bg-white/30 dark:bg-gray-900/30">
+      <nav className="sticky top-0 z-50 w-full backdrop-blur-md bg-white/80 dark:bg-black/80 border-b border-gray-200/50 dark:border-gray-800/50 transition-colors duration-200">
         <div className="container max-w-7xl mx-auto">
           <div className="flex items-center justify-between h-20 px-3 relative">
             <Link href="/" className="flex-shrink-0" aria-label="Theta Tau home">
-              <LogoIcon className="h-10 w-10 text-primary" />
+              <LogoIcon className="h-10 w-10 text-primary transition-colors" />
             </Link>
 
             {pathname === "/members-only" && (
@@ -31,15 +31,18 @@ export default function Navbar() {
               </div>
             )}
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
+              {/* Theme Switcher */}
+              <ThemeToggle />
+
               {pathname === "/members-only" && (
                 <form action={logoutAction}>
                   <button
                     type="submit"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 transition-all active:scale-95"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/40 hover:bg-red-100 dark:hover:bg-red-900/60 transition-all active:scale-95"
                   >
                     <LogOut className="h-3.5 w-3.5" />
-                    <span>Log Out</span>
+                    <span className="hidden sm:inline">Log Out</span>
                   </button>
                 </form>
               )}
@@ -76,55 +79,68 @@ export default function Navbar() {
           <button
             type="button"
             aria-label="Close menu"
-            className="fixed inset-0 bg-black/50 z-40"
+            className="fixed inset-0 bg-black/50 z-40 backdrop-blur-xs"
             onClick={() => setIsOpen(false)}
           />
 
           {/* Menu panel */}
-          <div className="fixed top-0 right-0 h-full w-[300px] sm:w-[400px] bg-white dark:bg-gray-900 shadow-xl z-50 transform transition-transform duration-300">
-            <div className="flex justify-end p-4">
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="p-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
-                aria-label="Close menu"
-              >
-                <X className="h-6 w-6" />
-              </button>
+          <div className="fixed top-0 right-0 h-full w-[300px] sm:w-[400px] bg-white dark:bg-zinc-950 border-l border-gray-200 dark:border-gray-800 shadow-2xl z-50 transform transition-transform duration-300 flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-center p-4 border-b border-gray-100 dark:border-gray-800/60">
+                <span className="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                  Navigation
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="p-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
+                  aria-label="Close menu"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              <nav id="mobile-menu" className="flex flex-col gap-2 mt-4 px-6">
+                <NavLink href="/" onClick={() => setIsOpen(false)}>
+                  <span className="text-lg">Home</span>
+                </NavLink>
+                <NavLink href="/about" onClick={() => setIsOpen(false)}>
+                  <span className="text-lg">About Us</span>
+                </NavLink>
+                <NavLink href="/rush" onClick={() => setIsOpen(false)}>
+                  <span className="text-lg">Rush</span>
+                </NavLink>
+                <NavLink href="/blog" onClick={() => setIsOpen(false)}>
+                  <span className="text-lg">Blog</span>
+                </NavLink>
+                <NavLink href="/members" onClick={() => setIsOpen(false)}>
+                  <span className="text-lg">Members</span>
+                </NavLink>
+                <NavLink href="/sponsorship" onClick={() => setIsOpen(false)}>
+                  <span className="text-lg">Sponsorship</span>
+                </NavLink>
+                <NavLink href="/newsletter" onClick={() => setIsOpen(false)}>
+                  <span className="text-lg">Newsletter</span>
+                </NavLink>
+                <div className="my-2 border-t border-gray-200 dark:border-gray-800"></div>
+                <NavLink
+                  href="/members-only"
+                  onClick={() => {
+                    setIsOpen(false)
+                    showAuthLoading()
+                  }}
+                >
+                  <span className="text-lg font-semibold text-red-800 dark:text-red-400">Member Portal</span>
+                </NavLink>
+              </nav>
             </div>
-            <nav id="mobile-menu" className="flex flex-col gap-4 mt-8 px-6">
-              <NavLink href="/" onClick={() => setIsOpen(false)}>
-                <span className="text-lg">Home</span>
-              </NavLink>
-              <NavLink href="/about" onClick={() => setIsOpen(false)}>
-                <span className="text-lg">About Us</span>
-              </NavLink>
-              <NavLink href="/rush" onClick={() => setIsOpen(false)}>
-                <span className="text-lg">Rush</span>
-              </NavLink>
-              <NavLink href="/blog" onClick={() => setIsOpen(false)}>
-                <span className="text-lg">Blog</span>
-              </NavLink>
-              <NavLink href="/members" onClick={() => setIsOpen(false)}>
-                <span className="text-lg">Members</span>
-              </NavLink>
-              <NavLink href="/sponsorship" onClick={() => setIsOpen(false)}>
-                <span className="text-lg">Sponsorship</span>
-              </NavLink>
-              <NavLink href="/newsletter" onClick={() => setIsOpen(false)}>
-                <span className="text-lg">Newsletter</span>
-              </NavLink>
-              <div className="my-2 border-t border-gray-200 dark:border-gray-800"></div>
-              <NavLink
-                href="/members-only"
-                onClick={() => {
-                  setIsOpen(false)
-                  showAuthLoading()
-                }}
-              >
-                <span className="text-lg font-semibold text-red-800 dark:text-red-400">Member Portal</span>
-              </NavLink>
-            </nav>
+
+            {/* Mobile Footer with Theme Toggle */}
+            <div className="p-6 border-t border-gray-100 dark:border-gray-800/60 flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Appearance
+              </span>
+              <ThemeToggle showLabel className="bg-gray-100 dark:bg-gray-800" />
+            </div>
           </div>
         </>
       )}
@@ -137,7 +153,7 @@ function NavLink({ href, children, onClick }: { href: string; children: React.Re
     <Link
       href={href}
       onClick={onClick}
-      className="text-gray-700 dark:text-gray-200 hover:text-red-800 dark:hover:text-primary-light flex items-center px-3 py-2 rounded-md text-sm font-medium nav-link focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900"
+      className="text-gray-700 dark:text-gray-200 hover:text-red-800 dark:hover:text-red-400 flex items-center px-3 py-2 rounded-md text-sm font-medium nav-link transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900"
     >
       {children}
     </Link>
@@ -158,7 +174,7 @@ function LogoIcon(props: React.SVGProps<SVGSVGElement>) {
     >
       <g
         transform="translate(0.000000,500.000000) scale(0.100000,-0.100000)"
-        fill="#800000"
+        fill="currentColor"
         stroke="none"
         vectorEffect="non-scaling-stroke"
       >

@@ -5,88 +5,88 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Dark Red and Gold Theme */
-  --background: 10 10% 8%;
-  --foreground: 35 10% 95%;
+  /* Light Mode: Clean White Background, Black Typography, Theta Tau Maroon & Gold */
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
 
-  --card: 10 10% 10%;
-  --card-foreground: 35 10% 95%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 3.9%;
 
-  --popover: 10 10% 10%;
-  --popover-foreground: 35 10% 95%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 3.9%;
 
-  --primary: 45 85% 55%; /* Gold */
-  --primary-foreground: 10 10% 8%;
+  --primary: 350 80% 28%; /* Theta Tau Maroon #800000 */
+  --primary-foreground: 0 0% 98%;
 
-  --secondary: 0 60% 30%; /* Dark Red */
-  --secondary-foreground: 35 10% 95%;
+  --secondary: 45 93% 47%; /* Theta Tau Gold #D4AF37 */
+  --secondary-foreground: 240 10% 3.9%;
 
-  --muted: 10 10% 15%;
-  --muted-foreground: 35 10% 60%;
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
 
-  --accent: 0 60% 35%;
-  --accent-foreground: 35 10% 95%;
+  --accent: 350 80% 96%;
+  --accent-foreground: 350 80% 28%;
 
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 35 10% 95%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
 
-  --border: 10 10% 15%;
-  --input: 10 10% 15%;
-  --ring: 45 85% 55%;
+  --border: 240 5.9% 90%;
+  --input: 240 5.9% 90%;
+  --ring: 350 80% 28%;
 
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
   --radius: 0.75rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+
+  --sidebar: 0 0% 98%;
+  --sidebar-foreground: 240 10% 3.9%;
+  --sidebar-primary: 350 80% 28%;
+  --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-accent: 240 4.8% 95.9%;
+  --sidebar-accent-foreground: 240 10% 3.9%;
+  --sidebar-border: 240 5.9% 90%;
+  --sidebar-ring: 350 80% 28%;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  /* Dark Mode: Deep True Black Background, Pure White Typography, Vibrant Accents */
+  --background: 240 10% 3.9%; /* #09090b */
+  --foreground: 0 0% 98%;     /* #fafafa */
+
+  --card: 240 10% 6.5%;       /* #121215 */
+  --card-foreground: 0 0% 98%;
+
+  --popover: 240 10% 6.5%;
+  --popover-foreground: 0 0% 98%;
+
+  --primary: 350 85% 55%;     /* Crimson / Bright Maroon */
+  --primary-foreground: 0 0% 98%;
+
+  --secondary: 45 93% 55%;    /* Bright Gold */
+  --secondary-foreground: 240 10% 3.9%;
+
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+
+  --accent: 350 80% 15%;
+  --accent-foreground: 0 0% 98%;
+
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --ring: 350 85% 55%;
+
+  --sidebar: 240 10% 5%;
+  --sidebar-foreground: 0 0% 98%;
+  --sidebar-primary: 350 85% 55%;
+  --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-accent: 240 3.7% 15.9%;
+  --sidebar-accent-foreground: 0 0% 98%;
+  --sidebar-border: 240 3.7% 15.9%;
+  --sidebar-ring: 350 85% 55%;
 }
 
 @theme inline {
-  /* optional: --font-sans, --font-serif, --font-mono if they are applied in the layout.tsx */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -106,11 +106,6 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -127,12 +122,48 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+  }
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground transition-colors duration-200;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+}
+
+/* Blurry white hue / radiant glow for dark images in dark mode */
+.dark-img-hue {
+  transition: filter 0.3s ease, transform 0.3s ease;
+}
+
+.dark .dark-img-hue {
+  filter: drop-shadow(0 0 16px rgba(255, 255, 255, 0.85)) drop-shadow(0 0 3px rgba(255, 255, 255, 0.95));
+}
+
+.dark-img-backdrop {
+  transition: all 0.3s ease;
+}
+
+.dark .dark-img-backdrop {
+  background-color: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  border-radius: 1rem;
+  padding: 0.5rem;
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.18);
+}
+
+/* Invert dark SVGs or logos in dark mode */
+.dark-invert {
+  transition: filter 0.3s ease;
+}
+
+.dark .dark-invert {
+  filter: brightness(0) invert(1) drop-shadow(0 0 10px rgba(255, 255, 255, 0.6));
 }
 
 /* Custom animations for interactive elements */

@@ -21,12 +21,12 @@ export default function AlumniLetterPage() {
   }, [])
 
   return (
-    <div className="min-h-full bg-linear-to-b from-stone-50 to-stone-100">
+    <div className="min-h-full bg-white dark:bg-black text-gray-900 dark:text-white transition-colors duration-200">
       <div className="max-w-5xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-4">
-          <h1 className="text-4xl font-bold text-stone-900 mb-2">Feburary 2026 Newsletter</h1>
-          <p className="text-stone-600">Stay connected with the latest from Theta Tau</p>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">February 2026 Newsletter</h1>
+          <p className="text-gray-600 dark:text-gray-400">Stay connected with the latest from Theta Tau</p>
         </div>
 
         {/* Action buttons */}
@@ -34,7 +34,7 @@ export default function AlumniLetterPage() {
           <Button
             variant="outline"
             asChild
-            className="border-red-800 text-red-800 hover:bg-red-800 hover:text-white transition-colors"
+            className="border-red-800 text-red-800 dark:border-red-500 dark:text-red-400 hover:bg-red-800 hover:text-white dark:hover:bg-red-900 dark:hover:text-white transition-colors"
           >
             <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
               <ExternalLink className="mr-2 h-4 w-4" />
@@ -53,20 +53,20 @@ export default function AlumniLetterPage() {
         </div>
 
         {/* PDF Viewer */}
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-stone-200">
+        <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-lg overflow-hidden border border-stone-200 dark:border-zinc-800 transition-colors duration-200">
           <div className="h-[85vh] min-h-[600px]">
             {pdfExists ? (
               <img
                 src={pdfUrl}
                 alt="February 2026 Newsletter"
-                className="w-full h-full object-contain bg-[#EBEBD7]"
+                className="w-full h-full object-contain bg-[#EBEBD7] dark:bg-zinc-950"
               />
             ) : (
               <div className="flex flex-col justify-center items-center h-full p-8 text-center">
-                <div className="text-red-700 font-semibold text-lg mb-4">
+                <div className="text-red-700 dark:text-red-400 font-semibold text-lg mb-4">
                   Unable to load the newsletter
                 </div>
-                <p className="text-stone-600 mb-6 max-w-md">
+                <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md">
                   The PDF file could not be found. Please try downloading it directly or check back later.
                 </p>
                 <Button

@@ -1,6 +1,6 @@
 export default function RushVideo() {
   return (
-    <div className="pt-24 lg:pt-0 min-h-screen bg-white flex flex-col relative">
+    <div className="pt-24 lg:pt-0 min-h-screen bg-white dark:bg-black flex flex-col relative transition-colors duration-200">
       {/* Blueprint grid pattern */}
 
       {/* Geometric corner elements */}
@@ -22,11 +22,11 @@ export default function RushVideo() {
             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-yellow-500">
               Experience θΤ Rush
             </h2>
-            <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
+            <p className="mx-auto max-w-[700px] text-gray-600 dark:text-gray-300 md:text-xl">
               Get a glimpse of what it&apos;s like to be part of Theta Tau. Watch our rush video and see why we&apos;re more than
               just a fraternity.
             </p>
-            <div className="w-full max-w-4xl aspect-video overflow-hidden rounded-xl border bg-muted">
+            <div className="w-full max-w-4xl aspect-video overflow-hidden rounded-xl border border-gray-200 dark:border-zinc-800 bg-muted">
               <iframe
                 width="100%"
                 height="100%"
@@ -37,7 +37,7 @@ export default function RushVideo() {
                 allowFullScreen
               ></iframe>
             </div>
-            <p className="text-sm text-muted-foreground">Watch our Fall 2025 Rush Video</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Watch our Fall 2025 Rush Video</p>
           </div>
         </div>
       </section>

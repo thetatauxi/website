@@ -5,7 +5,7 @@ export function RecruitmentHero() {
   const imageUrl = "/Fa26Rush.jpg"
 
   return (
-    <div className="min-h-[calc(100vh-5rem)] bg-white container max-w-7xl mx-auto relative px-4 sm:px-6 lg:px-8 py-12 lg:py-16 flex items-center">
+    <div className="min-h-[calc(100vh-5rem)] bg-white dark:bg-black text-gray-900 dark:text-white container max-w-7xl mx-auto relative px-4 sm:px-6 lg:px-8 py-12 lg:py-16 flex items-center transition-colors duration-200">
       <div className="absolute inset-0 opacity-10 pointer-events-none">
         <div
           className="w-full h-full"
@@ -30,10 +30,10 @@ export function RecruitmentHero() {
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter text-yellow-500">
               Record Breaking Rush
             </h1>
-            <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-gray-800">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-gray-900 dark:text-white">
               Rush Theta Tau
             </h2>
-            <p className="text-gray-600 md:text-lg">
+            <p className="text-gray-600 dark:text-gray-300 md:text-lg">
               Join a brotherhood of engineers dedicated to academic excellence, professional development, and community service. Follow our Instagram for more information and enter your email to get notified about rush.
             </p>
           </div>
@@ -50,7 +50,7 @@ export function RecruitmentHero() {
         </div>
 
         <div className="flex items-center justify-center lg:justify-end w-full">
-          <div className="w-full max-w-[550px] bg-white p-3 sm:p-4 rounded-2xl shadow-lg border border-gray-100/80 overflow-hidden flex items-center justify-center">
+          <div className="w-full max-w-[550px] bg-white dark:bg-zinc-900 p-3 sm:p-4 rounded-2xl shadow-lg border border-gray-100/80 dark:border-zinc-800 overflow-hidden flex items-center justify-center transition-colors duration-200">
             <div className="relative w-full aspect-[4/5] max-h-[580px] rounded-xl overflow-hidden">
               <Image
                 src={imageUrl}

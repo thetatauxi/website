@@ -6,7 +6,7 @@ import Header from "@/components/aboutus/header"
   
 export default function AboutUs() {
   return (
-    <div>
+    <div className="bg-white dark:bg-black text-gray-900 dark:text-white transition-colors duration-200">
       <Header />
       <main>
         <section id="exec-board">

@@ -6,6 +6,7 @@ import { FathomAnalytics } from "./fathom"
 import Navbar from "@/components/ui/nav-bar"
 import { Footer } from "@/components/ui/footer"
 import { AuthLoadingProvider } from "@/components/providers/auth-loading-provider"
+import { ThemeProvider } from "@/components/providers/theme-provider"
 import "./globals.css"
 
 const inter = localFont({
@@ -36,23 +37,43 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased flex flex-col min-h-screen`}>
-        <AuthLoadingProvider>
-          <a
-            href="#main-content"
-            className="sr-only focus:not-sr-only focus-visible:fixed focus-visible:left-4 focus-visible:top-4 focus-visible:z-50 focus-visible:rounded-md focus-visible:bg-white focus-visible:px-4 focus-visible:py-2 focus-visible:text-sm focus-visible:text-gray-900 focus-visible:shadow-lg"
-          >
-            Skip to content
-          </a>
-          <Navbar />
-          <main id="main-content" className="flex-1">
-            {children}
-          </main>
-          <Footer />
-          <Analytics />
-          <FathomAnalytics />
-        </AuthLoadingProvider>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var saved = localStorage.getItem('theta-tau-theme');
+                  if (saved === 'dark') {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased flex flex-col min-h-screen bg-background text-foreground`}>
+        <ThemeProvider>
+          <AuthLoadingProvider>
+            <a
+              href="#main-content"
+              className="sr-only focus:not-sr-only focus-visible:fixed focus-visible:left-4 focus-visible:top-4 focus-visible:z-50 focus-visible:rounded-md focus-visible:bg-white dark:focus-visible:bg-gray-900 focus-visible:px-4 focus-visible:py-2 focus-visible:text-sm focus-visible:text-gray-900 dark:focus-visible:text-white focus-visible:shadow-lg"
+            >
+              Skip to content
+            </a>
+            <Navbar />
+            <main id="main-content" className="flex-1">
+              {children}
+            </main>
+            <Footer />
+            <Analytics />
+            <FathomAnalytics />
+          </AuthLoadingProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

@@ -58,13 +58,13 @@ export default function SponsorshipPage() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 relative overflow-hidden">
+    <div className="min-h-screen bg-gray-50 dark:bg-black text-gray-900 dark:text-white relative overflow-hidden transition-colors duration-200">
       {/* Background with Geometric Lines and Abstract Graphics */}
       <div
-        className="absolute top-0 left-0 w-full h-full bg-no-repeat bg-center opacity-20 z-0"
+        className="absolute top-0 left-0 w-full h-full bg-no-repeat bg-center opacity-20 dark:opacity-10 z-0"
         style={{ backgroundImage: "url(/abstract-geometric-pattern.svg)" }}
       ></div>
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-red-700 to-yellow-500 opacity-15 z-0"></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-red-700 to-yellow-500 opacity-15 dark:opacity-10 z-0"></div>
       {/* Circuit board pattern */}
       <div className="absolute inset-0 opacity-10">
         <svg className="w-full h-full" viewBox="0 0 1200 800" fill="none" aria-hidden="true">
@@ -95,8 +95,8 @@ export default function SponsorshipPage() {
       </svg>
       {/* Header */}
       <header className="relative z-10 text-center py-12">
-        <h1 className="text-5xl font-semibold text-gray-800 mb-4">Sponsorship Opportunities</h1>
-        <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+        <h1 className="text-5xl font-semibold text-gray-900 dark:text-white mb-4">Sponsorship Opportunities</h1>
+        <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
           Partner with the next generation of engineering leaders.
         </p>
       </header>
@@ -104,10 +104,10 @@ export default function SponsorshipPage() {
       <main className="max-w-6xl mx-auto px-6 py-16 relative z-10">
         {/* Why Sponsor Us */}
         <section className="mb-16">
-          <h2 className="text-3xl font-semibold text-gray-800 text-center mb-8">Why Sponsor Us?</h2>
+          <h2 className="text-3xl font-semibold text-gray-900 dark:text-white text-center mb-8">Why Sponsor Us?</h2>
           <div className="flex flex-col lg:flex-row items-start gap-12">
             <div className="flex-1 my-auto">
-              <p className="text-xl text-gray-600 mb-6">
+              <p className="text-xl text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
                 Partnering with our chapter is an opportunity to support the development of future engineers while
                 increasing your organization’s visibility on campus. Sponsorships directly fund our professional
                 development programs, technical workshops, and community initiatives that prepare members to be leaders
@@ -130,14 +130,14 @@ export default function SponsorshipPage() {
 
         {/* Sponsors Section */}
         <section>
-          <h2 className="text-3xl font-semibold text-gray-800 text-center mb-8">
+          <h2 className="text-3xl font-semibold text-gray-900 dark:text-white text-center mb-8">
             Our Valued Sponsors
           </h2>
           <div className="flex flex-wrap justify-center gap-12">
             {sponsors.map((sponsor, index) => (
               <div
                 key={index}
-                className="flex-1 min-w-[320px] max-w-lg bg-white rounded-lg shadow-xl p-10 text-center border border-red-300 hover:shadow-2xl transition-shadow duration-300"
+                className="flex-1 min-w-[320px] max-w-lg bg-white dark:bg-zinc-900 rounded-2xl shadow-xl p-10 text-center border border-red-200 dark:border-zinc-800 hover:shadow-2xl transition-all duration-300"
               >
                 <div className="mb-6">
                   <Badge
@@ -156,15 +156,15 @@ export default function SponsorshipPage() {
                     height={112}
                     className="h-28 mx-auto object-contain mb-6"
                   />
-                  <h3 className="text-2xl font-semibold text-gray-800">
+                  <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
                     {sponsor.name}
                   </h3>
                 </a>
-                <p className="text-gray-500 text-base mb-6">{sponsor.description}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-base mb-6">{sponsor.description}</p>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-gray-300 text-gray-700 hover:bg-gray-200 px-6 py-2 rounded-full bg-transparent"
+                  className="border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800 px-6 py-2 rounded-full bg-transparent"
                   asChild
                 >
                   <a href={sponsor.website} target="_blank" rel="noopener noreferrer">

@@ -88,7 +88,7 @@ export default async function MembersOnlyPage() {
 
             {/* My Status Card */}
             {profile && (
-              <div className="bg-white dark:bg-gray-800 p-8 rounded-[32px] border border-gray-300 dark:border-gray-700 shadow-sm">
+              <div className="bg-white dark:bg-zinc-900 p-8 rounded-[32px] border border-gray-200 dark:border-zinc-800 shadow-sm transition-colors duration-200">
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
 
                   {/* Left Column: Status info and Points */}
@@ -199,14 +199,14 @@ export default async function MembersOnlyPage() {
               <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-6">Quick Access</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
+                <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all">
                   <Users className="h-8 w-8 text-red-700 dark:text-red-500 mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Rush Management Tool</h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Track PNM attendance and generate summaries for deliberations</p>
                   <a href="https://rmt.thetatauxi.org/" target="_blank" rel="noreferrer" className="inline-block text-sm font-medium text-red-700 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">Open RMT &rarr;</a>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
+                <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all">
                   <Users className="h-8 w-8 text-red-700 dark:text-red-500 mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Alumni Directory</h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Access contact information for alumni</p>
@@ -219,17 +219,17 @@ export default async function MembersOnlyPage() {
 
             {/* Role Specific Section: E-Board */}
             {userRole === 'admin' && (
-              <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+              <div className="pt-2 border-t border-gray-200 dark:border-zinc-800">
                 <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
                   <Shield className="h-5 w-5 text-red-700 dark:text-red-500" />
                   E-Board Tools
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
+                  <div className="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all">
                     <h3 className="font-medium text-gray-900 dark:text-white mb-1">Manage Finances</h3>
                     <button className="text-sm text-red-700 hover:text-red-800 dark:text-red-400">Open Dashboard &rarr;</button>
                   </div>
-                  <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
+                  <div className="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all">
                     <h3 className="font-medium text-gray-900 dark:text-white mb-1">Google Sheets Sync</h3>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Sync member status, roster, calendar, and sheet data with Supabase.</p>
                     <SyncPanel userRole={dbRole} />
@@ -240,13 +240,13 @@ export default async function MembersOnlyPage() {
 
             {/* Role Specific Section: Rush */}
             {userRole === 'rush' && (
-              <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+              <div className="pt-2 border-t border-gray-200 dark:border-zinc-800">
                 <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
                   <Shield className="h-5 w-5 text-red-700 dark:text-red-500" />
                   Rush Tools
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
+                  <div className="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all">
                     <h3 className="font-medium text-gray-900 dark:text-white mb-1">Manage Rushees</h3>
                     <button className="text-sm text-red-700 hover:text-red-800 dark:text-red-400">Open Dashboard &rarr;</button>
                   </div>
@@ -260,13 +260,13 @@ export default async function MembersOnlyPage() {
           <div className="w-full lg:w-80 flex-shrink-0 flex flex-col gap-6">
 
             {/* Attendance Leaderboard */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 overflow-hidden">
               <div className="bg-red-800 px-6 py-4 flex items-center gap-2">
                 <Award className="h-5 w-5 text-white" />
                 <h2 className="text-lg font-semibold text-white">Attendance Leaderboard</h2>
               </div>
               <div className="p-0">
-                <ul className="divide-y divide-gray-100 dark:divide-gray-700 max-h-[350px] overflow-y-auto">
+                <ul className="divide-y divide-gray-100 dark:divide-zinc-800 max-h-[350px] overflow-y-auto">
                   {leaderboard && leaderboard.length > 0 ? (
                     leaderboard.map((member, index) => {
                       const displayName = member.first_name && member.first_name !== 'TEMP'
@@ -274,7 +274,7 @@ export default async function MembersOnlyPage() {
                         : member.username;
                       const isCurrentUser = member.username === profile?.username;
                       return (
-                        <li key={member.username} className={`flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${isCurrentUser ? 'bg-red-50/50 dark:bg-red-950/20' : ''}`}>
+                        <li key={member.username} className={`flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors ${isCurrentUser ? 'bg-red-50/50 dark:bg-red-950/20' : ''}`}>
                           <div className="flex items-center gap-3">
                             <span className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${index === 0 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
                               index === 1 ? 'bg-gray-100 text-gray-800 dark:bg-gray-700/30 dark:text-gray-400' :
@@ -303,16 +303,16 @@ export default async function MembersOnlyPage() {
             </div>
 
             {/* Upcoming Events */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 overflow-hidden">
               <div className="bg-red-800 px-6 py-4 flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-white" />
                 <h2 className="text-lg font-semibold text-white">Upcoming Events</h2>
               </div>
               <div className="p-0">
-                <ul className="divide-y divide-gray-100 dark:divide-gray-700 max-h-[400px] overflow-y-auto">
+                <ul className="divide-y divide-gray-100 dark:divide-zinc-800 max-h-[400px] overflow-y-auto">
                   {upcomingEvents.length > 0 ? (
                     upcomingEvents.map((event) => (
-                      <li key={event.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                      <li key={event.id} className="p-4 hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
                         <div className="flex flex-col">
                           <span className="font-semibold text-gray-900 dark:text-white text-sm">{event.title}</span>
                           <span className="text-xs text-red-700 dark:text-red-400 font-medium mt-1">{event.date}</span>
@@ -320,7 +320,7 @@ export default async function MembersOnlyPage() {
                             <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">{event.location}</span>
                           )}
                           {event.details && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5 italic bg-gray-50 dark:bg-gray-900/50 p-2 rounded">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5 italic bg-gray-50 dark:bg-zinc-800/70 p-2 rounded">
                               {event.details}
                             </p>
                           )}
@@ -333,7 +333,7 @@ export default async function MembersOnlyPage() {
                     </li>
                   )}
                 </ul>
-                <div className="p-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 text-center">
+                <div className="p-4 bg-gray-50 dark:bg-zinc-900 border-t border-gray-100 dark:border-zinc-800 text-center">
                   <a href="https://calendar.google.com" target="_blank" rel="noreferrer" className="text-xs font-medium text-gray-500 hover:text-red-700 dark:hover:text-red-400 transition-colors">
                     View full Google Calendar
                   </a>
@@ -342,7 +342,7 @@ export default async function MembersOnlyPage() {
             </div>
 
             {/* Important Links */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+            <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 p-6">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <ExternalLink className="h-5 w-5 text-red-700 dark:text-red-500" />
                 Important Links

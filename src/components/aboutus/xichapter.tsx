@@ -4,11 +4,11 @@ import { useRef, useState, useEffect } from 'react'
 import Image from 'next/image'
 
 const xiChapterImages = [
-    '/exec/spring26_headshots/group_horizontal.webp?height=400&width=600',
-    '/elections.JPG?height=400&width=600',
-    '/advisor_dinner.jpg?height=400&width=600',
-    '/ike+katie_banquet.jpeg?height=400&width=600',
-  ]
+  '/exec/spring26_headshots/group_horizontal.webp?height=400&width=600',
+  '/elections.JPG?height=400&width=600',
+  '/advisor_dinner.jpg?height=400&width=600',
+  '/ike+katie_banquet.jpeg?height=400&width=600',
+]
 
 function ImageCarousel({ images, name }: { images: string[], name: string }) {
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -42,39 +42,38 @@ function ImageCarousel({ images, name }: { images: string[], name: string }) {
   )
 }
 
-
 export function XiChapter() {
   const xiChapterRef = useRef<HTMLElement>(null)
 
   return (
     <section ref={xiChapterRef} className="mb-32">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold text-red-900 mb-4">Xi Chapter</h2>
-            <div className="w-24 h-1 bg-linear-to-r from-red-600 to-red-800 mx-auto rounded-full"></div>
-          </div>
-            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden mx-0 lg:mx-16">
-            <div className="flex flex-col lg:flex-row">
-              <div className="lg:w-1/2 p-8 lg:p-12">
-                <div className="h-full flex flex-col justify-center">
-                  <h3 className="text-3xl font-bold text-red-900 mb-6">A Century of Excellence</h3>
-                  <div className="space-y-6 text-gray-700 leading-relaxed">
-                    <p>
-                      The Xi Chapter of Theta Tau was founded at the University of Wisconsin-Madison on January 13, 1923. For over a century, our chapter has been a cornerstone of engineering excellence and professional development on campus.
-                    </p>
-                    <p>
-                      Throughout our history, Xi Chapter has produced numerous distinguished alumni who have made significant contributions to the field of engineering and beyond. Our members have gone on to become industry leaders, innovators, and educators.
-                    </p>
-                    <p>
-                      Today, Xi Chapter continues to uphold the values and traditions of Theta Tau while adapting to the ever-changing landscape of engineering. We are committed to fostering a diverse and inclusive community of future engineers who will shape the world of tomorrow.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="lg:w-1/2 p-4">
-                <ImageCarousel images={xiChapterImages} name="Xi Chapter" />
+      <div className="text-center mb-16">
+        <h2 className="text-5xl font-bold text-red-900 dark:text-white mb-4">Xi Chapter</h2>
+        <div className="w-24 h-1 bg-gradient-to-r from-red-600 to-red-800 mx-auto rounded-full"></div>
+      </div>
+      <div className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl shadow-2xl overflow-hidden mx-4 sm:mx-8 lg:mx-16 transition-colors duration-200">
+        <div className="flex flex-col lg:flex-row">
+          <div className="lg:w-1/2 p-8 lg:p-12">
+            <div className="h-full flex flex-col justify-center">
+              <h3 className="text-3xl font-bold text-red-900 dark:text-red-400 mb-6">A Century of Excellence</h3>
+              <div className="space-y-6 text-gray-700 dark:text-gray-300 leading-relaxed">
+                <p>
+                  The Xi Chapter of Theta Tau was founded at the University of Wisconsin-Madison on January 13, 1923. For over a century, our chapter has been a cornerstone of engineering excellence and professional development on campus.
+                </p>
+                <p>
+                  Throughout our history, Xi Chapter has produced numerous distinguished alumni who have made significant contributions to the field of engineering and beyond. Our members have gone on to become industry leaders, innovators, and educators.
+                </p>
+                <p>
+                  Today, Xi Chapter continues to uphold the values and traditions of Theta Tau while adapting to the ever-changing landscape of engineering. We are committed to fostering a diverse and inclusive community of future engineers who will shape the world of tomorrow.
+                </p>
               </div>
             </div>
           </div>
+          <div className="lg:w-1/2 p-4">
+            <ImageCarousel images={xiChapterImages} name="Xi Chapter" />
+          </div>
+        </div>
+      </div>
     </section>
   )
 }

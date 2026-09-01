@@ -32,8 +32,8 @@ export function ExecBoard() {
         {/* Executive Board Section */}
         <section ref={executivesRef} className="mt-16 mb-32">
           <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold text-red-900 mb-4">Our Executive Board</h2>
-            <div className="w-24 h-1 bg-linear-to-r from-red-600 to-red-800 mx-auto rounded-full"></div>
+            <h2 className="text-5xl font-bold text-red-900 dark:text-red-400 mb-4">Our Executive Board</h2>
+            <div className="w-24 h-1 bg-gradient-to-r from-red-600 to-red-800 mx-auto rounded-full"></div>
           </div>
 
           {/* Regent + Vice Regent */}
@@ -42,12 +42,12 @@ export function ExecBoard() {
               {/* Regent */}
               <div className="flex justify-center">
                 <div className="relative group w-full max-w-md">
-                  <div className="absolute -inset-1 bg-linear-to-r from-red-600 to-red-800 rounded-3xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
-                  <div className="relative bg-white rounded-3xl p-8 shadow-2xl h-full">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-red-600 to-red-800 rounded-3xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
+                  <div className="relative bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-8 shadow-2xl h-full transition-colors duration-200">
                     <div className="text-center">
                       <div className="relative mb-6">
                         {isPlaceholderImage(regent.image) ? (
-                          <div className="relative w-[300px] aspect-4/3 mx-auto rounded-full bg-white/70 border-[3px] border-red-200 shadow-lg overflow-hidden group-hover:border-red-400 transition-colors duration-300">
+                          <div className="relative w-[300px] aspect-4/3 mx-auto rounded-full bg-white/70 dark:bg-zinc-800 border-[3px] border-red-200 dark:border-red-900/60 shadow-lg overflow-hidden group-hover:border-red-400 transition-colors duration-300">
                             <Image
                               src={regent.image || "/placeholder.svg"}
                               alt={regent.name}
@@ -57,7 +57,7 @@ export function ExecBoard() {
                             />
                           </div>
                         ) : (
-                          <div className="relative w-[220px] h-[220px] mx-auto rounded-full border-[3px] border-red-200 shadow-lg overflow-hidden group-hover:border-red-400 transition-colors duration-300">
+                          <div className="relative w-[220px] h-[220px] mx-auto rounded-full border-[3px] border-red-200 dark:border-red-900/60 shadow-lg overflow-hidden group-hover:border-red-400 transition-colors duration-300">
                             <Image
                               src={regent.image || "/placeholder.svg"}
                               alt={regent.name}
@@ -68,8 +68,8 @@ export function ExecBoard() {
                           </div>
                         )}
                       </div>
-                      <h3 className="text-3xl font-bold text-red-900 mb-2">{regent.name}</h3>
-                      <p className="text-xl text-red-700 font-semibold">{regent.position}</p>
+                      <h3 className="text-3xl font-bold text-red-900 dark:text-red-400 mb-2">{regent.name}</h3>
+                      <p className="text-xl text-red-700 dark:text-red-300 font-semibold">{regent.position}</p>
                     </div>
                   </div>
                 </div>
@@ -78,12 +78,12 @@ export function ExecBoard() {
               {/* Vice Regent */}
               <div className="flex justify-center">
                 <div className="relative group w-full max-w-md">
-                  <div className="absolute -inset-1 bg-linear-to-r from-red-600 to-red-800 rounded-3xl blur opacity-20 group-hover:opacity-60 transition duration-1000 group-hover:duration-200"></div>
-                  <div className="relative bg-white rounded-3xl p-8 shadow-2xl h-full">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-red-600 to-red-800 rounded-3xl blur opacity-20 group-hover:opacity-60 transition duration-1000 group-hover:duration-200"></div>
+                  <div className="relative bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-8 shadow-2xl h-full transition-colors duration-200">
                     <div className="text-center">
                       <div className=" mb-6">
                         {isPlaceholderImage(viceRegent.image) ? (
-                          <div className="relative w-[300] aspect-4/3 mx-auto rounded-full border-[3px] border-red-200 shadow-lg overflow-hidden group-hover:border-red-400 transition-colors duration-300">
+                          <div className="relative w-[300] aspect-4/3 mx-auto rounded-full border-[3px] border-red-200 dark:border-red-900/60 shadow-lg overflow-hidden group-hover:border-red-400 transition-colors duration-300">
                           <Image
                             src={viceRegent.image || "/placeholder.svg"}
                             alt={viceRegent.name}
@@ -93,7 +93,7 @@ export function ExecBoard() {
                           />
                         </div>
                         ) : (
-                          <div className="relative w-[220px] h-[220px] mx-auto rounded-full border-[3px] border-red-200 shadow-lg overflow-hidden group-hover:border-red-400 transition-colors duration-300">
+                          <div className="relative w-[220px] h-[220px] mx-auto rounded-full border-[3px] border-red-200 dark:border-red-900/60 shadow-lg overflow-hidden group-hover:border-red-400 transition-colors duration-300">
                             <Image
                               src={viceRegent.image || "/placeholder.svg"}
                               alt={viceRegent.name}
@@ -104,8 +104,8 @@ export function ExecBoard() {
                           </div>
                         )}
                       </div>
-                      <h3 className="text-3xl font-bold text-red-900 mb-2">{viceRegent.name}</h3>
-                      <p className="text-xl text-red-700 font-semibold">{viceRegent.position}</p>
+                      <h3 className="text-3xl font-bold text-red-900 dark:text-red-400 mb-2">{viceRegent.name}</h3>
+                      <p className="text-xl text-red-700 dark:text-red-300 font-semibold">{viceRegent.position}</p>
                     </div>
                   </div>
                 </div>
@@ -118,12 +118,12 @@ export function ExecBoard() {
             {otherExecutives.map((exec) => (
               <div key={exec.name} className="group">
                 <div className="relative">
-                  <div className="absolute -inset-1 bg-linear-to-r from-red-400 to-red-600 rounded-2xl blur opacity-0 group-hover:opacity-25 transition duration-500"></div>
-                  <div className="relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-transform duration-500 transform hover:-translate-y-2">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-red-400 to-red-600 rounded-2xl blur opacity-0 group-hover:opacity-25 transition duration-500"></div>
+                  <div className="relative bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
                     <div className="text-center">
                       <div className="relative mb-4 inline-block">
                         {isPlaceholderImage(exec.image) ? (
-                          <div className="relative w-[220px] h-[220px] mx-auto rounded-xl bg-white/70 border-[3px] border-red-200 shadow-lg overflow-hidden group-hover:border-red-400 transition-colors duration-300 flex items-center justify-center">
+                          <div className="relative w-[220px] h-[220px] mx-auto rounded-xl bg-white/70 dark:bg-zinc-800 border-[3px] border-red-200 dark:border-red-900/60 shadow-lg overflow-hidden group-hover:border-red-400 transition-colors duration-300 flex items-center justify-center">
                             <div className="relative w-full aspect-4/3 max-w-[200px]">
                               <Image
                                 src={exec.image || "/placeholder.svg"}
@@ -135,7 +135,7 @@ export function ExecBoard() {
                             </div>
                           </div>
                         ) : (
-                          <div className="relative w-[220px] h-[220px] mx-auto rounded-full border-[3px] border-red-200 shadow-lg overflow-hidden group-hover:border-red-400 transition-colors duration-300">
+                          <div className="relative w-[220px] h-[220px] mx-auto rounded-full border-[3px] border-red-200 dark:border-red-900/60 shadow-lg overflow-hidden group-hover:border-red-400 transition-colors duration-300">
                             <Image
                               src={exec.image || "/placeholder.svg"}
                               alt={exec.name}
@@ -146,8 +146,8 @@ export function ExecBoard() {
                           </div>
                         )}
                       </div>
-                      <h3 className="text-2xl font-bold text-red-900 mb-2">{exec.name}</h3>
-                      <p className="text-lg text-red-700">{exec.position}</p>
+                      <h3 className="text-2xl font-bold text-red-900 dark:text-red-400 mb-2">{exec.name}</h3>
+                      <p className="text-lg text-red-700 dark:text-red-300">{exec.position}</p>
                     </div>
                   </div>
                 </div>

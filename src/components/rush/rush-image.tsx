@@ -42,9 +42,9 @@ export default function RushPage() {
   ]
 
   return (
-    <section className="w-full bg-white py-16 relative">
+    <section className="w-full bg-white dark:bg-black py-16 relative transition-colors duration-200">
       <div className="container max-w-7xl mx-auto px-4 md:px-6">
-        <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8 text-center text-maroon-700">
+        <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8 text-center text-red-800 dark:text-red-400">
           Life at Theta Tau
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -59,8 +59,8 @@ export default function RushPage() {
                   width="600"
                 />
               </div>
-              <h3 className="text-xl font-bold text-maroon-700">{activity.title}</h3>
-              <p className="text-gray-600">
+              <h3 className="text-xl font-bold text-red-800 dark:text-red-400">{activity.title}</h3>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                 {activity.link ? (
                   <>
                     {activity.description}{" "}

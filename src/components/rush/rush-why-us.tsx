@@ -2,7 +2,7 @@ import Image from "next/image"
 
 export default function RushWhyUs() {
   return (
-    <div className="bg-white flex flex-col">
+    <div className="bg-white dark:bg-zinc-950 flex flex-col transition-colors duration-200">
 
       <div className="absolute top-20 right-10 w-16 h-16 border-2 border-yellow-500 opacity-20 rotate-45"></div>
       <div className="absolute top-1/3 left-10 w-12 h-12 border-2 border-yellow-500 opacity-20"></div>
@@ -31,7 +31,7 @@ export default function RushWhyUs() {
               <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-yellow-500">
                 Why Join Theta Tau?
               </h2>
-              <div className="space-y-4 text-gray-700 md:text-lg">
+              <div className="space-y-4 text-gray-700 dark:text-gray-300 md:text-lg">
                 <p>
                   Theta Tau offers a unique blend of professional development, philanthropic service, and lifelong
                   brotherhood. As a member, you&apos;ll join a community of like-minded engineers who support and inspire

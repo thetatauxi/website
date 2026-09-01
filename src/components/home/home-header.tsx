@@ -15,7 +15,7 @@ export function HomeHeroSection() {
   }, [])
 
   return (
-    <section className="relative pt-10 pb-20 px-4 overflow-hidden bg-gradient-to-b from-white to-[#FFF5D7]">
+    <section className="relative pt-10 pb-20 px-4 overflow-hidden bg-gradient-to-b from-white to-[#FFF5D7] dark:from-black dark:to-zinc-950 transition-colors duration-200">
       {/* Background gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#8B0000]/10 to-[#D4AF37]/10 opacity-30 z-0"></div>
 

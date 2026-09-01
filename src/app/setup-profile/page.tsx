@@ -129,8 +129,8 @@ export default function SetupProfilePage() {
   }
 
   return (
-    <div className="min-h-screen py-12 flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+    <div className="min-h-screen py-12 flex flex-col items-center justify-center bg-gray-50 dark:bg-black px-4 sm:px-6 lg:px-8 transition-colors duration-200">
+      <div className="max-w-md w-full space-y-8 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 p-8 rounded-xl shadow-lg transition-colors duration-200">
         <div>
           <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
             Setup Your Profile
@@ -252,19 +252,20 @@ export default function SetupProfilePage() {
                   className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white dark:bg-gray-900 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
                 >
                   <option value="" disabled>Select your major</option>
-                  <option value="Biomedical Engineering">Biomedical Engineering</option>
-                  <option value="Chemical Engineering">Chemical Engineering</option>
+                  <option value="Aerospace Engineering">Aerospace Engineering</option>
+                  <option value="Agricultural and Biosystems Engineering">Agricultural and Biosystems Engineering</option>
+                  <option value="Biological Systems Engineering">Biological Systems Engineering</option>
                   <option value="Civil Engineering">Civil Engineering</option>
                   <option value="Computer Engineering">Computer Engineering</option>
-                  <option value="Computer Science">Computer Science</option>
                   <option value="Electrical Engineering">Electrical Engineering</option>
+                  <option value="Engineering Mechanics">Engineering Mechanics</option>
+                  <option value="Geological Engineering">Geological Engineering</option>
                   <option value="Industrial Engineering">Industrial Engineering</option>
-                  <option value="Materials Science and Engineering">Materials Science and Engineering</option>
+                  <option value="Materials Science & Engineering">Materials Science & Engineering</option>
                   <option value="Mechanical Engineering">Mechanical Engineering</option>
                   <option value="Nuclear Engineering">Nuclear Engineering</option>
                   <option value="Undeclared Engineering">Undeclared Engineering</option>
-                  <option value="Other Engineering">Other Engineering</option>
-                  <option value="Non-Engineering">Non-Engineering</option>
+                  <option value="Not Listed">Other Engineering</option>
                 </select>
               </div>
 

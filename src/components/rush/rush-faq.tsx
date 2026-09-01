@@ -4,7 +4,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 
 export function RushFAQ() {
   return (
-    <section className="w-full px-6 py-12 md:py-16 lg:py-24 bg-white relative">
+    <section className="w-full px-6 py-12 md:py-16 lg:py-24 bg-white dark:bg-black text-gray-900 dark:text-gray-100 relative transition-colors duration-200">
       <div className="absolute inset-0 opacity-10">
         <div
           className="w-full h-full"

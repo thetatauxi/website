@@ -144,21 +144,21 @@ export default function AuthenticatingScreen() {
       role="status"
       aria-live="polite"
       aria-label="Authenticating"
-      className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center overflow-hidden select-none"
+      className="fixed inset-0 z-[9999] bg-white dark:bg-black flex flex-col items-center justify-center overflow-hidden select-none transition-colors duration-200"
     >
       {/* Dynamic Background Particle Canvas */}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 pointer-events-none w-full h-full"
+        className="absolute inset-0 pointer-events-none w-full h-full opacity-80 dark:opacity-100"
       />
 
       {/* Central Pulsing Authenticating Card */}
       <div className="relative z-10 flex flex-col items-center justify-center px-6 py-8 text-center animate-pulse">
         {/* Subtle Theta Tau Shield Emblem */}
         <div className="mb-5 relative flex items-center justify-center">
-          <div className="absolute -inset-3 rounded-full bg-gradient-to-r from-red-800/10 via-amber-500/10 to-yellow-500/10 blur-md pointer-events-none" />
+          <div className="absolute -inset-3 rounded-full bg-gradient-to-r from-red-800/10 via-amber-500/10 to-yellow-500/10 dark:from-red-600/20 dark:via-amber-400/20 dark:to-yellow-400/20 blur-md pointer-events-none" />
           <svg
-            className="h-14 w-14 drop-shadow-sm text-[#800000]"
+            className="h-14 w-14 drop-shadow-sm text-[#800000] dark:text-red-500"
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 500 500"
             preserveAspectRatio="xMidYMid meet"
@@ -201,7 +201,7 @@ l-3 -1058 -28 -42 c-37 -57 -90 -81 -203 -94 l-94 -11 0 -28 0 -29 520 0 520
         </div>
 
         {/* Pulsing Authenticating Text */}
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-wider text-gray-900 mb-3">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-wider text-gray-900 dark:text-white mb-3">
           Authenticating...
         </h1>
 

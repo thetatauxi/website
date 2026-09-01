@@ -6,8 +6,8 @@ export function HomeAboutSection() {
       id="about"
       className="
         py-20 px-4
-        bg-gradient-to-b from-[#FFF5D7] to-[#0A0000]
-        text-white
+        bg-gradient-to-b from-[#FFF5D7] to-[#0A0000] dark:from-[#09090b] dark:via-[#180404] dark:to-[#09090b]
+        text-white transition-colors duration-200
       "
     >
       <div className="container mx-auto">
@@ -30,7 +30,7 @@ export function HomeAboutSection() {
           {/* TEXT */}
           <div className="space-y-6">
             <div>
-              <div className="text-sm font-semibold text-black/75 mb-2 tracking-wider">
+              <div className="text-sm font-semibold text-black/75 dark:text-yellow-400 mb-2 tracking-wider">
                 SINCE 1904
               </div>
 

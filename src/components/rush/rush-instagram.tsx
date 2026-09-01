@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button"
 
 export default function RushInstagram() {
   return (
-    <div className="bg-white relative">
-      <div className="absolute inset-0 opacity-10">
+    <div className="bg-white dark:bg-black relative transition-colors duration-200">
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
         <div
           className="w-full h-full"
           style={{
@@ -18,9 +18,9 @@ export default function RushInstagram() {
         />
       </div>
 
-      <div className="absolute top-10 left-10 w-12 h-12 border-2 border-yellow-500 opacity-20 rotate-45"></div>
-      <div className="absolute top-1/2 right-10 w-16 h-16 border-2 border-yellow-500 opacity-20"></div>
-      <div className="absolute bottom-10 left-1/3 w-8 h-8 bg-yellow-500 opacity-20 rotate-45"></div>
+      <div className="absolute top-10 left-10 w-12 h-12 border-2 border-yellow-500 opacity-20 rotate-45 pointer-events-none"></div>
+      <div className="absolute top-1/2 right-10 w-16 h-16 border-2 border-yellow-500 opacity-20 pointer-events-none"></div>
+      <div className="absolute bottom-10 left-1/3 w-8 h-8 bg-yellow-500 opacity-20 rotate-45 pointer-events-none"></div>
 
       <section
         id="instagram"
@@ -36,7 +36,7 @@ export default function RushInstagram() {
             <Button
               size="lg"
               asChild
-              className="mt-4 bg-white text-yellow-500 hover:bg-yellow-50 border-2 border-white hover:border-yellow-100"
+              className="mt-4 bg-white text-yellow-600 hover:bg-yellow-50 border-2 border-white hover:border-yellow-100 font-semibold"
             >
               <Link href="https://www.instagram.com/thetatauxi" target="_blank" rel="noopener noreferrer">
                 Follow @thetatauxi

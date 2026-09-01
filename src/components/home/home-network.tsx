@@ -30,10 +30,10 @@ export function HomeOurNetwork() {
   const rows = Array.from({ length: numberOfRows }, (_, i) => paddedLogos.slice(i * logosPerRow, (i + 1) * logosPerRow))
 
   return (
-    <section className="relative pt-32 pb-20 overflow-hidden bg-white">
+    <section className="relative pt-32 pb-20 overflow-hidden bg-white dark:bg-black transition-colors duration-200">
       <div className="container max-w-7xl mx-auto px-4">
-        <h2 className="text-5xl font-bold text-left mb-8 text-black">Our Alumni Network</h2>
-        <p className="text-xl text-left text-black mb-24 max-w-3xl leading-relaxed">
+        <h2 className="text-5xl font-bold text-left mb-8 text-gray-900 dark:text-white">Our Alumni Network</h2>
+        <p className="text-xl text-left text-gray-700 dark:text-gray-300 mb-24 max-w-3xl leading-relaxed">
           Theta Tau alumni are making significant contributions at leading technology and engineering companies
           worldwide. Explore our extensive network:
         </p>
@@ -61,7 +61,11 @@ export function HomeOurNetwork() {
                   key={index}
                   className="group w-[200px] h-[100px] flex items-center justify-center shrink-0 mx-8 transition-transform duration-300 hover:scale-110"
                 >
-                  <div className="relative w-[200px] h-[100px] grayscale opacity-80 transition duration-300 group-hover:grayscale-0 group-hover:opacity-100">
+                  <div
+                    className={`relative w-[200px] h-[100px] transition-all duration-300 grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 dark:invert dark:grayscale dark:brightness-200 dark:opacity-80 group-hover:dark:invert-0 group-hover:dark:grayscale-0 group-hover:dark:brightness-100 group-hover:dark:opacity-100 ${
+                      logo.hoverGlow ? "group-hover:dark:drop-shadow-[0_0_14px_rgba(255,255,255,0.85)]" : ""
+                    }`}
+                  >
                     <Image
                       src={logo.src || "/placeholder.svg"}
                       alt={logo.alt}
@@ -78,7 +82,11 @@ export function HomeOurNetwork() {
                   key={`duplicate-${index}`}
                   className="group w-[200px] h-[100px] flex items-center justify-center shrink-0 mx-8 transition-transform duration-300 hover:scale-110"
                 >
-                  <div className="relative w-[200px] h-[100px] grayscale opacity-80 transition duration-300 group-hover:grayscale-0 group-hover:opacity-100">
+                  <div
+                    className={`relative w-[200px] h-[100px] transition-all duration-300 grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 dark:invert dark:grayscale dark:brightness-200 dark:opacity-80 group-hover:dark:invert-0 group-hover:dark:grayscale-0 group-hover:dark:brightness-100 group-hover:dark:opacity-100 ${
+                      logo.hoverGlow ? "group-hover:dark:drop-shadow-[0_0_14px_rgba(255,255,255,0.85)]" : ""
+                    }`}
+                  >
                     <Image
                       src={logo.src || "/placeholder.svg"}
                       alt={logo.alt}
@@ -95,7 +103,11 @@ export function HomeOurNetwork() {
                   key={`duplicate-2-${index}`}
                   className="group w-[200px] h-[100px] flex items-center justify-center shrink-0 mx-8 transition-transform duration-300 hover:scale-110"
                 >
-                  <div className="relative w-[200px] h-[100px] grayscale opacity-80 transition duration-300 group-hover:grayscale-0 group-hover:opacity-100">
+                  <div
+                    className={`relative w-[200px] h-[100px] transition-all duration-300 grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 dark:invert dark:grayscale dark:brightness-200 dark:opacity-80 group-hover:dark:invert-0 group-hover:dark:grayscale-0 group-hover:dark:brightness-100 group-hover:dark:opacity-100 ${
+                      logo.hoverGlow ? "group-hover:dark:drop-shadow-[0_0_14px_rgba(255,255,255,0.85)]" : ""
+                    }`}
+                  >
                     <Image
                       src={logo.src || "/placeholder.svg"}
                       alt={logo.alt}
@@ -114,10 +126,16 @@ export function HomeOurNetwork() {
   )
 }
 
-const companyLogos = [
+interface CompanyLogo {
+  src: string
+  alt: string
+  hoverGlow?: boolean
+}
+
+const companyLogos: CompanyLogo[] = [
   { src: "/logos/Google-Logo.wine.svg", alt: "Google Logo" },
   { src: "/logos/Tesla,_Inc.-Logo.wine.svg", alt: "Tesla Logo" },
-  { src: "/logos/Amazon_(company)-Logo.wine.svg", alt: "Amazon Logo" },
+  { src: "/logos/Amazon_(company)-Logo.wine.svg", alt: "Amazon Logo", hoverGlow: true },
   { src: "/logos/Meta_Platforms-Logo.wine.svg", alt: "Meta Logo" },
   { src: "/logos/The_Walt_Disney_Company-Logo.wine.svg", alt: "Walt Disney Logo" },
   { src: "/logos/McKinsey_&_Company-Logo.wine.svg", alt: "McKinsey Logo" },
@@ -134,7 +152,7 @@ const companyLogos = [
   { src: "/logos/burns-and-mcdonnell-logo-vector.svg", alt: "Burns and McDonnell Logo" },
   { src: "/logos/GE_HealthCare_logo_2023.svg", alt: "GE Healthcare Logo" },
   { src: "/logos/Siemens-logo.svg", alt: "Siemens Logo" },
-  { src: "/logos/Rivian_logo_and_wordmark.svg", alt: "Rivian Logo" },
+  { src: "/logos/Rivian_logo_and_wordmark.svg", alt: "Rivian Logo", hoverGlow: true },
   { src: "/logos/BP-Logo.wine.svg", alt: "BP Logo" },
   { src: "/logos/PepsiCo-Logo.wine.svg", alt: "PepsiCo Logo" },
   { src: "/logos/Tokyo_Electron-Logo.wine.svg", alt: "Tokyo Electron Logo" },
@@ -146,5 +164,4 @@ const companyLogos = [
   { src: "/logos/Sub-Zero_(logo).svg", alt: "Sub-Zero Logo" },
   { src: "/logos/Honeywell-Logo.wine.svg", alt: "Honeywell Logo" },
   { src: "/logos/Epic_Systems.svg", alt: "Epic Systems Logo" },
-  { src: "/logos/Grainger_logo.svg", alt: "Grainger Logo" },
 ]
