@@ -27,19 +27,30 @@ export default function SyncPanel({ userRole }: SyncPanelProps) {
     setLoadingSheetId(sheetId);
     try {
       const result = await syncSheetAction(sheetId);
-      const affected = result.updatedCount + result.insertedCount;
-      const addedMsg = result.addedToSheetCount && result.addedToSheetCount > 0
-        ? ` & added ${result.addedToSheetCount} new member${result.addedToSheetCount === 1 ? '' : 's'} to Sheet`
-        : '';
-      setSyncStatus(prev => ({
-        ...prev,
-        [sheetId]: {
-          type: 'success',
-          message: `Synced ${affected} row${affected === 1 ? '' : 's'}${addedMsg} (${result.durationMs}ms)`,
-          timestamp: new Date().toLocaleTimeString(),
-        },
-      }));
-      router.refresh();
+      if (result.success) {
+        const affected = result.updatedCount + result.insertedCount;
+        const addedMsg = result.addedToSheetCount && result.addedToSheetCount > 0
+          ? ` & added ${result.addedToSheetCount} new member${result.addedToSheetCount === 1 ? '' : 's'} to Sheet`
+          : '';
+        setSyncStatus(prev => ({
+          ...prev,
+          [sheetId]: {
+            type: 'success',
+            message: `Synced ${affected} row${affected === 1 ? '' : 's'}${addedMsg} (${result.durationMs}ms)`,
+            timestamp: new Date().toLocaleTimeString(),
+          },
+        }));
+        router.refresh();
+      } else {
+        setSyncStatus(prev => ({
+          ...prev,
+          [sheetId]: {
+            type: 'error',
+            message: result.errors.join('; ') || 'Sync failed. Please check sheet credentials and table schema.',
+            timestamp: new Date().toLocaleTimeString(),
+          },
+        }));
+      }
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to sync. Check sheet connection.';
       setSyncStatus(prev => ({
@@ -59,16 +70,30 @@ export default function SyncPanel({ userRole }: SyncPanelProps) {
     setLoadingSheetId('all');
     try {
       const results = await syncAllSheetsAction();
+      const failures = results.filter(r => !r.success);
       const totalAffected = results.reduce((sum, r) => sum + r.updatedCount + r.insertedCount, 0);
-      setSyncStatus(prev => ({
-        ...prev,
-        all: {
-          type: 'success',
-          message: `Successfully synced ${results.length} sheets (${totalAffected} total records affected)!`,
-          timestamp: new Date().toLocaleTimeString(),
-        },
-      }));
-      router.refresh();
+
+      if (failures.length === 0) {
+        setSyncStatus(prev => ({
+          ...prev,
+          all: {
+            type: 'success',
+            message: `Successfully synced ${results.length} sheets (${totalAffected} total records affected)!`,
+            timestamp: new Date().toLocaleTimeString(),
+          },
+        }));
+        router.refresh();
+      } else {
+        const errSummary = failures.map(f => `${f.sheetName}: ${f.errors.join(', ')}`).join(' | ');
+        setSyncStatus(prev => ({
+          ...prev,
+          all: {
+            type: 'error',
+            message: `Sync partially failed: ${errSummary}`,
+            timestamp: new Date().toLocaleTimeString(),
+          },
+        }));
+      }
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to sync all sheets.';
       setSyncStatus(prev => ({

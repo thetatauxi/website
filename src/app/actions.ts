@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { syncSheetToSupabase, syncAllSheetsToSupabase } from '@/lib/sheets/sync-engine';
-import { getSheetConfigById } from '@/config/sheets';
+import { getSheetConfigById, SyncResult } from '@/config/sheets';
 
 export async function logoutAction() {
   const supabase = createClient();
@@ -43,7 +43,7 @@ async function verifySyncPermission(sheetId?: string) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    throw new Error('Unauthorized. Please log in.');
+    throw new Error('Unauthorized. Please log in to sync data.');
   }
 
   const { data: profile } = await supabase
@@ -53,7 +53,7 @@ async function verifySyncPermission(sheetId?: string) {
     .single();
 
   if (!profile) {
-    throw new Error('Profile not found.');
+    throw new Error('Profile not found for authenticated user.');
   }
 
   const userRole = (profile.role || '').toLowerCase();
@@ -91,49 +91,70 @@ async function verifySyncPermission(sheetId?: string) {
 /**
  * Syncs a specific configured Google Sheet by its ID
  */
-export async function syncSheetAction(sheetId: string) {
-  const { supabase } = await verifySyncPermission(sheetId);
-  const result = await syncSheetToSupabase(sheetId, supabase);
-
-  if (!result.success && result.errors.length > 0) {
-    throw new Error(`Sync failed: ${result.errors.join('; ')}`);
+export async function syncSheetAction(sheetId: string): Promise<SyncResult> {
+  try {
+    const { supabase } = await verifySyncPermission(sheetId);
+    const result = await syncSheetToSupabase(sheetId, supabase);
+    return result;
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Unknown sync error';
+    return {
+      sheetId,
+      sheetName: sheetId,
+      supabaseTable: '',
+      success: false,
+      totalRowsRead: 0,
+      updatedCount: 0,
+      insertedCount: 0,
+      failedCount: 0,
+      errors: [errorMsg],
+      durationMs: 0,
+      syncedAt: new Date().toISOString(),
+    };
   }
-
-  return result;
 }
 
 /**
  * Syncs all configured Google Sheets in the registry
  */
-export async function syncAllSheetsAction() {
-  const { supabase } = await verifySyncPermission();
-  const results = await syncAllSheetsToSupabase(supabase);
-
-  const failures = results.filter(r => !r.success);
-  if (failures.length > 0) {
-    const errorDetails = failures.map(f => `${f.sheetName}: ${f.errors.join(', ')}`).join(' | ');
-    throw new Error(`Some sheets failed to sync: ${errorDetails}`);
+export async function syncAllSheetsAction(): Promise<SyncResult[]> {
+  try {
+    const { supabase } = await verifySyncPermission();
+    const results = await syncAllSheetsToSupabase(supabase);
+    return results;
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Failed to sync sheets';
+    return [{
+      sheetId: 'all',
+      sheetName: 'All Sheets',
+      supabaseTable: '',
+      success: false,
+      totalRowsRead: 0,
+      updatedCount: 0,
+      insertedCount: 0,
+      failedCount: 0,
+      errors: [errorMsg],
+      durationMs: 0,
+      syncedAt: new Date().toISOString(),
+    }];
   }
-
-  return results;
 }
 
 /**
  * Backwards compatible member status sync action
  */
 export async function syncMemberStatusAction() {
-  const { supabase } = await verifySyncPermission('roster_status');
-  const result = await syncSheetToSupabase('roster_status', supabase);
-
-  if (!result.success) {
-    throw new Error(result.errors.join(', ') || 'Failed to sync member status from Google Sheet.');
+  const res = await syncSheetAction('roster_status');
+  if (!res.success) {
+    throw new Error(res.errors.join('; ') || 'Failed to sync member status from Google Sheet.');
   }
 
-  if (result.updatedCount === 0 && result.insertedCount === 0) {
+  const count = res.updatedCount + res.insertedCount;
+  if (count === 0) {
     throw new Error(
       'No matching profiles found in Supabase. Make sure the usernames in your Google Sheet match the usernames in the profiles table.'
     );
   }
 
-  return { success: true, count: result.updatedCount + result.insertedCount };
+  return { success: true, count };
 }
