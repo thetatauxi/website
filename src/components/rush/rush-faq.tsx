@@ -104,13 +104,13 @@ export function RushFAQ() {
           <AccordionItem value="item-9">
             <AccordionTrigger>When are the first-round applications due?</AccordionTrigger>
             <AccordionContent>
-              The application must be submitted by Tuesday, 2/3, at 6 PM. Be sure to submit it on time, as late applications will not be accepted.
+              The application must be submitted by Tuesday, 9/15, by 11:59 PM. Be sure to submit it on time, as late applications will not be accepted.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="item-8">
             <AccordionTrigger>How do I know if I got an invitation to the Engineering Challenge and Food Friday?</AccordionTrigger>
             <AccordionContent>
-              Invitations will be sent to your email on Wednesday night (2/4). Be sure you’re receiving our emails and keep an eye out for your invite! Your invitation will also include the event location details.
+              Invitations will be sent to your email on Wednesday night (9/16). Be sure you’re receiving our emails and keep an eye out for your invite! Your invitation will also include the event location details.
             </AccordionContent>
           </AccordionItem>
 

@@ -255,6 +255,8 @@ export default function SetupProfilePage() {
                   <option value="Aerospace Engineering">Aerospace Engineering</option>
                   <option value="Agricultural and Biosystems Engineering">Agricultural and Biosystems Engineering</option>
                   <option value="Biological Systems Engineering">Biological Systems Engineering</option>
+                  <option value="Biomedical Engineering">Biomedical Engineering</option>
+                  <option value="Chemical Engineering">Chemical Engineering</option>
                   <option value="Civil Engineering">Civil Engineering</option>
                   <option value="Computer Engineering">Computer Engineering</option>
                   <option value="Electrical Engineering">Electrical Engineering</option>
