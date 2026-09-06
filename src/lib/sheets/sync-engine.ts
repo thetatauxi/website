@@ -153,6 +153,39 @@ export async function clearSheetValues(params: {
 }
 
 /**
+ * Clears multiple cell ranges in a Google Sheet tab in a single batch request
+ */
+export async function batchClearSheetRanges(params: {
+  spreadsheetIdOrUrl: string;
+  sheetName: string;
+  ranges: string[];
+}) {
+  if (!params.ranges || params.ranges.length === 0) return;
+
+  const sheets = getGoogleSheetsClient();
+  const spreadsheetId = extractSpreadsheetId(params.spreadsheetIdOrUrl);
+
+  if (!spreadsheetId) {
+    throw new Error('Spreadsheet ID is missing or invalid.');
+  }
+
+  const fullRanges = params.ranges.map(r =>
+    r.startsWith(`'${params.sheetName}'!`) || r.startsWith(`${params.sheetName}!`)
+      ? r
+      : `'${params.sheetName}'!${r}`
+  );
+
+  const response = await sheets.spreadsheets.values.batchClear({
+    spreadsheetId,
+    requestBody: {
+      ranges: fullRanges,
+    },
+  });
+
+  return response.data;
+}
+
+/**
  * Synchronizes a configured Google Sheet to its target Supabase database table
  */
 export async function syncSheetToSupabase(
@@ -432,8 +465,8 @@ export async function syncSupabaseToSheet(
     typeof c.sheetColumn === 'string'
       ? c.sheetColumn
       : Array.isArray(c.sheetColumn)
-      ? c.sheetColumn[0]
-      : c.supabaseColumn
+        ? c.sheetColumn[0]
+        : c.supabaseColumn
   );
 
   const values: unknown[][] = [headers];
@@ -466,16 +499,43 @@ export interface AccountIntakeResult {
   alreadyUsed: number;
   message: string;
   wiped: boolean;
+  wipedRowsCount?: number;
+  unsentRowsCount?: number;
   invitedEmails: string[];
   alreadyUsedEmails: string[];
   errors: string[];
 }
 
 /**
+ * Helper to group an array of row numbers into contiguous ranges.
+ * Example: [2, 3, 4, 6] -> [{ start: 2, end: 4 }, { start: 6, end: 6 }]
+ */
+function groupContiguousRowRanges(rowNumbers: number[]): Array<{ start: number; end: number }> {
+  if (rowNumbers.length === 0) return [];
+  const sorted = Array.from(new Set(rowNumbers)).sort((a, b) => a - b);
+  const ranges: Array<{ start: number; end: number }> = [];
+  let start = sorted[0];
+  let prev = sorted[0];
+
+  for (let i = 1; i < sorted.length; i++) {
+    const curr = sorted[i];
+    if (curr === prev + 1) {
+      prev = curr;
+    } else {
+      ranges.push({ start, end: prev });
+      start = curr;
+      prev = curr;
+    }
+  }
+  ranges.push({ start, end: prev });
+  return ranges;
+}
+
+/**
  * Reads prospective member emails from the 'NewAccountIntake' tab of the MemberStatus sheet,
  * verifies whether each email is already registered or invited in Supabase,
  * dispatches official Supabase invitation emails to new accounts,
- * clears the processed email rows from the Google Sheet,
+ * wipes ONLY the rows of emails that were sent or already in use (preserving unsent/failed rows),
  * and returns summary statistics.
  */
 export async function processNewAccountIntake(spreadsheetIdOrUrl?: string): Promise<AccountIntakeResult> {
@@ -507,7 +567,7 @@ export async function processNewAccountIntake(spreadsheetIdOrUrl?: string): Prom
     if (errMsg.includes('Unable to parse range') || errMsg.includes('not found')) {
       throw new Error(
         `Worksheet tab "${sheetName}" was not found in the MemberStatus spreadsheet. ` +
-        `Please create a tab named "${sheetName}" with a column header "wicEmail".`
+        `Please create a tab named "${sheetName}" with a column header "wiscEmail".`
       );
     }
     throw err;
@@ -519,18 +579,20 @@ export async function processNewAccountIntake(spreadsheetIdOrUrl?: string): Prom
       totalFound: 0,
       invitesSent: 0,
       alreadyUsed: 0,
-      message: "0 invites sent. 0 email's already in use",
+      message: "0 invites sent. 0 emails already in use.",
       wiped: false,
+      wipedRowsCount: 0,
+      unsentRowsCount: 0,
       invitedEmails: [],
       alreadyUsedEmails: [],
       errors: [],
     };
   }
 
-  // 1. Locate the email column header (e.g. wicEmail, wiscEmail, email)
+  // 1. Locate the email column header (e.g. wiscEmail, wiscEmail, email)
   const headers = (sheetValues[0] || []).map(h => String(h || '').trim().toLowerCase());
   let emailColIdx = headers.findIndex(h =>
-    h === 'wicemail' ||
+    h === 'wiscEmail' ||
     h === 'wiscemail' ||
     h === 'wisc_email' ||
     h === 'wic_email' ||
@@ -545,21 +607,29 @@ export async function processNewAccountIntake(spreadsheetIdOrUrl?: string): Prom
     emailColIdx = 0;
   }
 
-  // If row 0 itself looks like an email (user skipped header), include row 0 as data
-  let dataRows = sheetValues.slice(1);
-  if (headers[emailColIdx]?.includes('@')) {
-    dataRows = sheetValues;
+  // Determine starting row index (if row 0 is already an email because user skipped header)
+  const startRowIndex = headers[emailColIdx]?.includes('@') ? 0 : 1;
+
+  // 2. Parse candidate rows with their 1-based row numbers in Google Sheets
+  interface CandidateRow {
+    rowNum: number;
+    rawVal: string;
+    email: string;
   }
 
-  // 2. Extract and sanitize candidate emails
-  const candidateEmails: string[] = [];
-  const seen = new Set<string>();
+  const candidateRows: CandidateRow[] = [];
+  const errors: string[] = [];
 
-  for (const row of dataRows) {
+  for (let i = startRowIndex; i < sheetValues.length; i++) {
+    const row = sheetValues[i];
+    const rowNum = i + 1;
     const rawVal = row[emailColIdx];
-    if (rawVal === undefined || rawVal === null) continue;
+
+    if (rawVal === undefined || rawVal === null || String(rawVal).trim() === '') {
+      continue;
+    }
+
     let email = String(rawVal).trim().toLowerCase();
-    if (!email) continue;
 
     // Normalize: if only NetID was entered, append @wisc.edu
     if (!email.includes('@')) {
@@ -567,25 +637,28 @@ export async function processNewAccountIntake(spreadsheetIdOrUrl?: string): Prom
     }
 
     // Basic email format check
-    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      if (!seen.has(email)) {
-        seen.add(email);
-        candidateEmails.push(email);
-      }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.push(`Row ${rowNum} ("${rawVal}"): Invalid email address format (not sent; row preserved in sheet).`);
+      // Invalid email cannot be sent, so it will NOT be wiped
+      continue;
     }
+
+    candidateRows.push({ rowNum, rawVal: String(rawVal), email });
   }
 
-  if (candidateEmails.length === 0) {
+  if (candidateRows.length === 0) {
     return {
-      success: true,
+      success: errors.length === 0,
       totalFound: 0,
       invitesSent: 0,
       alreadyUsed: 0,
-      message: "0 invites sent. 0 email's already in use",
+      message: "0 invites sent. 0 emails already in use.",
       wiped: false,
+      wipedRowsCount: 0,
+      unsentRowsCount: 0,
       invitedEmails: [],
       alreadyUsedEmails: [],
-      errors: [],
+      errors,
     };
   }
 
@@ -640,17 +713,20 @@ export async function processNewAccountIntake(spreadsheetIdOrUrl?: string): Prom
   }
 
   // 4. Determine invite redirect destination
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thetatauxi.com';
-  const redirectTo = `${siteUrl.replace(/\/+$/, '')}/auth/callback`;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thetatauxi.org';
+  const redirectTo = `${siteUrl.replace(/\/+$/, '')}/setup-profile`;
 
-  // 5. Process candidate emails: invite new or mark as already used
-  const invitedEmails: string[] = [];
-  const alreadyUsedEmails: string[] = [];
-  const errors: string[] = [];
+  // 5. Process candidate rows: invite new or mark as already used, and track exact rows to wipe
+  const invitedEmails = new Set<string>();
+  const alreadyUsedEmails = new Set<string>();
+  const rowsToWipe = new Set<number>();
 
-  for (const email of candidateEmails) {
-    if (existingEmails.has(email)) {
-      alreadyUsedEmails.push(email);
+  for (const { rowNum, email } of candidateRows) {
+    // If email is already in Supabase or was already invited/used in this run
+    if (existingEmails.has(email) || invitedEmails.has(email) || alreadyUsedEmails.has(email)) {
+      alreadyUsedEmails.add(email);
+      // Email is already used -> wipe this row
+      rowsToWipe.add(rowNum);
       continue;
     }
 
@@ -666,42 +742,58 @@ export async function processNewAccountIntake(spreadsheetIdOrUrl?: string): Prom
         errMsg.includes('already exists') ||
         errMsg.includes('already in use')
       ) {
-        alreadyUsedEmails.push(email);
+        alreadyUsedEmails.add(email);
         existingEmails.add(email);
+        // Already used -> wipe this row
+        rowsToWipe.add(rowNum);
       } else {
-        errors.push(`${email}: ${inviteError.message}`);
+        // Invite could not be sent -> DO NOT wipe this row!
+        errors.push(`Row ${rowNum} (${email}): ${inviteError.message} (not sent; row preserved in sheet).`);
       }
     } else {
-      invitedEmails.push(email);
+      // Invite sent successfully!
+      invitedEmails.add(email);
       existingEmails.add(email);
+      // Email was sent -> wipe this row
+      rowsToWipe.add(rowNum);
     }
   }
 
-  // 6. Wipe the processed emails from the Google Sheet (data rows A2:Z)
+  // 6. Wipe ONLY the rows of emails that were sent or already in use
   let wiped = false;
-  try {
-    await clearSheetValues({
-      spreadsheetIdOrUrl: spreadsheetId,
-      sheetName,
-      range: 'A2:Z',
-    });
-    wiped = true;
-  } catch (wipeErr: unknown) {
-    const msg = wipeErr instanceof Error ? wipeErr.message : String(wipeErr);
-    errors.push(`Failed to wipe sheet after invites: ${msg}`);
+  const wipedRowNumbers = Array.from(rowsToWipe).sort((a, b) => a - b);
+
+  if (wipedRowNumbers.length > 0) {
+    try {
+      const rangesToClear = groupContiguousRowRanges(wipedRowNumbers).map(
+        r => r.start === r.end ? `A${r.start}:Z${r.start}` : `A${r.start}:Z${r.end}`
+      );
+
+      await batchClearSheetRanges({
+        spreadsheetIdOrUrl: spreadsheetId,
+        sheetName,
+        ranges: rangesToClear,
+      });
+      wiped = true;
+    } catch (wipeErr: unknown) {
+      const msg = wipeErr instanceof Error ? wipeErr.message : String(wipeErr);
+      errors.push(`Failed to wipe processed rows from sheet: ${msg}`);
+    }
   }
 
-  const message = `${invitedEmails.length} invites sent. ${alreadyUsedEmails.length} email's already in use`;
+  const message = `${invitedEmails.size} invites sent. ${alreadyUsedEmails.size} emails already in use.`;
 
   return {
     success: errors.length === 0,
-    totalFound: candidateEmails.length,
-    invitesSent: invitedEmails.length,
-    alreadyUsed: alreadyUsedEmails.length,
+    totalFound: candidateRows.length,
+    invitesSent: invitedEmails.size,
+    alreadyUsed: alreadyUsedEmails.size,
     message,
     wiped,
-    invitedEmails,
-    alreadyUsedEmails,
+    wipedRowsCount: wipedRowNumbers.length,
+    unsentRowsCount: candidateRows.length - wipedRowNumbers.length,
+    invitedEmails: Array.from(invitedEmails),
+    alreadyUsedEmails: Array.from(alreadyUsedEmails),
     errors,
   };
 }

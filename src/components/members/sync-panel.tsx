@@ -2,15 +2,15 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  RefreshCw, 
-  CheckCircle2, 
-  AlertCircle, 
-  Table, 
-  ChevronDown, 
-  UserPlus, 
-  Send, 
-  ShieldCheck, 
+import {
+  RefreshCw,
+  CheckCircle2,
+  AlertCircle,
+  Table,
+  ChevronDown,
+  UserPlus,
+  Send,
+  ShieldCheck,
   Trash2,
   Mail
 } from 'lucide-react';
@@ -33,7 +33,7 @@ export default function SyncPanel({ userRole }: SyncPanelProps) {
   const [loadingSheetId, setLoadingSheetId] = useState<string | null>(null);
   const [syncStatus, setSyncStatus] = useState<Record<string, { type: 'success' | 'error'; message: string; timestamp?: string }>>({});
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   // Modal state for New Account Intake results pop-up
   const [intakeModalOpen, setIntakeModalOpen] = useState(false);
   const [intakeResult, setIntakeResult] = useState<AccountIntakeResult | null>(null);
@@ -212,11 +212,10 @@ export default function SyncPanel({ userRole }: SyncPanelProps) {
 
       {/* Roster Sync Status Alert */}
       {syncStatus['roster_status'] && (
-        <div className={`p-2.5 rounded-lg text-xs flex items-start gap-2 ${
-          syncStatus['roster_status'].type === 'success'
+        <div className={`p-2.5 rounded-lg text-xs flex items-start gap-2 ${syncStatus['roster_status'].type === 'success'
             ? 'bg-green-50 text-green-800 dark:bg-green-950/30 dark:text-green-300 border border-green-200 dark:border-green-800/40'
             : 'bg-red-50 text-red-800 dark:bg-red-950/30 dark:text-red-300 border border-red-200 dark:border-red-800/40'
-        }`}>
+          }`}>
           {syncStatus['roster_status'].type === 'success' ? (
             <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
           ) : (
@@ -233,11 +232,10 @@ export default function SyncPanel({ userRole }: SyncPanelProps) {
 
       {/* Account Intake Quick Status Alert (if not opened in modal) */}
       {syncStatus['account_intake'] && !intakeModalOpen && (
-        <div className={`p-2.5 rounded-lg text-xs flex items-start gap-2 ${
-          syncStatus['account_intake'].type === 'success'
+        <div className={`p-2.5 rounded-lg text-xs flex items-start gap-2 ${syncStatus['account_intake'].type === 'success'
             ? 'bg-green-50 text-green-800 dark:bg-green-950/30 dark:text-green-300 border border-green-200 dark:border-green-800/40'
             : 'bg-red-50 text-red-800 dark:bg-red-950/30 dark:text-red-300 border border-red-200 dark:border-red-800/40'
-        }`}>
+          }`}>
           {syncStatus['account_intake'].type === 'success' ? (
             <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
           ) : (
@@ -287,12 +285,11 @@ export default function SyncPanel({ userRole }: SyncPanelProps) {
                   </h4>
                 </div>
                 <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate mt-0.5">
-                  Tab: <code className="font-mono text-[10px]">NewAccountIntake</code> &rarr; Column: <code className="font-mono text-[10px]">wicEmail</code>
+                  Tab: <code className="font-mono text-[10px]">NewAccountIntake</code> &rarr; Column: <code className="font-mono text-[10px]">wiscEmail</code>
                 </p>
                 {syncStatus['account_intake'] && (
-                  <p className={`text-[10px] mt-1 ${
-                    syncStatus['account_intake'].type === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                  }`}>
+                  <p className={`text-[10px] mt-1 ${syncStatus['account_intake'].type === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                    }`}>
                     {syncStatus['account_intake'].message}
                   </p>
                 )}
@@ -329,9 +326,8 @@ export default function SyncPanel({ userRole }: SyncPanelProps) {
                       Tab: <code className="font-mono text-[10px]">{sheet.sheetName}</code> &rarr; Table: <code className="font-mono text-[10px]">{sheet.supabaseTable}</code>
                     </p>
                     {status && (
-                      <p className={`text-[10px] mt-1 ${
-                        status.type === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                      }`}>
+                      <p className={`text-[10px] mt-1 ${status.type === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                        }`}>
                         {status.message}
                       </p>
                     )}
@@ -412,16 +408,25 @@ export default function SyncPanel({ userRole }: SyncPanelProps) {
             </div>
 
             {/* Google Sheet Wipe Status */}
-            <div className="p-2.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/80 flex items-center justify-between text-xs">
+            <div className="p-2.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/80 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs">
               <div className="flex items-center gap-2">
                 <Trash2 className="h-4 w-4 text-zinc-500" />
                 <span className="text-gray-700 dark:text-gray-300 font-medium">
                   Google Sheet Intake Rows:
                 </span>
               </div>
-              <span className={`font-semibold ${intakeResult?.wiped ? 'text-green-600 dark:text-green-400' : 'text-zinc-500'}`}>
-                {intakeResult?.wiped ? 'Wiped & cleared' : 'No rows wiped'}
-              </span>
+              <div className="text-right">
+                <span className={`font-semibold ${intakeResult?.wiped ? 'text-green-600 dark:text-green-400' : 'text-zinc-500'}`}>
+                  {intakeResult?.wiped
+                    ? `Wiped ${intakeResult.wipedRowsCount ?? ''} sent/used row${(intakeResult.wipedRowsCount ?? 0) === 1 ? '' : 's'}`
+                    : 'No rows wiped'}
+                </span>
+                {!!intakeResult?.unsentRowsCount && intakeResult.unsentRowsCount > 0 && (
+                  <span className="text-[10px] text-amber-600 dark:text-amber-400 block">
+                    ({intakeResult.unsentRowsCount} unsent row{intakeResult.unsentRowsCount === 1 ? '' : 's'} preserved)
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Itemized Lists (if available) */}

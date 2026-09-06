@@ -29,24 +29,17 @@ export default function SetupProfilePage() {
   const supabase = createClient()
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        setError('Your invitation link is expired or invalid. Please request a new invite.')
-        setLoading(false)
-        return
-      }
+    let isMounted = true
 
-      setUserId(session.user.id)
-
-      // Fetch the profile
+    const loadProfileData = async (uid: string) => {
+      setUserId(uid)
       const { data: profile } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', session.user.id)
+        .eq('id', uid)
         .single()
 
-      if (profile) {
+      if (isMounted && profile) {
         setUsername(profile.username || '')
         // Do not overwrite with TEMP or 0 if we can avoid it, or clear them if they are placeholders
         setFirstName(profile.first_name === 'TEMP' ? '' : profile.first_name || '')
@@ -55,10 +48,38 @@ export default function SetupProfilePage() {
         setPledgeClass(profile.pledge_class === 'TEMP' ? '' : profile.pledge_class || '')
         setGraduationYear(profile.graduation_year === 0 ? '' : profile.graduation_year?.toString() || '')
       }
-      setLoading(false)
+      if (isMounted) {
+        setLoading(false)
+      }
     }
 
-    fetchProfile()
+    // 1. Listen for auth state change (essential when tokens arrive via hash fragment)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!isMounted) return
+      if (session) {
+        await loadProfileData(session.user.id)
+      }
+    })
+
+    // 2. Check if a session already exists
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!isMounted) return
+      if (session) {
+        await loadProfileData(session.user.id)
+      } else {
+        // If there's an access_token in the URL hash, onAuthStateChange will process it
+        if (typeof window !== 'undefined' && window.location.hash.includes('access_token')) {
+          return
+        }
+        setError('Your invitation link is expired or invalid. Please request a new invite.')
+        setLoading(false)
+      }
+    })
+
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
+    }
   }, [supabase])
 
   const handleSubmit = async (e: React.FormEvent) => {

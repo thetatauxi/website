@@ -78,7 +78,7 @@ async function inviteAll() {
 
       // Send invite
       const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
-        redirectTo: 'https://thetatauxi.com/auth/callback'
+        redirectTo: 'https://thetatauxi.org/setup-profile'
       })
 
       if (inviteError) {

@@ -72,19 +72,19 @@ You can connect any spreadsheet in **two ways**:
   2. `NewAccountIntake` (Prospective Member Invitations)
      - **Headers in Row 1**:
        ```
-       wicEmail
+       wiscEmail
        ```
        *(or `wiscEmail` / `email`)*
      - **Workflow & Sync Behavior**:
-       - Prospective members or administrators enter University of Wisconsin emails (e.g. `bucky@wisc.edu` or simply netIDs like `bucky`) into the `wicEmail` column (row 2 downwards).
+       - Prospective members or administrators enter University of Wisconsin emails (e.g. `bucky@wisc.edu` or simply netIDs like `bucky`) into the `wiscEmail` column (row 2 downwards).
        - Clicking **"Sync New Account Intake"** in the Admin Member Portal:
          1. Pulls prospective emails from the `NewAccountIntake` tab.
          2. Automatically formats any netIDs missing `@wisc.edu`.
          3. Checks Supabase Auth and `profiles` to verify if the account is already registered or invited.
          4. Sends official Supabase invitation emails to new emails with a secure link to `/setup-profile`.
-         5. Automatically **wipes** the processed intake rows (`A2:Z`) from the Google Sheet to prevent duplicate processing, while preserving the header row.
+         5. Automatically **wipes only the rows of emails that were sent or already in use**. If an email cannot be sent (e.g. format typo, API error), its row is preserved in the sheet for inspection and retry.
          6. Displays a modal pop-up with the summary:
-            `"# invites sent. # email's already in use"`
+            `"# invites sent. # emails already in use."`
      - **Required Environment Variable**:
        - `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` (and in Vercel project settings).
 
