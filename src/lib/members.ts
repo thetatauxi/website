@@ -73,13 +73,6 @@ export const members: Member[] = [
     linkedinUrl: "https://www.linkedin.com/in/arshiya-chugh-b67114261",
   },
   {
-    id: 16,
-    name: "Mihir Patil",
-    imageUrl: "/spring25_headshots/TT.webp",
-    pledgeClass: "Fall 2023",
-    linkedinUrl: "https://www.linkedin.com/in/thetatauxi/",
-  },
-  {
     id: 17,
     name: "Drew Hay",
     imageUrl: "/spring25_headshots/DrewH.webp",
@@ -632,13 +625,6 @@ export const members: Member[] = [
     imageUrl: "/spring25_headshots/TT.webp",
     pledgeClass: "Fall 2025",
     linkedinUrl: "https://www.linkedin.com/in/thetatauxi/",
-  },
-  {
-    id: 111,
-    name: "Sullivan Neumeier",
-    imageUrl: "/fall25pc/Sullivan_Neumeier.webp",
-    pledgeClass: "Fall 2025",
-    linkedinUrl: "https://www.linkedin.com/in/sullivan-neumeier",
   },
   {
     id: 112,
