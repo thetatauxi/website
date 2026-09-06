@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { syncSheetToSupabase, syncAllSheetsToSupabase } from '@/lib/sheets/sync-engine';
+import { syncSheetToSupabase, syncAllSheetsToSupabase, processNewAccountIntake } from '@/lib/sheets/sync-engine';
 import { SHEET_CONFIGS, getSheetConfigById } from '@/config/sheets';
 import { createClient } from '@/lib/supabase/server';
 
@@ -51,7 +51,20 @@ async function handleSync(req: NextRequest) {
           .single();
 
         const role = profile?.role?.toLowerCase() || '';
-        const allowedRoles = ['regent', 'vice regent', 'corresponding secretary', 'scribe', 'treasurer', 'marshall', 'general chair', 'admin', 'rush chair'];
+        const allowedRoles = [
+          'regent',
+          'vice regent',
+          'corresponding secretary',
+          'scribe',
+          'treasurer',
+          'marshall',
+          'general chair',
+          'admin',
+          'rush chair',
+          'website chair',
+          'web chair',
+          'website',
+        ];
         if (allowedRoles.includes(role)) {
           isAuthorized = true;
         }
@@ -84,6 +97,11 @@ async function handleSync(req: NextRequest) {
         success: results.every(r => r.success),
         results,
       });
+    }
+
+    if (targetSheet === 'new_account_intake' || targetSheet === 'account_intake') {
+      const intakeResult = await processNewAccountIntake();
+      return NextResponse.json(intakeResult);
     }
 
     const config = getSheetConfigById(targetSheet);

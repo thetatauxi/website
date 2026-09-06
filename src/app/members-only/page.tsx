@@ -52,7 +52,7 @@ export default async function MembersOnlyPage() {
     if (r === 'rush chair') {
       return 'rush'
     }
-    if (['regent', 'vice regent', 'scribe'].includes(r)) {
+    if (['regent', 'vice regent', 'scribe', 'website chair', 'web chair', 'website'].includes(r)) {
       return 'admin'
     }
     return 'member'

@@ -3,7 +3,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { syncSheetToSupabase, syncAllSheetsToSupabase } from '@/lib/sheets/sync-engine';
+import { syncSheetToSupabase, syncAllSheetsToSupabase, processNewAccountIntake, type AccountIntakeResult } from '@/lib/sheets/sync-engine';
 import { getSheetConfigById, SyncResult } from '@/config/sheets';
 
 export async function logoutAction() {
@@ -79,6 +79,9 @@ async function verifySyncPermission(sheetId?: string) {
     'general chair',
     'rush chair',
     'admin',
+    'website chair',
+    'web chair',
+    'website',
   ];
 
   if (!defaultAllowedRoles.includes(userRole)) {
@@ -157,4 +160,30 @@ export async function syncMemberStatusAction() {
   }
 
   return { success: true, count };
+}
+
+/**
+ * Processes prospective member emails from the NewAccountIntake sheet tab:
+ * sends Supabase Auth invites to new users, skips existing accounts,
+ * wipes processed entries from the Google Sheet, and returns the intake summary.
+ */
+export async function processNewAccountIntakeAction(): Promise<AccountIntakeResult> {
+  try {
+    await verifySyncPermission();
+    const result = await processNewAccountIntake();
+    return result;
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Unknown intake processing error';
+    return {
+      success: false,
+      totalFound: 0,
+      invitesSent: 0,
+      alreadyUsed: 0,
+      message: `Failed to process account intake: ${errorMsg}`,
+      wiped: false,
+      invitedEmails: [],
+      alreadyUsedEmails: [],
+      errors: [errorMsg],
+    };
+  }
 }

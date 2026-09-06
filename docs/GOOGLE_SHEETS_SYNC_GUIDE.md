@@ -57,20 +57,41 @@ You can connect any spreadsheet in **two ways**:
 
 ### Sheet 1: Member Status
 - **Google Sheet Name**: Member Status
-- **Tab Name**: `MemberStatus`
-- **Headers in Row 1**:
-  ```
-  username | dues_paid | brotherhood_met | prof_dev_met | comm_service_met | concessions_done | attendance_points
-  ```
+- **Tabs**:
+  1. `MemberStatus` (Roster & Points)
+     - **Headers in Row 1**:
+       ```
+       username | dues_paid | brotherhood_met | prof_dev_met | comm_service_met | concessions_done | attendance_points
+       ```
+     - **Sync Behavior**:
+       - Google Sheet is the single source of truth.
+       - When sync is clicked, all member statuses in Supabase `profiles` are updated to match the sheet.
+       - **Automatic Missing Member Backfill**: If a brother signs up or exists in Supabase whose username is not yet in the Google Sheet, the sync engine automatically appends a new row at the bottom with:
+         `username | FALSE | FALSE | FALSE | FALSE | FALSE | 0`
+
+  2. `NewAccountIntake` (Prospective Member Invitations)
+     - **Headers in Row 1**:
+       ```
+       wicEmail
+       ```
+       *(or `wiscEmail` / `email`)*
+     - **Workflow & Sync Behavior**:
+       - Prospective members or administrators enter University of Wisconsin emails (e.g. `bucky@wisc.edu` or simply netIDs like `bucky`) into the `wicEmail` column (row 2 downwards).
+       - Clicking **"Sync New Account Intake"** in the Admin Member Portal:
+         1. Pulls prospective emails from the `NewAccountIntake` tab.
+         2. Automatically formats any netIDs missing `@wisc.edu`.
+         3. Checks Supabase Auth and `profiles` to verify if the account is already registered or invited.
+         4. Sends official Supabase invitation emails to new emails with a secure link to `/setup-profile`.
+         5. Automatically **wipes** the processed intake rows (`A2:Z`) from the Google Sheet to prevent duplicate processing, while preserving the header row.
+         6. Displays a modal pop-up with the summary:
+            `"# invites sent. # email's already in use"`
+     - **Required Environment Variable**:
+       - `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` (and in Vercel project settings).
+
 - **Connection Variable** in `.env.local`:
   ```bash
   GOOGLE_MEMBER_STATUS_SPREADSHEET_ID="YOUR_MEMBER_STATUS_SPREADSHEET_ID_OR_FULL_URL"
   ```
-- **Sync Behavior**:
-  - Google Sheet is the single source of truth.
-  - When sync is clicked, all member statuses in Supabase `profiles` are updated to match the sheet.
-  - **Automatic Missing Member Backfill**: If a brother signs up or exists in Supabase whose username is not yet in the Google Sheet, the sync engine automatically appends a new row at the bottom with:
-    `username | FALSE | FALSE | FALSE | FALSE | FALSE | 0`
 
 ---
 

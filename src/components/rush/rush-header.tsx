@@ -50,8 +50,7 @@ export function RecruitmentHero() {
         </div>
 
         <div className="flex items-center justify-center lg:justify-end w-full">
-          <div classNa
-          me="w-full max-w-[550px] bg-white dark:bg-zinc-900 p-3 sm:p-4 rounded-2xl shadow-lg border border-gray-100/80 dark:border-zinc-800 overflow-hidden flex items-center justify-center transition-colors duration-200">
+          <div className="w-full max-w-[550px] bg-white dark:bg-zinc-900 p-3 sm:p-4 rounded-2xl shadow-lg border border-gray-100/80 dark:border-zinc-800 overflow-hidden flex items-center justify-center transition-colors duration-200">
             <div className="relative w-full aspect-[4/5] max-h-[580px] rounded-xl overflow-hidden">
               <Image
                 src={imageUrl}

@@ -171,7 +171,7 @@ export const SHEET_CONFIGS: SheetConfig[] = [
       { sheetColumn: 'concessions_done', supabaseColumn: 'concessions_done', type: 'boolean', defaultValue: false },
       { sheetColumn: 'attendance_points', supabaseColumn: 'attendance_points', type: 'number', defaultValue: 0 }
     ],
-    allowedRoles: ['regent', 'vice regent', 'corresponding secretary', 'scribe', 'treasurer', 'marshall', 'general chair', 'admin']
+    allowedRoles: ['regent', 'vice regent', 'corresponding secretary', 'scribe', 'treasurer', 'marshall', 'general chair', 'admin', 'website chair', 'web chair', 'website']
   },
 
   // 2. Calendar and Links Spreadsheet -> Calendar Tab
@@ -228,7 +228,7 @@ export const SHEET_CONFIGS: SheetConfig[] = [
       { sheetColumn: ['balance', 'amount'], supabaseColumn: 'balance', type: 'number', defaultValue: 0 },
       { sheetColumn: ['notes', 'details'], supabaseColumn: 'notes', type: 'string' }
     ],
-    allowedRoles: ['regent', 'treasurer', 'admin']
+    allowedRoles: ['regent', 'treasurer', 'admin', 'website chair', 'web chair', 'website']
   },
 
   // 3. Finances Spreadsheet -> Budget Tab
@@ -249,7 +249,7 @@ export const SHEET_CONFIGS: SheetConfig[] = [
       { sheetColumn: ['remaining_amount', 'remaining'], supabaseColumn: 'remaining_amount', type: 'number', defaultValue: 0 },
       { sheetColumn: ['notes', 'description'], supabaseColumn: 'notes', type: 'string' }
     ],
-    allowedRoles: ['regent', 'treasurer', 'admin']
+    allowedRoles: ['regent', 'treasurer', 'admin', 'website chair', 'web chair', 'website']
   },
 
   // 4. Alumni Management Spreadsheet -> AlumniOverview Tab
@@ -272,7 +272,7 @@ export const SHEET_CONFIGS: SheetConfig[] = [
       { sheetColumn: ['location', 'city'], supabaseColumn: 'location', type: 'string' },
       { sheetColumn: ['linkedin_url', 'linkedin'], supabaseColumn: 'linkedin_url', type: 'string' }
     ],
-    allowedRoles: ['regent', 'vice regent', 'corresponding secretary', 'admin']
+    allowedRoles: ['regent', 'vice regent', 'corresponding secretary', 'admin', 'website chair', 'web chair', 'website']
   }
 ];
 

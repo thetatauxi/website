@@ -3,6 +3,7 @@ import { SHEET_CONFIGS, SheetConfig, SyncResult, getSheetConfigById } from '@/co
 import { extractSpreadsheetId, buildHeaderIndexMap, transformRowToSupabaseRecord, findColumnIndex } from './utils';
 import { createClient } from '@/lib/supabase/server';
 import { SupabaseClient } from '@supabase/supabase-js';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 /**
  * Initializes authenticated Google Sheets API client
@@ -121,6 +122,31 @@ export async function appendSheetRows(params: {
     requestBody: {
       values: params.rows as any[][], // eslint-disable-line @typescript-eslint/no-explicit-any
     },
+  });
+
+  return response.data;
+}
+
+/**
+ * Clears cell values in a Google Sheet tab range without deleting rows or columns
+ */
+export async function clearSheetValues(params: {
+  spreadsheetIdOrUrl: string;
+  sheetName: string;
+  range: string;
+}) {
+  const sheets = getGoogleSheetsClient();
+  const spreadsheetId = extractSpreadsheetId(params.spreadsheetIdOrUrl);
+
+  if (!spreadsheetId) {
+    throw new Error('Spreadsheet ID is missing or invalid.');
+  }
+
+  const fullRange = `'${params.sheetName}'!${params.range}`;
+
+  const response = await sheets.spreadsheets.values.clear({
+    spreadsheetId,
+    range: fullRange,
   });
 
   return response.data;
@@ -431,4 +457,251 @@ export async function syncSupabaseToSheet(
   });
 
   return { success: true, rowsWritten: rows.length };
+}
+
+export interface AccountIntakeResult {
+  success: boolean;
+  totalFound: number;
+  invitesSent: number;
+  alreadyUsed: number;
+  message: string;
+  wiped: boolean;
+  invitedEmails: string[];
+  alreadyUsedEmails: string[];
+  errors: string[];
+}
+
+/**
+ * Reads prospective member emails from the 'NewAccountIntake' tab of the MemberStatus sheet,
+ * verifies whether each email is already registered or invited in Supabase,
+ * dispatches official Supabase invitation emails to new accounts,
+ * clears the processed email rows from the Google Sheet,
+ * and returns summary statistics.
+ */
+export async function processNewAccountIntake(spreadsheetIdOrUrl?: string): Promise<AccountIntakeResult> {
+  const spreadsheetId = extractSpreadsheetId(
+    spreadsheetIdOrUrl ||
+    process.env.GOOGLE_MEMBER_STATUS_SPREADSHEET_ID ||
+    process.env.GOOGLE_SPREADSHEET_ID ||
+    ''
+  );
+
+  if (!spreadsheetId) {
+    throw new Error(
+      'Member Status Spreadsheet ID is missing. Please define GOOGLE_MEMBER_STATUS_SPREADSHEET_ID in your environment variables.'
+    );
+  }
+
+  const sheetName = 'NewAccountIntake';
+  let sheetValues: unknown[][] = [];
+
+  try {
+    const res = await readRawSheetValues({
+      spreadsheetIdOrUrl: spreadsheetId,
+      sheetName,
+      range: 'A:Z',
+    });
+    sheetValues = res.values || [];
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    if (errMsg.includes('Unable to parse range') || errMsg.includes('not found')) {
+      throw new Error(
+        `Worksheet tab "${sheetName}" was not found in the MemberStatus spreadsheet. ` +
+        `Please create a tab named "${sheetName}" with a column header "wicEmail".`
+      );
+    }
+    throw err;
+  }
+
+  if (sheetValues.length === 0) {
+    return {
+      success: true,
+      totalFound: 0,
+      invitesSent: 0,
+      alreadyUsed: 0,
+      message: "0 invites sent. 0 email's already in use",
+      wiped: false,
+      invitedEmails: [],
+      alreadyUsedEmails: [],
+      errors: [],
+    };
+  }
+
+  // 1. Locate the email column header (e.g. wicEmail, wiscEmail, email)
+  const headers = (sheetValues[0] || []).map(h => String(h || '').trim().toLowerCase());
+  let emailColIdx = headers.findIndex(h =>
+    h === 'wicemail' ||
+    h === 'wiscemail' ||
+    h === 'wisc_email' ||
+    h === 'wic_email' ||
+    h === 'email' ||
+    h.includes('wic') ||
+    h.includes('wisc') ||
+    h.includes('email')
+  );
+
+  // If header doesn't match standard terms, fallback to column 0
+  if (emailColIdx === -1) {
+    emailColIdx = 0;
+  }
+
+  // If row 0 itself looks like an email (user skipped header), include row 0 as data
+  let dataRows = sheetValues.slice(1);
+  if (headers[emailColIdx]?.includes('@')) {
+    dataRows = sheetValues;
+  }
+
+  // 2. Extract and sanitize candidate emails
+  const candidateEmails: string[] = [];
+  const seen = new Set<string>();
+
+  for (const row of dataRows) {
+    const rawVal = row[emailColIdx];
+    if (rawVal === undefined || rawVal === null) continue;
+    let email = String(rawVal).trim().toLowerCase();
+    if (!email) continue;
+
+    // Normalize: if only NetID was entered, append @wisc.edu
+    if (!email.includes('@')) {
+      email = `${email}@wisc.edu`;
+    }
+
+    // Basic email format check
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      if (!seen.has(email)) {
+        seen.add(email);
+        candidateEmails.push(email);
+      }
+    }
+  }
+
+  if (candidateEmails.length === 0) {
+    return {
+      success: true,
+      totalFound: 0,
+      invitesSent: 0,
+      alreadyUsed: 0,
+      message: "0 invites sent. 0 email's already in use",
+      wiped: false,
+      invitedEmails: [],
+      alreadyUsedEmails: [],
+      errors: [],
+    };
+  }
+
+  // 3. Query existing users in Supabase Auth and Profiles
+  const adminSupabase = createAdminClient();
+  const existingEmails = new Set<string>();
+
+  // Gather all Supabase Auth users (paginated)
+  let page = 1;
+  const perPage = 1000;
+  let hasMore = true;
+
+  while (hasMore) {
+    const { data: usersData, error: listError } = await adminSupabase.auth.admin.listUsers({
+      page,
+      perPage,
+    });
+
+    if (listError) {
+      throw new Error(`Failed to query existing Supabase auth accounts: ${listError.message}`);
+    }
+
+    const users = usersData?.users || [];
+    for (const u of users) {
+      if (u.email) {
+        existingEmails.add(u.email.toLowerCase().trim());
+      }
+    }
+
+    if (users.length < perPage) {
+      hasMore = false;
+    } else {
+      page++;
+    }
+  }
+
+  // Gather existing usernames and emails from profiles table
+  const { data: profiles, error: profileError } = await adminSupabase
+    .from('profiles')
+    .select('username, email');
+
+  if (!profileError && profiles) {
+    for (const p of profiles) {
+      if (p.email) {
+        existingEmails.add(String(p.email).toLowerCase().trim());
+      }
+      if (p.username) {
+        const u = String(p.username).toLowerCase().trim();
+        existingEmails.add(u.includes('@') ? u : `${u}@wisc.edu`);
+      }
+    }
+  }
+
+  // 4. Determine invite redirect destination
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thetatauxi.com';
+  const redirectTo = `${siteUrl.replace(/\/+$/, '')}/auth/callback`;
+
+  // 5. Process candidate emails: invite new or mark as already used
+  const invitedEmails: string[] = [];
+  const alreadyUsedEmails: string[] = [];
+  const errors: string[] = [];
+
+  for (const email of candidateEmails) {
+    if (existingEmails.has(email)) {
+      alreadyUsedEmails.push(email);
+      continue;
+    }
+
+    const { error: inviteError } = await adminSupabase.auth.admin.inviteUserByEmail(
+      email,
+      { redirectTo }
+    );
+
+    if (inviteError) {
+      const errMsg = inviteError.message.toLowerCase();
+      if (
+        errMsg.includes('already registered') ||
+        errMsg.includes('already exists') ||
+        errMsg.includes('already in use')
+      ) {
+        alreadyUsedEmails.push(email);
+        existingEmails.add(email);
+      } else {
+        errors.push(`${email}: ${inviteError.message}`);
+      }
+    } else {
+      invitedEmails.push(email);
+      existingEmails.add(email);
+    }
+  }
+
+  // 6. Wipe the processed emails from the Google Sheet (data rows A2:Z)
+  let wiped = false;
+  try {
+    await clearSheetValues({
+      spreadsheetIdOrUrl: spreadsheetId,
+      sheetName,
+      range: 'A2:Z',
+    });
+    wiped = true;
+  } catch (wipeErr: unknown) {
+    const msg = wipeErr instanceof Error ? wipeErr.message : String(wipeErr);
+    errors.push(`Failed to wipe sheet after invites: ${msg}`);
+  }
+
+  const message = `${invitedEmails.length} invites sent. ${alreadyUsedEmails.length} email's already in use`;
+
+  return {
+    success: errors.length === 0,
+    totalFound: candidateEmails.length,
+    invitesSent: invitedEmails.length,
+    alreadyUsed: alreadyUsedEmails.length,
+    message,
+    wiped,
+    invitedEmails,
+    alreadyUsedEmails,
+    errors,
+  };
 }

@@ -1,7 +1,28 @@
-import { readRawSheetValues, getGoogleSheetsClient, writeSheetValues, appendSheetRows, syncSheetToSupabase, syncAllSheetsToSupabase } from './sheets/sync-engine';
+import { 
+  readRawSheetValues, 
+  getGoogleSheetsClient, 
+  writeSheetValues, 
+  appendSheetRows, 
+  clearSheetValues,
+  syncSheetToSupabase, 
+  syncAllSheetsToSupabase,
+  processNewAccountIntake,
+  type AccountIntakeResult
+} from './sheets/sync-engine';
 import { parseBooleanValue, parseNumberValue, extractSpreadsheetId } from './sheets/utils';
 export * from '@/config/sheets';
-export { readRawSheetValues, getGoogleSheetsClient, writeSheetValues, appendSheetRows, syncSheetToSupabase, syncAllSheetsToSupabase, extractSpreadsheetId };
+export { 
+  readRawSheetValues, 
+  getGoogleSheetsClient, 
+  writeSheetValues, 
+  appendSheetRows, 
+  clearSheetValues,
+  syncSheetToSupabase, 
+  syncAllSheetsToSupabase, 
+  processNewAccountIntake,
+  type AccountIntakeResult,
+  extractSpreadsheetId 
+};
 
 export interface MemberRecord {
   username: string;
