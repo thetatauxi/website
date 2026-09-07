@@ -217,6 +217,13 @@ export default async function MembersOnlyPage() {
 
             </div>
 
+            {/* Community Links */}
+            <CommunityLinks
+              currentUserId={user.id}
+              currentAuthorName={authorDisplayName}
+              initialLinks={initialCommunityLinks}
+            />
+
             {/* Role Specific Section: E-Board */}
             {userRole === 'admin' && (
               <div className="pt-2 border-t border-gray-200 dark:border-zinc-800">
@@ -365,12 +372,6 @@ export default async function MembersOnlyPage() {
               </ul>
             </div>
 
-            {/* Community Links */}
-            <CommunityLinks
-              currentUserId={user.id}
-              currentAuthorName={authorDisplayName}
-              initialLinks={initialCommunityLinks}
-            />
 
           </div>
 

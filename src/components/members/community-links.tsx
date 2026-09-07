@@ -1,7 +1,26 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { Link as LinkIcon, MoreVertical, Trash2, X, Check, Globe, Loader2, User } from 'lucide-react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import {
+  Link as LinkIcon,
+  MoreVertical,
+  Trash2,
+  X,
+  Check,
+  Globe,
+  Loader2,
+  User,
+  Shield,
+  CheckSquare,
+  Send,
+  Users,
+  Folder,
+  ChevronDown,
+  ChevronsUpDown,
+  Plus,
+  ExternalLink,
+  Tag,
+} from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 export interface CommunityLink {
@@ -11,12 +30,36 @@ export interface CommunityLink {
   name: string
   url: string
   author_name: string
+  category?: string | null
 }
 
 interface CommunityLinksProps {
   currentUserId: string
   currentAuthorName: string
   initialLinks?: CommunityLink[]
+}
+
+const DEFAULT_CATEGORIES = ['Admin', 'Required', 'Telegram', 'Rush', 'Other']
+
+// Helper to select an icon per category
+function CategoryIcon({ category, className }: { category: string; className?: string }) {
+  const norm = category.toLowerCase().trim()
+  if (norm.includes('admin')) {
+    return <Shield className={className} />
+  }
+  if (norm.includes('require')) {
+    return <CheckSquare className={className} />
+  }
+  if (norm.includes('telegram') || norm.includes('chat') || norm.includes('message')) {
+    return <Send className={className} />
+  }
+  if (norm.includes('rush')) {
+    return <Users className={className} />
+  }
+  if (norm.includes('other')) {
+    return <Folder className={className} />
+  }
+  return <Tag className={className} />
 }
 
 export default function CommunityLinks({
@@ -27,8 +70,12 @@ export default function CommunityLinks({
   const [links, setLinks] = useState<CommunityLink[]>(initialLinks)
   const [urlName, setUrlName] = useState('')
   const [urlInput, setUrlInput] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<string>('Other')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Collapsed state map: key is category name, boolean is collapsed (true = collapsed)
+  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({})
 
   // Details Modal State (triggered by 3 dots)
   const [selectedLink, setSelectedLink] = useState<CommunityLink | null>(null)
@@ -47,6 +94,66 @@ export default function CommunityLinks({
       return trimmed
     }
     return `https://${trimmed}`
+  }
+
+  // Derive unique categories: default categories + any custom ones found in fetched links
+  const allCategories = useMemo(() => {
+    const customSet = new Set<string>()
+    links.forEach((l) => {
+      if (l.category && !DEFAULT_CATEGORIES.includes(l.category)) {
+        customSet.add(l.category)
+      }
+    })
+    const extraCategories = Array.from(customSet).sort()
+    return [
+      ...DEFAULT_CATEGORIES.filter((c) => c !== 'Other'),
+      ...extraCategories,
+      'Other',
+    ]
+  }, [links])
+
+  // Group links by category
+  const groupedLinks = useMemo(() => {
+    const map: Record<string, CommunityLink[]> = {}
+    allCategories.forEach((cat) => {
+      map[cat] = []
+    })
+
+    links.forEach((link) => {
+      const cat = (link.category && link.category.trim()) || 'Other'
+      if (!map[cat]) {
+        map[cat] = []
+      }
+      map[cat].push(link)
+    })
+
+    return map
+  }, [allCategories, links])
+
+  // Expand / Condense All calculation
+  const isAllCondensed = useMemo(() => {
+    return allCategories.length > 0 && allCategories.every((cat) => !!collapsedCategories[cat])
+  }, [allCategories, collapsedCategories])
+
+  const toggleCategory = (cat: string) => {
+    setCollapsedCategories((prev) => ({
+      ...prev,
+      [cat]: !prev[cat],
+    }))
+  }
+
+  const toggleAll = () => {
+    if (isAllCondensed) {
+      // Expand all
+      setCollapsedCategories({})
+    } else {
+      // Condense all
+      const nextState: Record<string, boolean> = {}
+      allCategories.forEach((cat) => {
+        nextState[cat] = true
+      })
+      setCollapsedCategories(nextState)
+    }
   }
 
   // Fetch all community links
@@ -80,7 +187,7 @@ export default function CommunityLinks({
     const rawUrl = urlInput.trim()
 
     if (!trimmedName) {
-      setError('Please provide a URL Name.')
+      setError('Please provide a link name.')
       return
     }
 
@@ -93,20 +200,52 @@ export default function CommunityLinks({
     setSubmitting(true)
 
     try {
-      const { data, error: insertError } = await supabase
+      const targetCategory = selectedCategory || 'Other'
+      const payload: {
+        name: string
+        url: string
+        user_id: string
+        author_name: string
+        category?: string
+      } = {
+        name: trimmedName,
+        url: formattedUrl,
+        user_id: currentUserId,
+        author_name: currentAuthorName || 'Brother',
+        category: targetCategory,
+      }
+
+      let { data, error: insertError } = await supabase
         .from('community_links')
-        .insert({
+        .insert(payload)
+        .select()
+        .single()
+
+      // Fallback if the category column hasn't been added to Supabase table yet
+      if (insertError && (insertError.code === '42703' || insertError.message?.includes('category'))) {
+        const fallbackPayload = {
           name: trimmedName,
           url: formattedUrl,
           user_id: currentUserId,
           author_name: currentAuthorName || 'Brother',
-        })
-        .select()
-        .single()
+        }
+        const fallbackRes = await supabase
+          .from('community_links')
+          .insert(fallbackPayload)
+          .select()
+          .single()
 
-      if (insertError) {
+        if (fallbackRes.error) {
+          setError(fallbackRes.error.message || 'Failed to add link.')
+          return
+        }
+        data = { ...(fallbackRes.data as CommunityLink), category: targetCategory }
+      } else if (insertError) {
         setError(insertError.message || 'Failed to add link.')
-      } else if (data) {
+        return
+      }
+
+      if (data) {
         setLinks((prev) => [data as CommunityLink, ...prev])
         setUrlName('')
         setUrlInput('')
@@ -145,135 +284,214 @@ export default function CommunityLinks({
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 flex flex-col justify-between">
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <Globe className="h-5 w-5 text-red-700 dark:text-red-500" />
-          Community Links
-        </h2>
-
-        {/* Link List */}
-        <ul className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-          {links.length > 0 ? (
-            links.map((link) => (
-              <li
-                key={link.id}
-                className="group flex items-center justify-between gap-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-              >
-                <a
-                  href={link.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-red-700 dark:hover:text-red-400 transition-colors truncate flex-1 min-w-0"
-                  title={link.url}
-                >
-                  <LinkIcon className="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-red-700 dark:group-hover:text-red-400 transition-colors" />
-                  <span className="truncate">{link.name}</span>
-                </a>
-
-                {/* 3 Dots Button */}
-                <button
-                  type="button"
-                  onClick={() => setSelectedLink(link)}
-                  className="p-1.5 text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md transition-colors flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-red-500/50"
-                  aria-label={`Details for ${link.name}`}
-                >
-                  <MoreVertical className="h-4 w-4" />
-                </button>
-              </li>
-            ))
-          ) : (
-            <li className="text-sm text-gray-400 dark:text-gray-500 py-3 text-center italic">
-              No community links added yet. Be the first to share one!
-            </li>
-          )}
-        </ul>
-      </div>
-
-      {/* Input Section at the Bottom */}
-      <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-700 space-y-3">
-        <div className="space-y-2">
-          <div>
-            <input
-              type="text"
-              placeholder="URL Name (e.g. Test Bank)"
-              value={urlName}
-              onChange={(e) => setUrlName(e.target.value)}
-              disabled={submitting}
-              className="w-full text-xs sm:text-sm px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              placeholder="URL (e.g. drive.google.com/...)"
-              value={urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  handleAddLink()
-                }
-              }}
-              disabled={submitting}
-              className="flex-1 text-xs sm:text-sm px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all"
-            />
-
-            {/* Checkbox Submit Button */}
-            <button
-              type="button"
-              onClick={handleAddLink}
-              disabled={submitting || !urlName.trim() || !urlInput.trim()}
-              title="Submit Link"
-              aria-label="Submit Link"
-              className="p-2.5 rounded-lg bg-red-700 hover:bg-red-800 disabled:opacity-40 disabled:cursor-not-allowed text-white transition-all shadow-sm active:scale-95 flex items-center justify-center flex-shrink-0"
-            >
-              {submitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Check className="h-4 w-4 stroke-[2.5]" />
-              )}
-            </button>
-          </div>
+    <section className="space-y-6">
+      {/* Top Header: Title & Expand / Condense All */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2.5">
+            <Globe className="h-6 w-6 text-red-700 dark:text-red-500" />
+            Community Links
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Important links and resources organized by category.
+          </p>
         </div>
 
+        <button
+          type="button"
+          onClick={toggleAll}
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700 transition-all shadow-xs self-start sm:self-auto"
+        >
+          <ChevronsUpDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+          <span>{isAllCondensed ? 'Expand All' : 'Condense All'}</span>
+        </button>
+      </div>
+
+      {/* Category Blocks: 3 in a row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
+        {allCategories.map((category) => {
+          const categoryLinks = groupedLinks[category] || []
+          const isCollapsed = !!collapsedCategories[category]
+
+          return (
+            <div
+              key={category}
+              className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-gray-200 dark:border-zinc-800 overflow-hidden transition-all duration-200 hover:border-gray-300 dark:hover:border-zinc-700 flex flex-col"
+            >
+              {/* Category Header (Clickable for collapse/expand) */}
+              <button
+                type="button"
+                onClick={() => toggleCategory(category)}
+                className="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors focus:outline-none select-none"
+                aria-expanded={!isCollapsed}
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <CategoryIcon
+                    category={category}
+                    className="h-4 w-4 text-red-700 dark:text-red-500 shrink-0"
+                  />
+                  <span className="font-semibold text-sm text-gray-900 dark:text-white truncate">
+                    {category}
+                  </span>
+                  <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-300 shrink-0">
+                    {categoryLinks.length}
+                  </span>
+                </div>
+                <ChevronDown
+                  className={`h-4 w-4 text-gray-400 transition-transform duration-200 shrink-0 ${isCollapsed ? '-rotate-90' : 'rotate-0'
+                    }`}
+                />
+              </button>
+
+              {/* Collapsible Content */}
+              {!isCollapsed && (
+                <div className="px-4 pb-4 pt-1 flex-1 flex flex-col border-t border-gray-100 dark:border-zinc-800/60">
+                  {categoryLinks.length > 0 ? (
+                    <ul className="space-y-1 max-h-[260px] overflow-y-auto pr-1">
+                      {categoryLinks.map((link) => (
+                        <li
+                          key={link.id}
+                          className="group flex items-center justify-between gap-2 p-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800/60 transition-colors"
+                        >
+                          <a
+                            href={link.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-2 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-red-700 dark:hover:text-red-400 transition-colors truncate flex-1 min-w-0"
+                            title={link.url}
+                          >
+                            <LinkIcon className="h-3.5 w-3.5 shrink-0 text-gray-400 group-hover:text-red-700 dark:group-hover:text-red-400 transition-colors" />
+                            <span className="truncate">{link.name}</span>
+                          </a>
+
+                          <button
+                            type="button"
+                            onClick={() => setSelectedLink(link)}
+                            className="p-1 text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded-md transition-colors shrink-0 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                            aria-label={`Details for ${link.name}`}
+                          >
+                            <MoreVertical className="h-3.5 w-3.5" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="py-6 text-center text-xs text-gray-400 dark:text-gray-500 italic">
+                      No links in this category
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Bottom One-Line Input Bar */}
+      <div className="bg-white dark:bg-zinc-900 p-4 sm:p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-zinc-800">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            handleAddLink()
+          }}
+          className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5"
+        >
+          {/* Name input */}
+          <input
+            type="text"
+            placeholder="Name (e.g. Google Drive)"
+            value={urlName}
+            onChange={(e) => setUrlName(e.target.value)}
+            disabled={submitting}
+            className="flex-1 min-w-0 text-xs sm:text-sm px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all"
+          />
+
+          {/* URL input */}
+          <input
+            type="text"
+            placeholder="URL (e.g. drive.google.com/...)"
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.target.value)}
+            disabled={submitting}
+            className="flex-1 min-w-0 text-xs sm:text-sm px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all"
+          />
+
+          {/* Category Dropdown */}
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            disabled={submitting}
+            className="w-full sm:w-44 text-xs sm:text-sm px-3 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all cursor-pointer"
+          >
+            {allCategories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={submitting || !urlName.trim() || !urlInput.trim()}
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-red-700 hover:bg-red-800 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-medium transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5 shrink-0"
+          >
+            {submitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Check className="h-4 w-4 stroke-[2.5]" />
+            )}
+            <span>Submit</span>
+          </button>
+        </form>
+
         {error && (
-          <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
+          <p className="text-xs text-red-600 dark:text-red-400 mt-2.5">{error}</p>
         )}
       </div>
 
       {/* 3-Dots Details Modal */}
       {selectedLink && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 dark:border-gray-700 relative">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 dark:border-zinc-800 relative">
             <button
               type="button"
               onClick={() => setSelectedLink(null)}
-              className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
 
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 pr-6 flex items-center gap-2">
-              <Globe className="h-5 w-5 text-red-700 dark:text-red-500 flex-shrink-0" />
+              <Globe className="h-5 w-5 text-red-700 dark:text-red-500 shrink-0" />
               Link Details
             </h3>
 
             <div className="space-y-4 text-sm">
               <div>
                 <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 block mb-1">
-                  URL Name
+                  Name
                 </span>
-                <p className="text-gray-900 dark:text-gray-100 font-medium bg-gray-50 dark:bg-gray-900 p-2.5 rounded-lg border border-gray-100 dark:border-gray-800">
+                <p className="text-gray-900 dark:text-gray-100 font-medium bg-gray-50 dark:bg-zinc-800 p-2.5 rounded-lg border border-gray-100 dark:border-zinc-700/50">
                   {selectedLink.name}
                 </p>
               </div>
 
               <div>
                 <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 block mb-1">
-                  URL (Plain Text)
+                  Category
                 </span>
-                <p className="text-gray-700 dark:text-gray-300 font-mono text-xs break-all bg-gray-50 dark:bg-gray-900 p-2.5 rounded-lg border border-gray-100 dark:border-gray-800 select-all">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border border-red-200/50 dark:border-red-900/40">
+                  <CategoryIcon category={selectedLink.category || 'Other'} className="h-3.5 w-3.5" />
+                  {selectedLink.category || 'Other'}
+                </span>
+              </div>
+
+              <div>
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 block mb-1">
+                  URL
+                </span>
+                <p className="text-gray-700 dark:text-gray-300 font-mono text-xs break-all bg-gray-50 dark:bg-zinc-800 p-2.5 rounded-lg border border-gray-100 dark:border-zinc-700/50 select-all">
                   {selectedLink.url}
                 </p>
               </div>
@@ -282,21 +500,22 @@ export default function CommunityLinks({
                 <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 block mb-1">
                   Added By
                 </span>
-                <p className="text-gray-900 dark:text-gray-100 flex items-center gap-1.5 bg-gray-50 dark:bg-gray-900 p-2.5 rounded-lg border border-gray-100 dark:border-gray-800">
+                <p className="text-gray-900 dark:text-gray-100 flex items-center gap-1.5 bg-gray-50 dark:bg-zinc-800 p-2.5 rounded-lg border border-gray-100 dark:border-zinc-700/50">
                   <User className="h-4 w-4 text-gray-400" />
                   <span>{selectedLink.author_name || 'Member'}</span>
                 </p>
               </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+            <div className="mt-6 pt-4 border-t border-gray-100 dark:border-zinc-800 flex items-center justify-between">
               <a
                 href={selectedLink.url}
                 target="_blank"
                 rel="noreferrer"
                 className="text-xs font-semibold text-red-700 hover:text-red-800 dark:text-red-400 flex items-center gap-1"
               >
-                Open Link &rarr;
+                <span>Open Link</span>
+                <ExternalLink className="h-3.5 w-3.5" />
               </a>
 
               <button
@@ -315,7 +534,7 @@ export default function CommunityLinks({
       {/* Delete Confirmation Modal */}
       {linkToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-gray-100 dark:border-gray-700 text-center">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-gray-100 dark:border-zinc-800 text-center">
             <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 flex items-center justify-center mx-auto mb-4">
               <Trash2 className="h-6 w-6" />
             </div>
@@ -332,7 +551,7 @@ export default function CommunityLinks({
                 type="button"
                 disabled={deleting}
                 onClick={() => setLinkToDelete(null)}
-                className="px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                className="px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"
               >
                 Cancel
               </button>
@@ -349,6 +568,6 @@ export default function CommunityLinks({
           </div>
         </div>
       )}
-    </div>
+    </section>
   )
 }
