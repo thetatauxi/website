@@ -104,7 +104,7 @@ export function RushFAQ() {
           <AccordionItem value="item-9">
             <AccordionTrigger>When are the first-round applications due?</AccordionTrigger>
             <AccordionContent>
-              The application must be submitted by Tuesday, 9/15, by 11:59 PM. Be sure to submit it on time, as late applications will not be accepted.
+              The application must be submitted by Tuesday, 9/15, by 6 PM. Be sure to submit it on time, as late applications will not be accepted.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="item-8">
