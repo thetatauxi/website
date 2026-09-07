@@ -101,9 +101,11 @@ export async function GET(request: Request) {
         if (hash && (hash.includes('access_token=') || hash.includes('type=invite') || hash.includes('type=recovery'))) {
           window.location.replace('/setup-profile' + hash);
         } else if (hash && hash.includes('error=')) {
-          window.location.replace('/login?error=auth-failed');
+          var params = new URLSearchParams(hash.substring(1));
+          var desc = params.get('error_description') || params.get('error') || 'invite-expired';
+          window.location.replace('/login?error=' + encodeURIComponent(desc));
         } else {
-          window.location.replace('/login?error=auth-failed');
+          window.location.replace('/login?error=invite-expired');
         }
       })();
     </script>

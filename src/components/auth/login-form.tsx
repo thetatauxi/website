@@ -48,11 +48,29 @@ export default function LoginForm({ error }: { error?: string }) {
           />
         </div>
       </div>
-      {error && (
-        <p className="text-red-500 text-sm text-center">
-          Incorrect username or password
-        </p>
-      )}
+      {(() => {
+        if (!error) return null
+        const lower = error.toLowerCase()
+        if (lower.includes('expired') || lower.includes('invalid') || lower === 'otp_expired' || lower === 'invite-expired') {
+          return (
+            <div className="p-3 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-xs text-center leading-relaxed">
+              This invitation link is expired or has already been used. Please request a new invite from an administrator.
+            </div>
+          )
+        }
+        if (lower.includes('auth-failed') || lower.includes('unauthorized') || lower.includes('redirect')) {
+          return (
+            <div className="p-3 rounded-md bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs text-center leading-relaxed">
+              Unable to verify authentication link. Please request a new invite or verify your login credentials.
+            </div>
+          )
+        }
+        return (
+          <p className="text-red-500 text-sm text-center">
+            Incorrect username or password
+          </p>
+        )
+      })()}
       <div>
         <button
           type="submit"

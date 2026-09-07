@@ -51,6 +51,12 @@ export default function RootLayout({
                     document.documentElement.classList.remove('dark');
                   }
                 } catch (e) {}
+                try {
+                  var hash = window.location.hash;
+                  if (hash && (hash.includes('type=invite') || hash.includes('type=recovery')) && window.location.pathname !== '/setup-profile') {
+                    window.location.replace('/setup-profile' + hash);
+                  }
+                } catch (e) {}
               })();
             `,
           }}
