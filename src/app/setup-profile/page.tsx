@@ -31,56 +31,115 @@ export default function SetupProfilePage() {
   useEffect(() => {
     let isMounted = true
 
-    const loadProfileData = async (uid: string) => {
-      setUserId(uid)
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', uid)
-        .single()
+    const loadProfileData = async (user: { id: string; email?: string }) => {
+      if (!isMounted) return
+      setUserId(user.id)
 
-      if (isMounted && profile) {
-        setUsername(profile.username || '')
-        // Do not overwrite with TEMP or 0 if we can avoid it, or clear them if they are placeholders
-        setFirstName(profile.first_name === 'TEMP' ? '' : profile.first_name || '')
-        setLastName(profile.last_name === 'TEMP' ? '' : profile.last_name || '')
-        setMajor(profile.major === 'TEMP' ? '' : profile.major || '')
-        setPledgeClass(profile.pledge_class === 'TEMP' ? '' : profile.pledge_class || '')
-        setGraduationYear(profile.graduation_year === 0 ? '' : profile.graduation_year?.toString() || '')
+      // Always populate username immediately from email prefix as default
+      const defaultUsername = user.email ? user.email.split('@')[0] : ''
+      if (defaultUsername) {
+        setUsername(defaultUsername)
       }
-      if (isMounted) {
-        setLoading(false)
+
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle()
+
+        if (isMounted && profile) {
+          if (profile.username) {
+            setUsername(profile.username)
+          }
+          // Do not overwrite with TEMP or 0 if we can avoid it, or clear them if they are placeholders
+          setFirstName(profile.first_name === 'TEMP' ? '' : profile.first_name || '')
+          setLastName(profile.last_name === 'TEMP' ? '' : profile.last_name || '')
+          setMajor(profile.major === 'TEMP' ? '' : profile.major || '')
+          setPledgeClass(profile.pledge_class === 'TEMP' ? '' : profile.pledge_class || '')
+          setGraduationYear(profile.graduation_year === 0 ? '' : profile.graduation_year?.toString() || '')
+        }
+      } catch (err) {
+        console.warn('Error fetching profile details:', err)
+      } finally {
+        if (isMounted) {
+          setLoading(false)
+        }
       }
     }
 
-    // 1. Listen for auth state change (essential when tokens arrive via hash fragment)
+    const initAuth = async () => {
+      // 1. Check if an invite/recovery hash is present in the URL
+      if (typeof window !== 'undefined' && window.location.hash) {
+        const hash = window.location.hash.substring(1)
+        const params = new URLSearchParams(hash)
+        const accessToken = params.get('access_token')
+        const refreshToken = params.get('refresh_token')
+        const errorParam = params.get('error')
+        const errorDesc = params.get('error_description')
+
+        if (errorParam || errorDesc) {
+          if (isMounted) {
+            setError(errorDesc || errorParam || 'Invalid or expired invitation link.')
+            setLoading(false)
+          }
+          return
+        }
+
+        if (accessToken && refreshToken) {
+          // Explicitly set the active session using the new invite tokens
+          // This overrides any stale/deleted user session currently in cookies
+          const { data: sessionData, error: sessionErr } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          })
+
+          if (sessionErr) {
+            console.error('Error activating invite session:', sessionErr)
+            if (isMounted) {
+              setError('Unable to activate invitation session. Please request a new invite.')
+              setLoading(false)
+            }
+            return
+          }
+
+          if (sessionData.session?.user && isMounted) {
+            await loadProfileData(sessionData.session.user)
+            return
+          }
+        }
+      }
+
+      // 2. Validate current session against Supabase Auth server (not just stale local cookies)
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+      if (userError || !user) {
+        if (isMounted) {
+          // If the cached JWT belongs to a deleted user, clear local storage/cookies
+          await supabase.auth.signOut().catch(() => {})
+          setError('Your invitation link is expired or invalid. Please request a new invite.')
+          setLoading(false)
+        }
+      } else if (isMounted) {
+        await loadProfileData(user)
+      }
+    }
+
+    // Subscribe to auth state changes as a backup
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return
-      if (session) {
-        await loadProfileData(session.user.id)
+      if (event === 'SIGNED_IN' && session?.user) {
+        await loadProfileData(session.user)
       }
     })
 
-    // 2. Check if a session already exists
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!isMounted) return
-      if (session) {
-        await loadProfileData(session.user.id)
-      } else {
-        // If there's an access_token in the URL hash, onAuthStateChange will process it
-        if (typeof window !== 'undefined' && window.location.hash.includes('access_token')) {
-          return
-        }
-        setError('Your invitation link is expired or invalid. Please request a new invite.')
-        setLoading(false)
-      }
-    })
+    initAuth()
 
     return () => {
       isMounted = false
       subscription.unsubscribe()
     }
-  }, [supabase])
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -107,27 +166,37 @@ export default function SetupProfilePage() {
 
     // 1. Update password
     const { error: updateAuthError } = await supabase.auth.updateUser({
-      password: password
+      password: password,
     })
 
     if (updateAuthError) {
-      setError(updateAuthError.message)
+      if (
+        updateAuthError.message.includes('sub claim') ||
+        updateAuthError.message.includes('not exist')
+      ) {
+        await supabase.auth.signOut().catch(() => {})
+        setError('Your session has expired or the user account was reset. Please request a new invite.')
+      } else {
+        setError(updateAuthError.message)
+      }
       setSaving(false)
       return
     }
 
-    // 2. Update profile
+    // 2. Update/upsert profile to guarantee record exists
     const { error: updateProfileError } = await supabase
       .from('profiles')
-      .update({
+      .upsert({
+        id: userId,
+        username: username,
         first_name: firstName,
         last_name: lastName,
         major: major,
         pledge_class: pledgeClass,
         graduation_year: parseInt(graduationYear),
-        updated_at: new Date().toISOString()
+        role: 'Member',
+        updated_at: new Date().toISOString(),
       })
-      .eq('id', userId)
 
     if (updateProfileError) {
       setError(updateProfileError.message)
