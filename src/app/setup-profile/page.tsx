@@ -164,9 +164,15 @@ export default function SetupProfilePage() {
       return
     }
 
-    // 1. Update password
+    // 1. Update password & auth metadata (Display Name in Supabase Auth dashboard)
+    const fullName = `${firstName.trim()} ${lastName.trim()}`
     const { error: updateAuthError } = await supabase.auth.updateUser({
       password: password,
+      data: {
+        full_name: fullName,
+        name: fullName,
+        display_name: fullName,
+      },
     })
 
     if (updateAuthError) {
