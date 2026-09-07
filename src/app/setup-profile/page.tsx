@@ -183,20 +183,18 @@ export default function SetupProfilePage() {
       return
     }
 
-    // 2. Update/upsert profile to guarantee record exists
+    // 2. Update profile record (RLS permits UPDATE for authenticated users where id = auth.uid())
     const { error: updateProfileError } = await supabase
       .from('profiles')
-      .upsert({
-        id: userId,
-        username: username,
+      .update({
         first_name: firstName,
         last_name: lastName,
         major: major,
         pledge_class: pledgeClass,
         graduation_year: parseInt(graduationYear),
-        role: 'Member',
         updated_at: new Date().toISOString(),
       })
+      .eq('id', userId)
 
     if (updateProfileError) {
       setError(updateProfileError.message)
