@@ -17,7 +17,6 @@ import {
   Folder,
   ChevronDown,
   ChevronsUpDown,
-  Plus,
   ExternalLink,
   Tag,
 } from 'lucide-react'
@@ -215,14 +214,16 @@ export default function CommunityLinks({
         category: targetCategory,
       }
 
-      let { data, error: insertError } = await supabase
+      const insertRes = await supabase
         .from('community_links')
         .insert(payload)
         .select()
         .single()
 
+      let insertedData = insertRes.data
+
       // Fallback if the category column hasn't been added to Supabase table yet
-      if (insertError && (insertError.code === '42703' || insertError.message?.includes('category'))) {
+      if (insertRes.error && (insertRes.error.code === '42703' || insertRes.error.message?.includes('category'))) {
         const fallbackPayload = {
           name: trimmedName,
           url: formattedUrl,
@@ -239,14 +240,14 @@ export default function CommunityLinks({
           setError(fallbackRes.error.message || 'Failed to add link.')
           return
         }
-        data = { ...(fallbackRes.data as CommunityLink), category: targetCategory }
-      } else if (insertError) {
-        setError(insertError.message || 'Failed to add link.')
+        insertedData = { ...(fallbackRes.data as CommunityLink), category: targetCategory }
+      } else if (insertRes.error) {
+        setError(insertRes.error.message || 'Failed to add link.')
         return
       }
 
-      if (data) {
-        setLinks((prev) => [data as CommunityLink, ...prev])
+      if (insertedData) {
+        setLinks((prev) => [insertedData as CommunityLink, ...prev])
         setUrlName('')
         setUrlInput('')
       }
