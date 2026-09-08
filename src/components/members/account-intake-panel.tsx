@@ -239,28 +239,24 @@ export default function AccountIntakePanel({ userRole }: AccountIntakePanelProps
 
       {/* Option 3: Resend Pending Account Setup Emails */}
       <div className="p-3.5 rounded-xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/80 dark:border-blue-900/40 transition-colors">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
-              <MailCheck className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-              <h4 className="text-xs font-bold text-gray-900 dark:text-gray-100">
-                Pending Accounts Re-Invitation
-              </h4>
-            </div>
-            <p className="text-[11px] text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">
-              Finds anyone who hasn&apos;t completed their profile setup yet (first and last name are &ldquo;TEMP&rdquo;), generates fresh 7-day tokens, and sends new setup emails via Resend.
-            </p>
-          </div>
-
-          <button
-            onClick={handleResendUnclaimedSetupEmails}
-            disabled={resendLoading}
-            className="self-start sm:self-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-800 text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center gap-1.5 flex-shrink-0 shadow-sm"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${resendLoading ? 'animate-spin' : ''}`} />
-            {resendLoading ? 'Resending...' : 'Resend Account Setup Email'}
-          </button>
+        <div className="flex items-center gap-1.5 mb-1">
+          <MailCheck className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+          <h4 className="text-xs font-bold text-gray-900 dark:text-gray-100">
+            Pending Accounts Re-Invitation
+          </h4>
         </div>
+        <p className="text-[11px] text-gray-600 dark:text-gray-400 mb-2.5 leading-relaxed">
+          Re-dispatches setup emails with fresh 7-day links to anyone who has not completed profile setup (TEMP name) via Resend.
+        </p>
+
+        <button
+          onClick={handleResendUnclaimedSetupEmails}
+          disabled={resendLoading}
+          className="w-full sm:w-auto px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-800 text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-sm"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${resendLoading ? 'animate-spin' : ''}`} />
+          {resendLoading ? 'Resending...' : 'Resend Account Setup Email'}
+        </button>
 
         {resendResult && (
           <div className="mt-2.5 pt-2 border-t border-blue-200/60 dark:border-blue-900/40 space-y-2">
