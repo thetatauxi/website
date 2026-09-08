@@ -366,6 +366,152 @@ export async function generateMemberDirectLinkAction(
   }
 }
 
+export interface ResendUnclaimedItem {
+  email: string;
+  username: string;
+  success: boolean;
+  setupUrl?: string;
+  error?: string;
+}
+
+export interface ResendUnclaimedResult {
+  success: boolean;
+  count: number;
+  message: string;
+  details?: ResendUnclaimedItem[];
+}
+
+/**
+ * Dispatches fresh setup invitation emails to all accounts whose profile setup
+ * is still pending (i.e. first_name or last_name is 'TEMP').
+ */
+export async function resendUnclaimedSetupEmailsAction(): Promise<ResendUnclaimedResult> {
+  try {
+    await verifySyncPermission();
+    const adminSupabase = createAdminClient();
+
+    // 1. Find all profiles where first_name or last_name is still 'TEMP'
+    const { data: profiles, error: pErr } = await adminSupabase
+      .from('profiles')
+      .select('id, username, first_name, last_name')
+      .or('first_name.eq.TEMP,last_name.eq.TEMP');
+
+    if (pErr) {
+      throw new Error(`Failed to query pending accounts: ${pErr.message}`);
+    }
+
+    if (!profiles || profiles.length === 0) {
+      return {
+        success: true,
+        count: 0,
+        message: 'No pending accounts found. All registered members have already set up their profile!',
+        details: [],
+      };
+    }
+
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thetatauxi.org';
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 days
+
+    const details: ResendUnclaimedItem[] = [];
+    let sentCount = 0;
+    let failedCount = 0;
+
+    for (const profile of profiles) {
+      // Fetch user email from Supabase Auth
+      let email = '';
+      const { data: authUserRes } = await adminSupabase.auth.admin.getUserById(profile.id);
+      if (authUserRes?.user?.email) {
+        email = authUserRes.user.email.trim();
+      } else if (profile.username) {
+        email = profile.username.includes('@') ? profile.username : `${profile.username}@wisc.edu`;
+      }
+
+      if (!email) {
+        details.push({
+          email: 'Unknown email',
+          username: profile.username || profile.id,
+          success: false,
+          error: 'No email found in Supabase Auth.',
+        });
+        failedCount++;
+        continue;
+      }
+
+      // Generate a fresh 64-character unguessable token
+      const setupToken = crypto.randomBytes(32).toString('hex');
+      const { error: updateErr } = await adminSupabase
+        .from('profiles')
+        .update({
+          setup_token: setupToken,
+          setup_token_expires_at: expiresAt,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', profile.id);
+
+      if (updateErr) {
+        details.push({
+          email,
+          username: profile.username || '',
+          success: false,
+          error: `Failed to save setup token: ${updateErr.message}`,
+        });
+        failedCount++;
+        continue;
+      }
+
+      const setupUrl = `${siteUrl.replace(/\/+$/, '')}/setup-profile?token=${setupToken}`;
+
+      // Dispatch invitation email via Resend
+      const emailResult = await sendSetupEmail({
+        to: email,
+        setupUrl,
+        username: profile.username,
+        isReset: false,
+      });
+
+      if (!emailResult.success) {
+        const isSandbox = emailResult.error?.includes('testing emails');
+        details.push({
+          email,
+          username: profile.username || '',
+          success: false,
+          setupUrl,
+          error: isSandbox
+            ? 'Resend sandbox mode: verify domain at resend.com/domains'
+            : (emailResult.error || 'Delivery failed'),
+        });
+        failedCount++;
+      } else {
+        details.push({
+          email,
+          username: profile.username || '',
+          success: true,
+          setupUrl,
+        });
+        sentCount++;
+      }
+    }
+
+    const message = failedCount > 0
+      ? `Sent ${sentCount} email${sentCount === 1 ? '' : 's'}. ${failedCount} had delivery errors.`
+      : `Successfully dispatched setup emails to all ${sentCount} pending account${sentCount === 1 ? '' : 's'}.`;
+
+    return {
+      success: failedCount === 0 || sentCount > 0,
+      count: sentCount,
+      message,
+      details,
+    };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Failed to resend setup emails';
+    return {
+      success: false,
+      count: 0,
+      message: errorMsg,
+    };
+  }
+}
+
 export interface SetupTokenVerification {
   valid: boolean;
   message?: string;

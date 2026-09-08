@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   Trash2,
   Mail,
+  MailCheck,
   KeyRound,
   Copy,
   Check,
@@ -17,7 +18,9 @@ import {
 import {
   processNewAccountIntakeAction,
   sendPasswordResetEmailAction,
-  generateMemberDirectLinkAction
+  generateMemberDirectLinkAction,
+  resendUnclaimedSetupEmailsAction,
+  type ResendUnclaimedResult
 } from '@/app/actions';
 import { type AccountIntakeResult } from '@/lib/sheets/sync-engine';
 import {
@@ -48,6 +51,11 @@ export default function AccountIntakePanel({ userRole }: AccountIntakePanelProps
   const [resetMessage, setResetMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [directLink, setDirectLink] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
+
+  // Resend Unclaimed Setup Emails state
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendResult, setResendResult] = useState<ResendUnclaimedResult | null>(null);
+  const [copiedDetailIdx, setCopiedDetailIdx] = useState<number | null>(null);
 
   const handleSyncIntake = async () => {
     setIntakeLoading(true);
@@ -109,6 +117,26 @@ export default function AccountIntakePanel({ userRole }: AccountIntakePanelProps
       setResetMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to generate link' });
     } finally {
       setResetLoading(false);
+    }
+  };
+
+  const handleResendUnclaimedSetupEmails = async () => {
+    setResendLoading(true);
+    setResendResult(null);
+    try {
+      const res = await resendUnclaimedSetupEmailsAction();
+      setResendResult(res);
+      if (res.success && res.count > 0) {
+        router.refresh();
+      }
+    } catch (err: unknown) {
+      setResendResult({
+        success: false,
+        count: 0,
+        message: err instanceof Error ? err.message : 'Failed to resend setup emails',
+      });
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -205,6 +233,72 @@ export default function AccountIntakePanel({ userRole }: AccountIntakePanelProps
               {copiedLink ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
               {copiedLink ? 'Copied' : 'Copy'}
             </button>
+          </div>
+        )}
+      </div>
+
+      {/* Option 3: Resend Pending Account Setup Emails */}
+      <div className="p-3.5 rounded-xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/80 dark:border-blue-900/40 transition-colors">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <MailCheck className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+              <h4 className="text-xs font-bold text-gray-900 dark:text-gray-100">
+                Pending Accounts Re-Invitation
+              </h4>
+            </div>
+            <p className="text-[11px] text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">
+              Finds anyone who hasn&apos;t completed their profile setup yet (first and last name are &ldquo;TEMP&rdquo;), generates fresh 7-day tokens, and sends new setup emails via Resend.
+            </p>
+          </div>
+
+          <button
+            onClick={handleResendUnclaimedSetupEmails}
+            disabled={resendLoading}
+            className="self-start sm:self-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-800 text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center gap-1.5 flex-shrink-0 shadow-sm"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${resendLoading ? 'animate-spin' : ''}`} />
+            {resendLoading ? 'Resending...' : 'Resend Account Setup Email'}
+          </button>
+        </div>
+
+        {resendResult && (
+          <div className="mt-2.5 pt-2 border-t border-blue-200/60 dark:border-blue-900/40 space-y-2">
+            <p className={`text-[11px] font-medium ${resendResult.success ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+              {resendResult.message}
+            </p>
+
+            {resendResult.details && resendResult.details.length > 0 && (
+              <div className="max-h-40 overflow-y-auto space-y-1 mt-1 pr-1">
+                {resendResult.details.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="p-1.5 rounded-md bg-white dark:bg-zinc-800 border border-blue-100 dark:border-zinc-700/80 flex items-center justify-between gap-2 text-[11px]"
+                  >
+                    <div className="min-w-0 flex-1 truncate">
+                      <span className="font-medium text-gray-900 dark:text-gray-200">{item.email}</span>
+                      {item.username && <span className="text-gray-400 ml-1">({item.username})</span>}
+                      {item.error && <span className="text-red-500 ml-1.5 text-[10px]">&bull; {item.error}</span>}
+                    </div>
+                    {item.setupUrl && (
+                      <button
+                        onClick={() => {
+                          if (item.setupUrl) {
+                            navigator.clipboard.writeText(item.setupUrl);
+                            setCopiedDetailIdx(idx);
+                            setTimeout(() => setCopiedDetailIdx(null), 2000);
+                          }
+                        }}
+                        className="px-2 py-0.5 text-[10px] font-medium rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 hover:bg-blue-100 flex items-center gap-1 flex-shrink-0"
+                      >
+                        {copiedDetailIdx === idx ? <Check className="h-2.5 w-2.5 text-green-600" /> : <Copy className="h-2.5 w-2.5" />}
+                        {copiedDetailIdx === idx ? 'Copied Link' : 'Copy Link'}
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
