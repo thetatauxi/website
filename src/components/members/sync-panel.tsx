@@ -36,7 +36,7 @@ export default function SyncPanel({ userRole }: SyncPanelProps) {
     setLoadingSheetId(sheetId);
     try {
       const result = await syncSheetAction(sheetId);
-      if (result.success) {
+      if (result?.success) {
         const affected = result.updatedCount + result.insertedCount;
         const addedMsg = result.addedToSheetCount && result.addedToSheetCount > 0
           ? ` & added ${result.addedToSheetCount} new member${result.addedToSheetCount === 1 ? '' : 's'} to Sheet`
@@ -55,7 +55,7 @@ export default function SyncPanel({ userRole }: SyncPanelProps) {
           ...prev,
           [sheetId]: {
             type: 'error',
-            message: result.errors.join('; ') || 'Sync failed. Please check sheet credentials and table schema.',
+            message: result?.errors?.join('; ') || 'Sync failed. Please check sheet credentials and table schema.',
             timestamp: new Date().toLocaleTimeString(),
           },
         }));
@@ -79,7 +79,8 @@ export default function SyncPanel({ userRole }: SyncPanelProps) {
     setLoadingSheetId('all');
     try {
       const results = await syncAllSheetsAction();
-      const failures = results.filter(r => !r.success);
+      const list = results || [];
+      const failures = list.filter(r => !r?.success);
       const totalAffected = results.reduce((sum, r) => sum + r.updatedCount + r.insertedCount, 0);
 
       if (failures.length === 0) {

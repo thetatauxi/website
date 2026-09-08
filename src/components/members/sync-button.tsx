@@ -20,12 +20,12 @@ export default function SyncButton({ sheetId = 'roster_status', label = 'Sync Ro
     setMessage(null)
     try {
       const result = await syncSheetAction(sheetId)
-      if (result.success) {
+      if (result?.success) {
         const count = result.updatedCount + result.insertedCount
         setMessage({ type: 'success', text: `Successfully synced ${count} records!` })
         router.refresh()
       } else {
-        setMessage({ type: 'error', text: result.errors.join('; ') || 'Sync failed.' })
+        setMessage({ type: 'error', text: result?.errors?.join('; ') || 'Sync failed.' })
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to sync. Please try again.'

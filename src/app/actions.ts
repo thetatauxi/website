@@ -151,8 +151,8 @@ export async function syncAllSheetsAction(): Promise<SyncResult[]> {
  */
 export async function syncMemberStatusAction() {
   const res = await syncSheetAction('roster_status');
-  if (!res.success) {
-    throw new Error(res.errors.join('; ') || 'Failed to sync member status from Google Sheet.');
+  if (!res || !res.success) {
+    throw new Error(res?.errors?.join('; ') || 'Failed to sync member status from Google Sheet.');
   }
 
   const count = res.updatedCount + res.insertedCount;

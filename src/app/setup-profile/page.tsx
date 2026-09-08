@@ -235,8 +235,8 @@ export default function SetupProfilePage() {
           graduationYear,
         })
 
-        if (!res.success) {
-          setError(res.message || 'Failed to complete profile setup.')
+        if (!res || !res.success) {
+          setError(res?.message || 'Failed to complete profile setup. Please try again.')
           setSaving(false)
           return
         }

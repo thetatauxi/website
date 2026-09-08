@@ -62,6 +62,9 @@ export default function AccountIntakePanel({ userRole }: AccountIntakePanelProps
     setIntakeInlineStatus(null);
     try {
       const result = await processNewAccountIntakeAction();
+      if (!result) {
+        throw new Error('No response from server. Check that Vercel environment variables are configured.');
+      }
       setIntakeResult(result);
       setIntakeModalOpen(true);
 
@@ -92,6 +95,9 @@ export default function AccountIntakePanel({ userRole }: AccountIntakePanelProps
     setDirectLink(null);
     try {
       const res = await sendPasswordResetEmailAction(resetInput);
+      if (!res) {
+        throw new Error('No response from server. Check that Vercel environment variables are configured.');
+      }
       setResetMessage({ type: res.success ? 'success' : 'error', text: res.message });
     } catch (err: unknown) {
       setResetMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to send' });
@@ -107,6 +113,9 @@ export default function AccountIntakePanel({ userRole }: AccountIntakePanelProps
     setDirectLink(null);
     try {
       const res = await generateMemberDirectLinkAction(resetInput, 'recovery');
+      if (!res) {
+        throw new Error('No response from server. Check that Vercel environment variables are configured.');
+      }
       if (res.success && res.link) {
         setDirectLink(res.link);
         setResetMessage({ type: 'success', text: res.message });
@@ -125,6 +134,9 @@ export default function AccountIntakePanel({ userRole }: AccountIntakePanelProps
     setResendResult(null);
     try {
       const res = await resendUnclaimedSetupEmailsAction();
+      if (!res) {
+        throw new Error('No response received from server. Please verify Vercel environment variables (SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY).');
+      }
       setResendResult(res);
       if (res.success && res.count > 0) {
         router.refresh();
@@ -260,7 +272,7 @@ export default function AccountIntakePanel({ userRole }: AccountIntakePanelProps
 
         {resendResult && (
           <div className="mt-2.5 pt-2 border-t border-blue-200/60 dark:border-blue-900/40 space-y-2">
-            <p className={`text-[11px] font-medium ${resendResult.success ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+            <p className={`text-[11px] font-medium ${resendResult?.success ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
               {resendResult.message}
             </p>
 
