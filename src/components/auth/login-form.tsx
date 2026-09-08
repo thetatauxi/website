@@ -31,7 +31,7 @@ export default function LoginForm({ error }: { error?: string }) {
             type="text"
             required
             className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-900 focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
-            placeholder="Username (e.g. jsmith)"
+            placeholder="Username (e.g. brbutler)"
           />
         </div>
         <div>
