@@ -261,7 +261,7 @@ export async function sendPasswordResetEmailAction(targetInput: string): Promise
 
     // Generate 64-character unguessable token
     const setupToken = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(); // 14 days
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 days
 
     const { error: updateError } = await adminSupabase
       .from('profiles')
@@ -328,7 +328,7 @@ export async function generateMemberDirectLinkAction(
 
     // Generate 64-character unguessable token
     const setupToken = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 days
 
     const { error: updateError } = await adminSupabase
       .from('profiles')

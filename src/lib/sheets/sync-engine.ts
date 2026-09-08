@@ -734,7 +734,7 @@ export async function processNewAccountIntake(spreadsheetIdOrUrl?: string): Prom
 
     // Generate 64-character unguessable token
     const setupToken = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(); // 14 days
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 days
     const username = email.split('@')[0];
 
     // 1. Create user in Supabase Auth if not exists
