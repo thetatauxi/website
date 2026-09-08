@@ -1,9 +1,11 @@
+import crypto from 'crypto';
 import { google } from 'googleapis';
 import { SHEET_CONFIGS, SheetConfig, SyncResult, getSheetConfigById } from '@/config/sheets';
 import { extractSpreadsheetId, buildHeaderIndexMap, transformRowToSupabaseRecord, findColumnIndex } from './utils';
 import { createClient } from '@/lib/supabase/server';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { sendSetupEmail } from '@/lib/resend';
 
 /**
  * Initializes authenticated Google Sheets API client
@@ -713,8 +715,8 @@ export async function processNewAccountIntake(spreadsheetIdOrUrl?: string): Prom
   }
 
   // 4. Determine invite redirect destination
+  // 4. Determine site URL
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thetatauxi.org';
-  const redirectTo = `${siteUrl.replace(/\/+$/, '')}/setup-profile`;
 
   // 5. Process candidate rows: invite new or mark as already used, and track exact rows to wipe
   const invitedEmails = new Set<string>();
@@ -730,13 +732,22 @@ export async function processNewAccountIntake(spreadsheetIdOrUrl?: string): Prom
       continue;
     }
 
-    const { error: inviteError } = await adminSupabase.auth.admin.inviteUserByEmail(
-      email,
-      { redirectTo }
-    );
+    // Generate 64-character unguessable token
+    const setupToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(); // 14 days
+    const username = email.split('@')[0];
 
-    if (inviteError) {
-      const errMsg = inviteError.message.toLowerCase();
+    // 1. Create user in Supabase Auth if not exists
+    const { data: userData, error: createError } = await adminSupabase.auth.admin.createUser({
+      email,
+      email_confirm: true,
+      user_metadata: {
+        username,
+      },
+    });
+
+    if (createError) {
+      const errMsg = createError.message.toLowerCase();
       if (
         errMsg.includes('already registered') ||
         errMsg.includes('already exists') ||
@@ -744,19 +755,57 @@ export async function processNewAccountIntake(spreadsheetIdOrUrl?: string): Prom
       ) {
         alreadyUsedEmails.add(email);
         existingEmails.add(email);
-        // Already used -> wipe this row
         rowsToWipe.add(rowNum);
+        continue;
       } else {
-        // Invite could not be sent -> DO NOT wipe this row!
-        errors.push(`Row ${rowNum} (${email}): ${inviteError.message} (not sent; row preserved in sheet).`);
+        errors.push(`Row ${rowNum} (${email}): ${createError.message} (not sent; row preserved in sheet).`);
+        continue;
       }
-    } else {
-      // Invite sent successfully!
-      invitedEmails.add(email);
-      existingEmails.add(email);
-      // Email was sent -> wipe this row
-      rowsToWipe.add(rowNum);
     }
+
+    const userId = userData?.user?.id;
+    if (!userId) {
+      errors.push(`Row ${rowNum} (${email}): Failed to obtain created user ID.`);
+      continue;
+    }
+
+    // 2. Insert/Upsert profile in profiles table with setup_token
+    const { error: profileError } = await adminSupabase.from('profiles').upsert({
+      id: userId,
+      email,
+      username,
+      role: 'Member',
+      first_name: 'TEMP',
+      last_name: 'TEMP',
+      setup_token: setupToken,
+      setup_token_expires_at: expiresAt,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'id' });
+
+    if (profileError) {
+      errors.push(`Row ${rowNum} (${email}): Failed to save profile setup token (${profileError.message}).`);
+      continue;
+    }
+
+    // 3. Send setup email via Resend
+    const setupUrl = `${siteUrl.replace(/\/+$/, '')}/setup-profile?token=${setupToken}`;
+    const emailResult = await sendSetupEmail({
+      to: email,
+      setupUrl,
+      username,
+      isReset: false,
+    });
+
+    if (!emailResult.success) {
+      errors.push(`Row ${rowNum} (${email}): Created account, but email dispatch failed: ${emailResult.error} (row preserved in sheet).`);
+      // Row preserved so admin knows email wasn't delivered
+      continue;
+    }
+
+    // Email sent successfully!
+    invitedEmails.add(email);
+    existingEmails.add(email);
+    rowsToWipe.add(rowNum);
   }
 
   // 6. Wipe ONLY the rows of emails that were sent or already in use

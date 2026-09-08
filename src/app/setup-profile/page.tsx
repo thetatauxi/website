@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { verifySetupTokenAction, completeProfileSetupAction } from '@/app/actions'
 
 export default function SetupProfilePage() {
   const [loading, setLoading] = useState(true)
@@ -11,6 +12,7 @@ export default function SetupProfilePage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [isRecovery, setIsRecovery] = useState(false)
+  const [setupToken, setSetupToken] = useState<string | null>(null)
 
   // Form state
   const [userId, setUserId] = useState('')
@@ -80,7 +82,44 @@ export default function SetupProfilePage() {
     }
 
     const initAuth = async () => {
-      // 1. Check if an invite/recovery hash is present in the URL
+      // 0. Check for resilient custom setup token in URL search params (?token=...)
+      if (typeof window !== 'undefined') {
+        const queryParams = new URLSearchParams(window.location.search)
+        const tokenParam = queryParams.get('token')
+        if (tokenParam && tokenParam.trim().length >= 16) {
+          const cleanToken = tokenParam.trim()
+          setSetupToken(cleanToken)
+          try {
+            const result = await verifySetupTokenAction(cleanToken)
+            if (!isMounted) return
+
+            if (result.valid) {
+              setUserId(result.userId || '')
+              setUsername(result.username || '')
+              if (result.firstName) setFirstName(result.firstName)
+              if (result.lastName) setLastName(result.lastName)
+              if (result.major) setMajor(result.major)
+              if (result.pledgeClass) setPledgeClass(result.pledgeClass)
+              if (result.graduationYear) setGraduationYear(result.graduationYear)
+              if (result.isReset) setIsRecovery(true)
+              setLoading(false)
+              return
+            } else {
+              setError(result.message || 'This setup link is invalid or has expired.')
+              setLoading(false)
+              return
+            }
+          } catch (err: unknown) {
+            if (!isMounted) return
+            const msg = err instanceof Error ? err.message : 'Error validating setup link.'
+            setError(msg)
+            setLoading(false)
+            return
+          }
+        }
+      }
+
+      // 1. Check if an invite/recovery hash is present in the URL (legacy fallback)
       if (typeof window !== 'undefined') {
         if (window.location.search.includes('type=recovery')) {
           setIsRecovery(true)
@@ -108,7 +147,6 @@ export default function SetupProfilePage() {
 
         if (accessToken && refreshToken) {
           // Explicitly set the active session using the new invite tokens
-          // This overrides any stale/deleted user session currently in cookies
           const { data: sessionData, error: sessionErr } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
@@ -130,14 +168,13 @@ export default function SetupProfilePage() {
         }
       }
 
-      // 2. Validate current session against Supabase Auth server (not just stale local cookies)
+      // 2. Validate current session against Supabase Auth server
       const { data: { user }, error: userError } = await supabase.auth.getUser()
 
       if (userError || !user) {
         if (isMounted) {
-          // If the cached JWT belongs to a deleted user, clear local storage/cookies
           await supabase.auth.signOut().catch(() => {})
-          setError('Your invitation link is expired or invalid. Please request a new invite.')
+          setError('Please use the setup link sent to your email to configure your profile.')
           setLoading(false)
         }
       } else if (isMounted) {
@@ -148,7 +185,7 @@ export default function SetupProfilePage() {
     // Subscribe to auth state changes as a backup
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return
-      if (event === 'SIGNED_IN' && session?.user) {
+      if (event === 'SIGNED_IN' && session?.user && !setupToken) {
         await loadProfileData(session.user)
       }
     })
@@ -159,7 +196,8 @@ export default function SetupProfilePage() {
       isMounted = false
       subscription.unsubscribe()
     }
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setupToken])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -184,7 +222,48 @@ export default function SetupProfilePage() {
       return
     }
 
-    // 1. Update password & auth metadata (Display Name in Supabase Auth dashboard)
+    // PATH A: Use custom resilient setup token (immune to email scanner link burn)
+    if (setupToken) {
+      try {
+        const res = await completeProfileSetupAction({
+          token: setupToken,
+          password,
+          firstName,
+          lastName,
+          major,
+          pledgeClass,
+          graduationYear,
+        })
+
+        if (!res.success) {
+          setError(res.message || 'Failed to complete profile setup.')
+          setSaving(false)
+          return
+        }
+
+        // Automatically sign in the user with their newly confirmed credentials
+        if (res.email) {
+          await supabase.auth.signInWithPassword({
+            email: res.email,
+            password,
+          }).catch(() => {})
+        }
+
+        setSuccess(true)
+        setSaving(false)
+        setTimeout(() => {
+          router.push('/members-only')
+        }, 2000)
+        return
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Failed to save profile'
+        setError(msg)
+        setSaving(false)
+        return
+      }
+    }
+
+    // PATH B: Legacy session-based update
     const fullName = `${firstName.trim()} ${lastName.trim()}`
     const { error: updateAuthError } = await supabase.auth.updateUser({
       password: password,
@@ -209,7 +288,6 @@ export default function SetupProfilePage() {
       return
     }
 
-    // 2. Update profile record (RLS permits UPDATE for authenticated users where id = auth.uid())
     const { error: updateProfileError } = await supabase
       .from('profiles')
       .update({
