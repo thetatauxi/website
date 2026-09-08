@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
-import { Calendar, Users, ExternalLink, Megaphone, Shield, Link as LinkIcon, CheckCircle2, XCircle, Award } from 'lucide-react'
+import { Calendar, Users, ExternalLink, Megaphone, Shield, Link as LinkIcon, CheckCircle2, XCircle, Award, UserPlus, Table } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getCalendarFromSheet, getLinksFromSheet } from '@/lib/google-sheets'
 import SyncPanel from '@/components/members/sync-panel'
+import AccountIntakePanel from '@/components/members/account-intake-panel'
 import { Medal } from '@/components/members/medal'
 import CommunityLinks, { type CommunityLink } from '@/components/members/community-links'
 
@@ -231,15 +232,37 @@ export default async function MembersOnlyPage() {
                   <Shield className="h-5 w-5 text-red-700 dark:text-red-500" />
                   E-Board Tools
                 </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all">
-                    <h3 className="font-medium text-gray-900 dark:text-white mb-1">Manage Finances</h3>
-                    <button className="text-sm text-red-700 hover:text-red-800 dark:text-red-400">Open Dashboard &rarr;</button>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Dedicated Block: Sync New Account Intake */}
+                  <div className="bg-white dark:bg-zinc-900 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all">
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+                      <UserPlus className="h-4 w-4 text-red-700 dark:text-red-500" />
+                      Sync New Account Intake
+                    </h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3.5">
+                      Batch process onboarding invitations and manage member account setup recovery.
+                    </p>
+                    <AccountIntakePanel userRole={dbRole} />
                   </div>
-                  <div className="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all">
-                    <h3 className="font-medium text-gray-900 dark:text-white mb-1">Google Sheets Sync</h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Sync member status, roster, calendar, and sheet data with Supabase.</p>
-                    <SyncPanel userRole={dbRole} />
+
+                  {/* Google Sheets Sync & Finances */}
+                  <div className="space-y-4">
+                    <div className="bg-white dark:bg-zinc-900 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all">
+                      <h3 className="font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+                        <Table className="h-4 w-4 text-red-700 dark:text-red-500" />
+                        Google Sheets Sync
+                      </h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Sync member status, roster, calendar, and sheet data with Supabase.</p>
+                      <SyncPanel userRole={dbRole} />
+                    </div>
+
+                    <div className="bg-white dark:bg-zinc-900 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Manage Finances</h3>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">View balances, dues, and transaction records.</p>
+                      </div>
+                      <button className="text-sm font-medium text-red-700 hover:text-red-800 dark:text-red-400">Open Dashboard &rarr;</button>
+                    </div>
                   </div>
                 </div>
               </div>
