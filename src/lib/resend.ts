@@ -26,7 +26,7 @@ export async function sendSetupEmail({
 
   const fromEmail =
     process.env.RESEND_FROM_EMAIL ||
-    'Theta Tau <onboarding@rmt.thetatauxi.org>';
+    'Theta Tau <noreply@thetatauxi.org>';
 
   const resend = new Resend(apiKey);
 
