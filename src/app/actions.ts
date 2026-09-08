@@ -201,8 +201,8 @@ async function getOrCreateUserAndProfile(email: string) {
   // 1. Check profiles table first
   const { data: profile } = await adminSupabase
     .from('profiles')
-    .select('id, email, username')
-    .or(`email.ilike.${email},username.ilike.${username}`)
+    .select('id, username')
+    .ilike('username', username)
     .maybeSingle();
 
   if (profile) {
@@ -231,7 +231,6 @@ async function getOrCreateUserAndProfile(email: string) {
   // Ensure row exists in profiles
   await adminSupabase.from('profiles').upsert({
     id: userId,
-    email,
     username,
     role: 'Member',
     first_name: 'TEMP',
@@ -287,6 +286,13 @@ export async function sendPasswordResetEmailAction(targetInput: string): Promise
     });
 
     if (!resendResult.success) {
+      const isSandbox = resendResult.error?.includes('testing emails');
+      if (isSandbox) {
+        return {
+          success: true,
+          message: `Link generated! Resend is in testing mode (verify domain at resend.com/domains). Link: ${setupUrl}`,
+        };
+      }
       throw new Error(`Token generated, but email delivery failed: ${resendResult.error}`);
     }
 
@@ -386,7 +392,7 @@ export async function verifySetupTokenAction(token: string): Promise<SetupTokenV
     const adminSupabase = createAdminClient();
     const { data: profile, error } = await adminSupabase
       .from('profiles')
-      .select('id, email, username, first_name, last_name, major, pledge_class, graduation_year, setup_token_expires_at')
+      .select('id, username, first_name, last_name, major, pledge_class, graduation_year, setup_token_expires_at')
       .eq('setup_token', token.trim())
       .maybeSingle();
 
@@ -407,13 +413,19 @@ export async function verifySetupTokenAction(token: string): Promise<SetupTokenV
       }
     }
 
+    let userEmail = '';
+    const { data: authUserData } = await adminSupabase.auth.admin.getUserById(profile.id);
+    if (authUserData?.user?.email) {
+      userEmail = authUserData.user.email;
+    }
+
     const isReset = Boolean(profile.first_name && profile.first_name !== 'TEMP');
-    const defaultUsername = profile.username || (profile.email ? profile.email.split('@')[0] : '');
+    const defaultUsername = profile.username || (userEmail ? userEmail.split('@')[0] : '');
 
     return {
       valid: true,
       userId: profile.id,
-      email: profile.email || '',
+      email: userEmail,
       username: defaultUsername,
       firstName: profile.first_name === 'TEMP' ? '' : (profile.first_name || ''),
       lastName: profile.last_name === 'TEMP' ? '' : (profile.last_name || ''),
@@ -464,7 +476,7 @@ export async function completeProfileSetupAction(
     // 1. Locate the profile with this active token
     const { data: profile, error: fetchErr } = await adminSupabase
       .from('profiles')
-      .select('id, email, username, setup_token_expires_at')
+      .select('id, username, setup_token_expires_at')
       .eq('setup_token', token.trim())
       .maybeSingle();
 
@@ -484,6 +496,10 @@ export async function completeProfileSetupAction(
         };
       }
     }
+
+    // Retrieve email from Auth
+    const { data: authUserData } = await adminSupabase.auth.admin.getUserById(profile.id);
+    const userEmail = authUserData?.user?.email || '';
 
     const fullName = `${firstName.trim()} ${lastName.trim()}`;
 
@@ -524,7 +540,7 @@ export async function completeProfileSetupAction(
 
     return {
       success: true,
-      email: profile.email,
+      email: userEmail,
     };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Unknown error during profile setup';

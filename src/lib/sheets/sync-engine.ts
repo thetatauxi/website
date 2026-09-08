@@ -697,16 +697,13 @@ export async function processNewAccountIntake(spreadsheetIdOrUrl?: string): Prom
     }
   }
 
-  // Gather existing usernames and emails from profiles table
+  // Gather existing usernames from profiles table
   const { data: profiles, error: profileError } = await adminSupabase
     .from('profiles')
-    .select('username, email');
+    .select('username');
 
   if (!profileError && profiles) {
     for (const p of profiles) {
-      if (p.email) {
-        existingEmails.add(String(p.email).toLowerCase().trim());
-      }
       if (p.username) {
         const u = String(p.username).toLowerCase().trim();
         existingEmails.add(u.includes('@') ? u : `${u}@wisc.edu`);
@@ -772,7 +769,6 @@ export async function processNewAccountIntake(spreadsheetIdOrUrl?: string): Prom
     // 2. Insert/Upsert profile in profiles table with setup_token
     const { error: profileError } = await adminSupabase.from('profiles').upsert({
       id: userId,
-      email,
       username,
       role: 'Member',
       first_name: 'TEMP',
@@ -797,9 +793,18 @@ export async function processNewAccountIntake(spreadsheetIdOrUrl?: string): Prom
     });
 
     if (!emailResult.success) {
-      errors.push(`Row ${rowNum} (${email}): Created account, but email dispatch failed: ${emailResult.error} (row preserved in sheet).`);
-      // Row preserved so admin knows email wasn't delivered
-      continue;
+      const isSandbox = emailResult.error?.includes('testing emails');
+      if (isSandbox) {
+        errors.push(`Row ${rowNum} (${email}): Account created & token active! Resend is in testing mode (verify domain at resend.com/domains). Setup Link: ${setupUrl}`);
+        // Account and token are valid -> count as invited so admin can copy the link
+        invitedEmails.add(email);
+        existingEmails.add(email);
+        rowsToWipe.add(rowNum);
+        continue;
+      } else {
+        errors.push(`Row ${rowNum} (${email}): Created account, but email dispatch failed: ${emailResult.error} (row preserved in sheet).`);
+        continue;
+      }
     }
 
     // Email sent successfully!
