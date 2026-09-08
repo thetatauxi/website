@@ -12,9 +12,19 @@ import {
   Send,
   ShieldCheck,
   Trash2,
-  Mail
+  Mail,
+  KeyRound,
+  Copy,
+  Check,
+  ExternalLink
 } from 'lucide-react';
-import { syncSheetAction, syncAllSheetsAction, processNewAccountIntakeAction } from '@/app/actions';
+import {
+  syncSheetAction,
+  syncAllSheetsAction,
+  processNewAccountIntakeAction,
+  sendPasswordResetEmailAction,
+  generateMemberDirectLinkAction
+} from '@/app/actions';
 import { SHEET_CONFIGS } from '@/config/sheets';
 import { type AccountIntakeResult } from '@/lib/sheets/sync-engine';
 import {
@@ -37,6 +47,48 @@ export default function SyncPanel({ userRole }: SyncPanelProps) {
   // Modal state for New Account Intake results pop-up
   const [intakeModalOpen, setIntakeModalOpen] = useState(false);
   const [intakeResult, setIntakeResult] = useState<AccountIntakeResult | null>(null);
+
+  // Manual Reset / Direct Link state
+  const [resetInput, setResetInput] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetMessage, setResetMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [directLink, setDirectLink] = useState<string | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  const handleSendResetEmail = async () => {
+    if (!resetInput.trim()) return;
+    setResetLoading(true);
+    setResetMessage(null);
+    setDirectLink(null);
+    try {
+      const res = await sendPasswordResetEmailAction(resetInput);
+      setResetMessage({ type: res.success ? 'success' : 'error', text: res.message });
+    } catch (err: unknown) {
+      setResetMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to send' });
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleGenerateDirectLink = async () => {
+    if (!resetInput.trim()) return;
+    setResetLoading(true);
+    setResetMessage(null);
+    setDirectLink(null);
+    try {
+      const res = await generateMemberDirectLinkAction(resetInput, 'recovery');
+      if (res.success && res.link) {
+        setDirectLink(res.link);
+        setResetMessage({ type: 'success', text: res.message });
+      } else {
+        setResetMessage({ type: 'error', text: res.message });
+      }
+    } catch (err: unknown) {
+      setResetMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to generate link' });
+    } finally {
+      setResetLoading(false);
+    }
+  };
 
   const router = useRouter();
 
@@ -303,6 +355,72 @@ export default function SyncPanel({ userRole }: SyncPanelProps) {
                 <RefreshCw className={`h-3 w-3 ${loadingSheetId === 'account_intake' ? 'animate-spin' : ''}`} />
                 {loadingSheetId === 'account_intake' ? 'Processing...' : 'Run Intake'}
               </button>
+            </div>
+
+            {/* Password Reset & Direct Link Tool */}
+            <div className="p-3 rounded-lg bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200/70 dark:border-amber-900/40">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <KeyRound className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+                <h4 className="text-xs font-semibold text-gray-900 dark:text-gray-100">
+                  Member Password Reset & Link Recovery
+                </h4>
+              </div>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-2">
+                Sends a link to reset password and update info on <code className="font-mono text-[10px]">/setup-profile</code>. Use &ldquo;Generate Direct Link&rdquo; to copy and DM the link directly if campus email scanners expire their email link.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="text"
+                  value={resetInput}
+                  onChange={(e) => setResetInput(e.target.value)}
+                  placeholder="NetID or email (e.g. bblake or bblake@wisc.edu)"
+                  className="flex-1 px-2.5 py-1 text-xs rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                />
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={handleSendResetEmail}
+                    disabled={resetLoading || !resetInput.trim()}
+                    className="px-2.5 py-1 text-xs font-medium rounded bg-white dark:bg-gray-700 border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200 hover:bg-amber-50 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 flex items-center gap-1"
+                  >
+                    <Send className="h-3 w-3" />
+                    {resetLoading ? 'Sending...' : 'Send Reset Email'}
+                  </button>
+                  <button
+                    onClick={handleGenerateDirectLink}
+                    disabled={resetLoading || !resetInput.trim()}
+                    className="px-2.5 py-1 text-xs font-medium rounded bg-amber-800 text-white hover:bg-amber-700 transition-colors disabled:opacity-50 flex items-center gap-1"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    {resetLoading ? 'Generating...' : 'Generate Direct Link'}
+                  </button>
+                </div>
+              </div>
+
+              {resetMessage && (
+                <p className={`text-[11px] mt-2 ${resetMessage.type === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {resetMessage.text}
+                </p>
+              )}
+
+              {directLink && (
+                <div className="mt-2 p-2 rounded bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-800 flex items-center justify-between gap-2">
+                  <span className="font-mono text-[10px] text-gray-700 dark:text-gray-300 truncate select-all flex-1">
+                    {directLink}
+                  </span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(directLink);
+                      setCopiedLink(true);
+                      setTimeout(() => setCopiedLink(false), 2000);
+                    }}
+                    className="px-2 py-0.5 text-xs font-medium rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center gap-1 flex-shrink-0"
+                  >
+                    {copiedLink ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
+                    {copiedLink ? 'Copied' : 'Copy'}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Other Configured Sheets */}

@@ -3,6 +3,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { syncSheetToSupabase, syncAllSheetsToSupabase, processNewAccountIntake, type AccountIntakeResult } from '@/lib/sheets/sync-engine';
 import { getSheetConfigById, SyncResult } from '@/config/sheets';
 
@@ -184,6 +185,100 @@ export async function processNewAccountIntakeAction(): Promise<AccountIntakeResu
       invitedEmails: [],
       alreadyUsedEmails: [],
       errors: [errorMsg],
+    };
+  }
+}
+
+/**
+ * Sends a password reset & profile setup email directly to a member
+ */
+export async function sendPasswordResetEmailAction(targetInput: string): Promise<{ success: boolean; message: string }> {
+  try {
+    await verifySyncPermission();
+
+    let email = (targetInput || '').trim().toLowerCase();
+    if (!email) {
+      throw new Error('Please enter a valid NetID or email address.');
+    }
+    if (!email.includes('@')) {
+      email = `${email}@wisc.edu`;
+    }
+
+    const adminSupabase = createAdminClient();
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thetatauxi.org';
+    const redirectTo = `${siteUrl.replace(/\/+$/, '')}/setup-profile`;
+
+    const { error } = await adminSupabase.auth.resetPasswordForEmail(email, {
+      redirectTo,
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return {
+      success: true,
+      message: `Password reset email dispatched to ${email}.`,
+    };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Failed to send password reset email';
+    return {
+      success: false,
+      message: errorMsg,
+    };
+  }
+}
+
+/**
+ * Generates a direct single-use setup / recovery link that an admin can copy and send directly
+ * (Completely bypasses institutional email filters and Safe Links pre-fetching)
+ */
+export async function generateMemberDirectLinkAction(
+  targetInput: string,
+  linkType: 'recovery' | 'invite' = 'recovery'
+): Promise<{ success: boolean; link?: string; message: string }> {
+  try {
+    await verifySyncPermission();
+
+    let email = (targetInput || '').trim().toLowerCase();
+    if (!email) {
+      throw new Error('Please enter a valid NetID or email address.');
+    }
+    if (!email.includes('@')) {
+      email = `${email}@wisc.edu`;
+    }
+
+    const adminSupabase = createAdminClient();
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thetatauxi.org';
+    const redirectTo = `${siteUrl.replace(/\/+$/, '')}/setup-profile`;
+
+    const { data, error } = await adminSupabase.auth.admin.generateLink({
+      type: linkType,
+      email,
+      options: {
+        redirectTo,
+      },
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const actionLink = data?.properties?.action_link;
+    if (!actionLink) {
+      throw new Error('Supabase did not return an action link.');
+    }
+
+    return {
+      success: true,
+      link: actionLink,
+      message: `Direct link generated for ${email}.`,
+    };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Failed to generate direct link';
+    return {
+      success: false,
+      message: errorMsg,
     };
   }
 }

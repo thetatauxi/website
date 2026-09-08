@@ -10,6 +10,7 @@ export default function SetupProfilePage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [isRecovery, setIsRecovery] = useState(false)
 
   // Form state
   const [userId, setUserId] = useState('')
@@ -52,12 +53,22 @@ export default function SetupProfilePage() {
           if (profile.username) {
             setUsername(profile.username)
           }
-          // Do not overwrite with TEMP or 0 if we can avoid it, or clear them if they are placeholders
-          setFirstName(profile.first_name === 'TEMP' ? '' : profile.first_name || '')
-          setLastName(profile.last_name === 'TEMP' ? '' : profile.last_name || '')
-          setMajor(profile.major === 'TEMP' ? '' : profile.major || '')
-          setPledgeClass(profile.pledge_class === 'TEMP' ? '' : profile.pledge_class || '')
-          setGraduationYear(profile.graduation_year === 0 ? '' : profile.graduation_year?.toString() || '')
+          if (profile.first_name && profile.first_name !== 'TEMP') {
+            setFirstName(profile.first_name)
+            setIsRecovery(true)
+          }
+          if (profile.last_name && profile.last_name !== 'TEMP') {
+            setLastName(profile.last_name)
+          }
+          if (profile.major && profile.major !== 'TEMP') {
+            setMajor(profile.major)
+          }
+          if (profile.pledge_class && profile.pledge_class !== 'TEMP') {
+            setPledgeClass(profile.pledge_class)
+          }
+          if (profile.graduation_year && profile.graduation_year !== 0) {
+            setGraduationYear(profile.graduation_year.toString())
+          }
         }
       } catch (err) {
         console.warn('Error fetching profile details:', err)
@@ -70,9 +81,18 @@ export default function SetupProfilePage() {
 
     const initAuth = async () => {
       // 1. Check if an invite/recovery hash is present in the URL
+      if (typeof window !== 'undefined') {
+        if (window.location.search.includes('type=recovery')) {
+          setIsRecovery(true)
+        }
+      }
+
       if (typeof window !== 'undefined' && window.location.hash) {
         const hash = window.location.hash.substring(1)
         const params = new URLSearchParams(hash)
+        if (params.get('type') === 'recovery') {
+          setIsRecovery(true)
+        }
         const accessToken = params.get('access_token')
         const refreshToken = params.get('refresh_token')
         const errorParam = params.get('error')
@@ -227,16 +247,20 @@ export default function SetupProfilePage() {
       <div className="max-w-md w-full space-y-8 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 p-8 rounded-xl shadow-lg transition-colors duration-200">
         <div>
           <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-            Setup Your Profile
+            {isRecovery ? 'Reset Password & Profile' : 'Setup Your Profile'}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            Complete your profile and set a password to access the portal.
+            {isRecovery
+              ? 'Set a new password and review or update your member details below.'
+              : 'Complete your profile and set a password to access the portal.'}
           </p>
         </div>
 
         {success ? (
           <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/30 text-green-800 dark:text-green-300 p-4 rounded-lg text-center">
-            Profile saved successfully! Redirecting you to the portal...
+            {isRecovery
+              ? 'Password and profile updated successfully! Redirecting you to the portal...'
+              : 'Profile saved successfully! Redirecting you to the portal...'}
           </div>
         ) : (
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -411,7 +435,11 @@ export default function SetupProfilePage() {
                 disabled={saving}
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-red-800 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors disabled:opacity-50"
               >
-                {saving ? 'Saving...' : 'Save Profile & Set Password'}
+                {saving
+                  ? 'Saving...'
+                  : isRecovery
+                  ? 'Update Profile & Set New Password'
+                  : 'Save Profile & Set Password'}
               </button>
             </div>
           </form>
