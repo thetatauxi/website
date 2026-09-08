@@ -26,7 +26,7 @@ export async function sendSetupEmail({
 
   const fromEmail =
     process.env.RESEND_FROM_EMAIL ||
-    'Theta Tau <onboarding@resend.dev>'; // Default fallback if custom domain is not yet configured
+    'Theta Tau <onboarding@rmt.thetatauxi.org>';
 
   const resend = new Resend(apiKey);
 
