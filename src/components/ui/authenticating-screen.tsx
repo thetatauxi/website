@@ -25,7 +25,11 @@ function interpolateColor(t: number, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`
 }
 
-export default function AuthenticatingScreen() {
+interface AuthenticatingScreenProps {
+  message?: string
+}
+
+export default function AuthenticatingScreen({ message = "Loading..." }: AuthenticatingScreenProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
   useEffect(() => {
@@ -143,7 +147,7 @@ export default function AuthenticatingScreen() {
     <div
       role="status"
       aria-live="polite"
-      aria-label="Authenticating"
+      aria-label={message.replace(/\.+$/, "")}
       className="fixed inset-0 z-[9999] bg-white dark:bg-black flex flex-col items-center justify-center overflow-hidden select-none transition-colors duration-200"
     >
       {/* Dynamic Background Particle Canvas */}
@@ -200,9 +204,9 @@ l-3 -1058 -28 -42 c-37 -57 -90 -81 -203 -94 l-94 -11 0 -28 0 -29 520 0 520
           </svg>
         </div>
 
-        {/* Pulsing Authenticating Text */}
+        {/* Pulsing Loading Text */}
         <h1 className="text-2xl sm:text-3xl font-bold tracking-wider text-gray-900 dark:text-white mb-3">
-          Authenticating...
+          {message}
         </h1>
 
         {/* Dynamic Dark Red to Gold Accent Bar */}

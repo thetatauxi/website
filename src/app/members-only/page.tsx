@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
-import { Calendar, Users, ExternalLink, Megaphone, Shield, Link as LinkIcon, CheckCircle2, XCircle, Award, UserPlus, Table } from 'lucide-react'
+import LoadingLink from '@/components/ui/loading-link'
+import { Calendar, Users, ExternalLink, Megaphone, Shield, Link as LinkIcon, CheckCircle2, XCircle, Award, UserPlus, Table, QrCode } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getCalendarFromSheet, getLinksFromSheet } from '@/lib/google-sheets'
 import SyncPanel from '@/components/members/sync-panel'
@@ -198,7 +199,14 @@ export default async function MembersOnlyPage() {
 
             <div>
               <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-6">Quick Access</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all">
+                  <Award className="h-8 w-8 text-red-700 dark:text-red-500 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Chapter Attendance</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">View your attended events, points breakdown, and semester standing</p>
+                  <LoadingLink href="/attendance" className="inline-block text-sm font-medium text-red-700 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">Open Attendance &rarr;</LoadingLink>
+                </div>
 
                 <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all">
                   <Users className="h-8 w-8 text-red-700 dark:text-red-500 mb-4" />
@@ -245,8 +253,21 @@ export default async function MembersOnlyPage() {
                     <AccountIntakePanel userRole={dbRole} />
                   </div>
 
-                  {/* Google Sheets Sync & Finances */}
+                  {/* Attendance Manager, Google Sheets Sync & Finances */}
                   <div className="space-y-4">
+                    <div className="bg-white dark:bg-zinc-900 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+                          <QrCode className="h-4 w-4 text-red-700 dark:text-red-500" />
+                          Attendance &amp; Event Manager
+                        </h3>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Launch Scribe grid, generate event QR codes, and toggle member attendance.</p>
+                      </div>
+                      <LoadingLink href="/attendance" className="text-sm font-medium text-red-700 hover:text-red-800 dark:text-red-400 whitespace-nowrap ml-4">
+                        Open Grid &rarr;
+                      </LoadingLink>
+                    </div>
+
                     <div className="bg-white dark:bg-zinc-900 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all">
                       <h3 className="font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
                         <Table className="h-4 w-4 text-red-700 dark:text-red-500" />
