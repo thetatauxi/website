@@ -138,11 +138,10 @@ export default function EventModal({
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
               <span>Event Details &amp; Settings</span>
             </DialogTitle>
-            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider ${
-              isActive
+            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider ${isActive
                 ? 'bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-400 border border-green-200 dark:border-green-800'
                 : 'bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-gray-400 border border-gray-200 dark:border-zinc-700'
-            }`}>
+              }`}>
               {isActive ? 'Active for Scans' : 'Inactive / Closed'}
             </span>
           </div>
@@ -245,7 +244,7 @@ export default function EventModal({
                   className="w-full h-9 px-3 py-1 text-xs sm:text-sm rounded-md border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-600"
                 >
                   <option value="general">General / Chapter</option>
-                  <option value="rush">Rush (0 pts)</option>
+                  <option value="rush">Rush</option>
                   <option value="brotherhood">Brotherhood Pillar</option>
                   <option value="professional">Professional Development</option>
                   <option value="service">Community Service</option>

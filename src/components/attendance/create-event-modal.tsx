@@ -148,7 +148,7 @@ export default function CreateEventModal({
               className="w-full h-10 px-3 py-2 text-sm rounded-md border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-600"
             >
               <option value="general">General / Chapter</option>
-              <option value="rush">Rush (0 pts)</option>
+              <option value="rush">Rush</option>
               <option value="brotherhood">Brotherhood Pillar</option>
               <option value="professional">Professional Development</option>
               <option value="service">Community Service</option>

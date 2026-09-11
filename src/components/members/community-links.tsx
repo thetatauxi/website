@@ -73,8 +73,8 @@ export default function CommunityLinks({
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Collapsed state map: key is category name, boolean is collapsed (true = collapsed)
-  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({})
+  // Expanded state map: key is category name, boolean is expanded (true = expanded, default false = collapsed)
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
 
   // Details Modal State (triggered by 3 dots)
   const [selectedLink, setSelectedLink] = useState<CommunityLink | null>(null)
@@ -130,28 +130,28 @@ export default function CommunityLinks({
   }, [allCategories, links])
 
   // Expand / Condense All calculation
-  const isAllCondensed = useMemo(() => {
-    return allCategories.length > 0 && allCategories.every((cat) => !!collapsedCategories[cat])
-  }, [allCategories, collapsedCategories])
+  const isAllExpanded = useMemo(() => {
+    return allCategories.length > 0 && allCategories.every((cat) => !!expandedCategories[cat])
+  }, [allCategories, expandedCategories])
 
   const toggleCategory = (cat: string) => {
-    setCollapsedCategories((prev) => ({
+    setExpandedCategories((prev) => ({
       ...prev,
       [cat]: !prev[cat],
     }))
   }
 
   const toggleAll = () => {
-    if (isAllCondensed) {
-      // Expand all
-      setCollapsedCategories({})
-    } else {
+    if (isAllExpanded) {
       // Condense all
+      setExpandedCategories({})
+    } else {
+      // Expand all
       const nextState: Record<string, boolean> = {}
       allCategories.forEach((cat) => {
         nextState[cat] = true
       })
-      setCollapsedCategories(nextState)
+      setExpandedCategories(nextState)
     }
   }
 
@@ -304,7 +304,7 @@ export default function CommunityLinks({
           className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700 transition-all shadow-xs self-start sm:self-auto"
         >
           <ChevronsUpDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-          <span>{isAllCondensed ? 'Expand All' : 'Condense All'}</span>
+          <span>{isAllExpanded ? 'Condense All' : 'Expand All'}</span>
         </button>
       </div>
 
@@ -312,7 +312,7 @@ export default function CommunityLinks({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
         {allCategories.map((category) => {
           const categoryLinks = groupedLinks[category] || []
-          const isCollapsed = !!collapsedCategories[category]
+          const isExpanded = !!expandedCategories[category]
 
           return (
             <div
@@ -324,7 +324,7 @@ export default function CommunityLinks({
                 type="button"
                 onClick={() => toggleCategory(category)}
                 className="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors focus:outline-none select-none"
-                aria-expanded={!isCollapsed}
+                aria-expanded={isExpanded}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <CategoryIcon
@@ -339,13 +339,13 @@ export default function CommunityLinks({
                   </span>
                 </div>
                 <ChevronDown
-                  className={`h-4 w-4 text-gray-400 transition-transform duration-200 shrink-0 ${isCollapsed ? '-rotate-90' : 'rotate-0'
+                  className={`h-4 w-4 text-gray-400 transition-transform duration-200 shrink-0 ${isExpanded ? 'rotate-0' : '-rotate-90'
                     }`}
                 />
               </button>
 
               {/* Collapsible Content */}
-              {!isCollapsed && (
+              {isExpanded && (
                 <div className="px-4 pb-4 pt-1 flex-1 flex flex-col border-t border-gray-100 dark:border-zinc-800/60">
                   {categoryLinks.length > 0 ? (
                     <ul className="space-y-1 max-h-[260px] overflow-y-auto pr-1">

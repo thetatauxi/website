@@ -263,7 +263,7 @@ export default function ScribeAttendanceGrid({
               className="w-full h-10 px-3 py-2 text-xs sm:text-sm rounded-md border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-600"
             >
               <option value="all">All Types</option>
-              <option value="rush">Rush (0 pts)</option>
+              <option value="rush">Rush</option>
               <option value="general">General Chapter</option>
               <option value="brotherhood">Brotherhood</option>
               <option value="professional">Professional Dev</option>
@@ -272,33 +272,28 @@ export default function ScribeAttendanceGrid({
             </select>
           </div>
 
-          {/* Points Filter: Two Tiny Vertically Stacked Inputs for Min/Max */}
-          <div className="md:col-span-2 flex flex-col justify-between h-10 py-0.5">
-            <div className="flex items-center gap-1.5 h-[18px]">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-gray-500 dark:text-gray-400 w-8 select-none">
-                Min:
-              </span>
+          {/* Points Filter: Centered 'Points' label with side-by-side Min - Max inputs */}
+          <div className="md:col-span-2 flex flex-col justify-center items-center h-10">
+            <span className="text-[10px] uppercase font-bold tracking-wider text-gray-500 dark:text-gray-400 select-none leading-none mb-1">
+              Points
+            </span>
+            <div className="flex items-center gap-1.5 w-full">
               <input
                 type="number"
                 min="0"
-                placeholder="0"
+                placeholder="Min"
                 value={minPoints}
                 onChange={(e) => setMinPoints(e.target.value)}
-                className="w-full h-full px-1.5 text-[11px] rounded border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-red-600 font-mono"
+                className="w-full h-6 px-1.5 text-[11px] text-center rounded border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-red-600 font-mono"
               />
-            </div>
-
-            <div className="flex items-center gap-1.5 h-[18px]">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-gray-500 dark:text-gray-400 w-8 select-none">
-                Max:
-              </span>
+              <span className="text-gray-400 text-xs font-semibold select-none">-</span>
               <input
                 type="number"
                 min="0"
                 placeholder="Max"
                 value={maxPoints}
                 onChange={(e) => setMaxPoints(e.target.value)}
-                className="w-full h-full px-1.5 text-[11px] rounded border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-red-600 font-mono"
+                className="w-full h-6 px-1.5 text-[11px] text-center rounded border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-red-600 font-mono"
               />
             </div>
           </div>
@@ -442,11 +437,10 @@ export default function ScribeAttendanceGrid({
                                 type="button"
                                 onClick={() => handleToggle(ev.id, member.id)}
                                 disabled={isPending}
-                                className={`w-6 h-6 rounded-md flex items-center justify-center transition-all ${
-                                  isChecked
-                                    ? 'bg-red-700 hover:bg-red-800 text-white shadow-sm ring-2 ring-red-700/20'
-                                    : 'bg-gray-100 dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 hover:border-red-400 dark:hover:border-red-500'
-                                } active:scale-90`}
+                                className={`w-6 h-6 rounded-md flex items-center justify-center transition-all ${isChecked
+                                  ? 'bg-red-700 hover:bg-red-800 text-white shadow-sm ring-2 ring-red-700/20'
+                                  : 'bg-gray-100 dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 hover:border-red-400 dark:hover:border-red-500'
+                                  } active:scale-90`}
                               >
                                 {isPending ? (
                                   <Loader2 className="h-3.5 w-3.5 animate-spin text-current" />
