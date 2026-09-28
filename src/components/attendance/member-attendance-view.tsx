@@ -290,6 +290,7 @@ export default function MemberAttendanceView({
           <option value="brotherhood">Brotherhood</option>
           <option value="professional">Professional Dev</option>
           <option value="service">Community Service</option>
+          <option value="study tables">Study Tables</option>
         </select>
       </div>
 

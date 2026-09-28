@@ -274,6 +274,7 @@ export default function EventModal({
                   <option value="brotherhood">Brotherhood Pillar</option>
                   <option value="professional">Professional Development</option>
                   <option value="service">Community Service</option>
+                  <option value="study tables">Study Tables</option>
                 </select>
               </div>
             </div>

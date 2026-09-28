@@ -168,7 +168,7 @@ export default function CreateEventModal({
 
             {isRestrictedChair ? (
               <div className="w-full h-10 px-3 py-2 text-sm rounded-md border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 font-bold capitalize flex items-center">
-                {type === 'rush' ? 'Rush' : `${type} Pillar`}
+                {type === 'rush' ? 'Rush' : type === 'study tables' ? 'Study Tables' : `${type} Pillar`}
               </div>
             ) : (
               <select
@@ -182,6 +182,7 @@ export default function CreateEventModal({
                 <option value="brotherhood">Brotherhood Pillar</option>
                 <option value="professional">Professional Development</option>
                 <option value="service">Community Service</option>
+                <option value="study tables">Study Tables</option>
               </select>
             )}
           </div>

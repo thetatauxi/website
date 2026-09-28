@@ -296,6 +296,24 @@ export default function ScribeAttendanceGrid({
   const totalDuesPaidCount = members.filter((m) => m.dues_paid).length;
   const totalConcessionsDoneCount = members.filter((m) => m.concessions_done).length;
 
+  // Dues and Consessions visibility restricted to respective chairs and executive officers
+  const canSeeDues = permissions.isFullOfficer || permissions.canEditDues;
+  const canSeeConcessions = permissions.isFullOfficer || permissions.canEditConcessions;
+  const canSeeAnyRequirements = canSeeDues || canSeeConcessions;
+
+  const requirementsButtonLabel = useMemo(() => {
+    if (canSeeDues && canSeeConcessions) {
+      return showRequirementsColumns ? 'Hide Dues & Consessions' : 'Show Dues & Consessions';
+    }
+    if (canSeeDues) {
+      return showRequirementsColumns ? 'Hide Dues' : 'Show Dues';
+    }
+    if (canSeeConcessions) {
+      return showRequirementsColumns ? 'Hide Consessions' : 'Show Consessions';
+    }
+    return '';
+  }, [canSeeDues, canSeeConcessions, showRequirementsColumns]);
+
   return (
     <div className="space-y-6">
       {/* Top Banner Notice if Tables Need Migration */}
@@ -381,11 +399,16 @@ export default function ScribeAttendanceGrid({
                 <option value="brotherhood">Brotherhood</option>
                 <option value="professional">Professional Dev</option>
                 <option value="service">Community Service</option>
+                <option value="study tables">Study Tables</option>
               </select>
             ) : (
               <div className="w-full h-10 px-3 py-2 text-xs rounded-md border border-amber-200 dark:border-amber-900/60 bg-amber-50/70 dark:bg-amber-950/30 text-amber-900 dark:text-amber-200 font-bold capitalize flex items-center truncate">
                 {permissions.allowedCategories.length > 0
-                  ? `${permissions.allowedCategories.join(', ')} Pillar`
+                  ? permissions.allowedCategories.includes('study tables')
+                    ? 'Study Tables Scope'
+                    : permissions.allowedCategories.includes('rush')
+                      ? 'Rush Scope'
+                      : `${permissions.allowedCategories.join(', ')} Pillar`
                   : permissions.canEditDues
                     ? 'Dues Scope'
                     : 'Consessions Scope'}
@@ -448,45 +471,51 @@ export default function ScribeAttendanceGrid({
             </div>
             {showRequirementsColumns && (
               <>
-                <div className="flex items-center gap-1.5">
-                  <DollarSign className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                  <span>
-                    {totalDuesPaidCount} / {members.length} Dues paid
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Award className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                  <span>
-                    {totalConcessionsDoneCount} / {members.length} Consessions attended
-                  </span>
-                </div>
+                {canSeeDues && (
+                  <div className="flex items-center gap-1.5">
+                    <DollarSign className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    <span>
+                      {totalDuesPaidCount} / {members.length} Dues paid
+                    </span>
+                  </div>
+                )}
+                {canSeeConcessions && (
+                  <div className="flex items-center gap-1.5">
+                    <Award className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    <span>
+                      {totalConcessionsDoneCount} / {members.length} Consessions attended
+                    </span>
+                  </div>
+                )}
               </>
             )}
           </div>
 
           {/* Button on the right side in line with the stats, made a bit smaller */}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setShowRequirementsColumns((prev) => !prev)}
-            className={`h-7 px-2.5 text-[11px] font-semibold rounded-lg border flex items-center gap-1.5 transition-all shadow-xs self-start sm:self-auto shrink-0 ${showRequirementsColumns
-              ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/60'
-              : 'bg-gray-50 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-750'
-              }`}
-          >
-            {showRequirementsColumns ? (
-              <>
-                <EyeOff className="h-3.5 w-3.5 text-amber-700 dark:text-amber-400" />
-                <span>Hide Dues &amp; Consessions</span>
-              </>
-            ) : (
-              <>
-                <Eye className="h-3.5 w-3.5 text-gray-500" />
-                <span>Show Dues &amp; Consessions</span>
-              </>
-            )}
-          </Button>
+          {canSeeAnyRequirements && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowRequirementsColumns((prev) => !prev)}
+              className={`h-7 px-2.5 text-[11px] font-semibold rounded-lg border flex items-center gap-1.5 transition-all shadow-xs self-start sm:self-auto shrink-0 ${showRequirementsColumns
+                ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/60'
+                : 'bg-gray-50 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-750'
+                }`}
+            >
+              {showRequirementsColumns ? (
+                <>
+                  <EyeOff className="h-3.5 w-3.5 text-amber-700 dark:text-amber-400" />
+                  <span>{requirementsButtonLabel}</span>
+                </>
+              ) : (
+                <>
+                  <Eye className="h-3.5 w-3.5 text-gray-500" />
+                  <span>{requirementsButtonLabel}</span>
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -505,8 +534,8 @@ export default function ScribeAttendanceGrid({
                   </div>
                 </th>
 
-                {/* 2. Scrolling Light Gold Column: Dues (When visible) */}
-                {showRequirementsColumns && (
+                {/* 2. Scrolling Light Gold Column: Dues (When visible and authorized) */}
+                {canSeeDues && showRequirementsColumns && (
                   <th
                     className="p-2.5 w-[84px] min-w-[84px] max-w-[84px] bg-amber-100/90 dark:bg-amber-950/60 border-r border-amber-200/80 dark:border-amber-900/60 font-bold text-center select-none"
                     title={permissions.canEditDues ? 'Treasurer & Officers can edit Dues' : 'Managed by Treasurer'}
@@ -518,8 +547,8 @@ export default function ScribeAttendanceGrid({
                   </th>
                 )}
 
-                {/* 3. Scrolling Light Gold Column: Consessions (When visible) */}
-                {showRequirementsColumns && (
+                {/* 3. Scrolling Light Gold Column: Consessions (When visible and authorized) */}
+                {canSeeConcessions && showRequirementsColumns && (
                   <th
                     className="p-2.5 w-[104px] min-w-[104px] max-w-[104px] bg-amber-100/90 dark:bg-amber-950/60 border-r border-amber-200/80 dark:border-amber-900/60 font-bold text-center select-none"
                     title={permissions.canEditConcessions ? 'Fundraising Chair & Officers can edit Consessions' : 'Managed by Fundraising Chair'}
@@ -588,7 +617,11 @@ export default function ScribeAttendanceGrid({
                 <tr>
                   <td
                     colSpan={
-                      filteredEvents.length + (showRequirementsColumns ? 3 : 1) + (permissions.canCreateEvents ? 1 : 0)
+                      filteredEvents.length +
+                      1 +
+                      (canSeeDues && showRequirementsColumns ? 1 : 0) +
+                      (canSeeConcessions && showRequirementsColumns ? 1 : 0) +
+                      (permissions.canCreateEvents ? 1 : 0)
                     }
                     className="p-8 text-center text-gray-400 text-xs italic"
                   >
@@ -630,8 +663,8 @@ export default function ScribeAttendanceGrid({
                         </div>
                       </td>
 
-                      {/* 2. Scrolling Light Gold Column: Dues Checkbox (When visible) */}
-                      {showRequirementsColumns && (
+                      {/* 2. Scrolling Light Gold Column: Dues Checkbox (When visible and authorized) */}
+                      {canSeeDues && showRequirementsColumns && (
                         <td className="p-2.5 w-[84px] min-w-[84px] max-w-[84px] text-center bg-amber-50/70 dark:bg-amber-950/30 group-hover:bg-amber-100/70 dark:group-hover:bg-amber-900/40 border-r border-amber-200/70 dark:border-amber-900/40 transition-colors">
                           <div className="flex items-center justify-center">
                             <button
@@ -663,8 +696,8 @@ export default function ScribeAttendanceGrid({
                         </td>
                       )}
 
-                      {/* 3. Scrolling Light Gold Column: Consessions Checkbox (When visible) */}
-                      {showRequirementsColumns && (
+                      {/* 3. Scrolling Light Gold Column: Consessions Checkbox (When visible and authorized) */}
+                      {canSeeConcessions && showRequirementsColumns && (
                         <td className="p-2.5 w-[104px] min-w-[104px] max-w-[104px] text-center bg-amber-50/70 dark:bg-amber-950/30 group-hover:bg-amber-100/70 dark:group-hover:bg-amber-900/40 border-r border-amber-200/70 dark:border-amber-900/40 transition-colors">
                           <div className="flex items-center justify-center">
                             <button

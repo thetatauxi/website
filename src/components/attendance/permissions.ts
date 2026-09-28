@@ -35,7 +35,7 @@ export function parseAttendancePermissions(rawRole?: string | null): AttendanceP
       canEditDues: true,
       canEditConcessions: true,
       canCreateEvents: true,
-      allowedCategories: ['all', 'rush', 'general', 'brotherhood', 'professional', 'service'],
+      allowedCategories: ['all', 'rush', 'general', 'brotherhood', 'professional', 'service', 'study tables'],
       canManageEvent: () => true,
       canManageCategory: () => true,
       badgeLabel: 'Officer Privileges Active',
@@ -50,12 +50,19 @@ export function parseAttendancePermissions(rawRole?: string | null): AttendanceP
   const isPdChair = role.includes('pd') || role.includes('prof') || role.includes('professional');
   const isServiceChair = role.includes('service') || role.includes('com serv') || role.includes('community');
   const isRushChair = role.includes('rush');
+  const isAcademicChair =
+    role.includes('academic') ||
+    role.includes('academics') ||
+    role.includes('scholarship') ||
+    role.includes('study table') ||
+    role.includes('study');
 
   const allowedCategories: string[] = [];
   if (isBrotherhoodChair) allowedCategories.push('brotherhood');
   if (isPdChair) allowedCategories.push('professional');
   if (isServiceChair) allowedCategories.push('service');
   if (isRushChair) allowedCategories.push('rush');
+  if (isAcademicChair) allowedCategories.push('study tables');
 
   const canCreateEvents = allowedCategories.length > 0;
   const canAccessGrid = isTreasurer || isFundraising || canCreateEvents;
@@ -77,6 +84,7 @@ export function parseAttendancePermissions(rawRole?: string | null): AttendanceP
   else if (isPdChair) badgeLabel = 'PD Chair Active';
   else if (isServiceChair) badgeLabel = 'Service Chair Active';
   else if (isRushChair) badgeLabel = 'Rush Chair Active';
+  else if (isAcademicChair) badgeLabel = 'Academic Chair Active';
 
   return {
     canAccessGrid,

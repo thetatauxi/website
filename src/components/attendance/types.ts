@@ -3,7 +3,7 @@ export interface AttendanceEvent {
   name: string;
   date: string;
   points: number;
-  type: string; // 'rush' | 'brotherhood' | 'professional' | 'service' | 'concessions' | 'general'
+  type: string; // 'rush' | 'brotherhood' | 'professional' | 'service' | 'study tables' | 'general'
   is_active: boolean;
   code: string;
   created_at: string;
@@ -40,6 +40,7 @@ export type EventCategory =
   | 'brotherhood'
   | 'professional'
   | 'service'
+  | 'study tables'
   | 'general';
 
 export interface AttendanceFilterState {
