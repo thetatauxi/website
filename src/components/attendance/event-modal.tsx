@@ -5,15 +5,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AttendanceEvent } from './types';
+import { AttendanceEvent, MemberProfile } from './types';
+import { parseAttendancePermissions } from './permissions';
 import { updateAttendanceEventAction, deleteAttendanceEventAction } from '@/app/attendance/actions';
-import { Maximize2, Trash2, Copy, Check, Loader2, Users, Save } from 'lucide-react';
+import { Maximize2, Trash2, Copy, Check, Loader2, Users, Save, ShieldAlert } from 'lucide-react';
 
 interface EventModalProps {
   event: AttendanceEvent | null;
   isOpen: boolean;
   totalCheckedInCount: number;
   totalMembersCount: number;
+  currentUserProfile?: MemberProfile | null;
   onClose: () => void;
   onEventUpdated: (updatedEvent: AttendanceEvent) => void;
   onEventDeleted: (eventId: string) => void;
@@ -25,11 +27,17 @@ export default function EventModal({
   isOpen,
   totalCheckedInCount,
   totalMembersCount,
+  currentUserProfile,
   onClose,
   onEventUpdated,
   onEventDeleted,
   onOpenFullScreenCode,
 }: EventModalProps) {
+  const permissions = parseAttendancePermissions(currentUserProfile?.role);
+  const canEditThisEvent = event
+    ? permissions.isFullOfficer || permissions.canManageCategory(event.type)
+    : false;
+
   const [name, setName] = useState('');
   const [date, setDate] = useState('');
   const [points, setPoints] = useState<number>(0);
@@ -59,6 +67,8 @@ export default function EventModal({
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canEditThisEvent) return;
+
     if (!name.trim()) {
       setError('Event name is required.');
       return;
@@ -100,6 +110,8 @@ export default function EventModal({
   };
 
   const handleDelete = async () => {
+    if (!canEditThisEvent) return;
+
     setIsDeleting(true);
     setError(null);
 
@@ -150,6 +162,16 @@ export default function EventModal({
           </DialogDescription>
         </DialogHeader>
 
+        {/* Read-Only Notice if Chair does not own this category */}
+        {!canEditThisEvent && (
+          <div className="p-3 bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
+            <ShieldAlert className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+            <span>
+              <strong>Read-Only Mode:</strong> You can view attendance metrics and launch the full-screen QR code. Only the <strong>{event.type} chair</strong> or <strong>executive officers</strong> can edit or delete this event.
+            </span>
+          </div>
+        )}
+
         {/* Live Attendance Metric & Full Screen Launch Banner */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-red-50/70 dark:bg-red-950/30 border border-red-100 dark:border-red-900/40 mt-1">
           <div className="flex items-center gap-3">
@@ -196,7 +218,8 @@ export default function EventModal({
                   id="edit-name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 font-medium h-9 text-xs sm:text-sm"
+                  disabled={!canEditThisEvent}
+                  className="bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 font-medium h-9 text-xs sm:text-sm disabled:opacity-75"
                   required
                 />
               </div>
@@ -212,7 +235,8 @@ export default function EventModal({
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 h-9 text-xs sm:text-sm"
+                    disabled={!canEditThisEvent}
+                    className="bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 h-9 text-xs sm:text-sm disabled:opacity-75"
                   />
                 </div>
 
@@ -227,7 +251,8 @@ export default function EventModal({
                     step="1"
                     value={points}
                     onChange={(e) => setPoints(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 font-bold h-9 text-xs sm:text-sm"
+                    disabled={!canEditThisEvent}
+                    className="bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 font-bold h-9 text-xs sm:text-sm disabled:opacity-75"
                   />
                 </div>
               </div>
@@ -241,14 +266,14 @@ export default function EventModal({
                   id="edit-type"
                   value={type}
                   onChange={(e) => setType(e.target.value)}
-                  className="w-full h-9 px-3 py-1 text-xs sm:text-sm rounded-md border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-600"
+                  disabled={!canEditThisEvent}
+                  className="w-full h-9 px-3 py-1 text-xs sm:text-sm rounded-md border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-600 disabled:opacity-75"
                 >
                   <option value="general">General / Chapter</option>
                   <option value="rush">Rush</option>
                   <option value="brotherhood">Brotherhood Pillar</option>
                   <option value="professional">Professional Development</option>
                   <option value="service">Community Service</option>
-                  <option value="concessions">Concessions</option>
                 </select>
               </div>
             </div>
@@ -265,11 +290,12 @@ export default function EventModal({
                     {isActive ? 'Scans are currently accepted.' : 'Check-ins are closed.'}
                   </div>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer ml-3">
+                <label className={`relative inline-flex items-center ml-3 ${canEditThisEvent ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}>
                   <input
                     type="checkbox"
                     checked={isActive}
-                    onChange={(e) => setIsActive(e.target.checked)}
+                    onChange={(e) => canEditThisEvent && setIsActive(e.target.checked)}
+                    disabled={!canEditThisEvent}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
@@ -316,39 +342,43 @@ export default function EventModal({
 
           {/* Form Actions Footer */}
           <div className="pt-3 border-t border-gray-100 dark:border-zinc-800 flex items-center justify-between">
-            {showConfirmDelete ? (
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  className="bg-red-600 hover:bg-red-700 text-white text-xs h-9 px-3"
-                >
-                  {isDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Confirm Delete'}
-                </Button>
+            {canEditThisEvent ? (
+              showConfirmDelete ? (
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className="bg-red-600 hover:bg-red-700 text-white text-xs h-9 px-3"
+                  >
+                    {isDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Confirm Delete'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowConfirmDelete(false)}
+                    className="text-xs text-gray-500 h-9"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => setShowConfirmDelete(false)}
-                  className="text-xs text-gray-500 h-9"
+                  onClick={() => setShowConfirmDelete(true)}
+                  className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40 flex items-center gap-1.5 h-9"
                 >
-                  Cancel
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span>Delete Event</span>
                 </Button>
-              </div>
+              )
             ) : (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowConfirmDelete(true)}
-                className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40 flex items-center gap-1.5 h-9"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                <span>Delete Event</span>
-              </Button>
+              <div className="text-xs text-gray-400 italic">Editing restricted to category chair</div>
             )}
 
             <div className="flex items-center gap-2">
@@ -359,25 +389,27 @@ export default function EventModal({
                 disabled={isLoading}
                 className="border-gray-200 dark:border-zinc-700 text-xs h-9 px-4"
               >
-                Cancel
+                {canEditThisEvent ? 'Cancel' : 'Close'}
               </Button>
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="bg-red-700 hover:bg-red-800 text-white font-semibold text-xs flex items-center gap-1.5 h-9 px-5"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    <span>Saving...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-3.5 w-3.5" />
-                    <span>Save Changes</span>
-                  </>
-                )}
-              </Button>
+              {canEditThisEvent && (
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="bg-red-700 hover:bg-red-800 text-white font-semibold text-xs flex items-center gap-1.5 h-9 px-5"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-3.5 w-3.5" />
+                      <span>Save Changes</span>
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         </form>

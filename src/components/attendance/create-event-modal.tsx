@@ -1,11 +1,12 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AttendanceEvent } from './types';
+import { AttendanceEvent, MemberProfile } from './types';
+import { parseAttendancePermissions } from './permissions';
 import { createAttendanceEventAction } from '@/app/attendance/actions';
 import { Calendar, Plus, Loader2 } from 'lucide-react';
 
@@ -13,20 +14,35 @@ interface CreateEventModalProps {
   isOpen: boolean;
   onClose: () => void;
   onEventCreated: (event: AttendanceEvent) => void;
+  currentUserProfile?: MemberProfile | null;
 }
 
 export default function CreateEventModal({
   isOpen,
   onClose,
   onEventCreated,
+  currentUserProfile,
 }: CreateEventModalProps) {
+  const permissions = parseAttendancePermissions(currentUserProfile?.role);
+
+  // Default type based on chair role
+  const defaultCategory = permissions.isFullOfficer
+    ? 'general'
+    : (permissions.allowedCategories[0] || 'general');
+
   const [name, setName] = useState('');
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [points, setPoints] = useState<number>(1);
-  const [type, setType] = useState<string>('general');
+  const [type, setType] = useState<string>(defaultCategory);
   const [isActive, setIsActive] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setType(defaultCategory);
+    }
+  }, [isOpen, defaultCategory]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +74,7 @@ export default function CreateEventModal({
       setName('');
       setDate(new Date().toISOString().split('T')[0]);
       setPoints(1);
-      setType('general');
+      setType(defaultCategory);
       setIsActive(true);
       onClose();
     } catch (err: unknown) {
@@ -68,6 +84,8 @@ export default function CreateEventModal({
       setIsLoading(false);
     }
   };
+
+  const isRestrictedChair = !permissions.isFullOfficer && permissions.allowedCategories.length > 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -96,7 +114,7 @@ export default function CreateEventModal({
             </Label>
             <Input
               id="event-name"
-              placeholder="e.g. Chapter Meeting #1, Rush Night 1"
+              placeholder="e.g. Chapter Meeting #1, Brotherhood Night"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700"
@@ -132,28 +150,40 @@ export default function CreateEventModal({
                 onChange={(e) => setPoints(Math.max(0, parseInt(e.target.value) || 0))}
                 className="bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700"
               />
-              <p className="text-[11px] text-gray-400">Set to 0 for Rush or optional events</p>
             </div>
           </div>
 
           {/* Type / Category */}
           <div className="space-y-1.5">
-            <Label htmlFor="event-type" className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
-              Event Type
-            </Label>
-            <select
-              id="event-type"
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              className="w-full h-10 px-3 py-2 text-sm rounded-md border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-600"
-            >
-              <option value="general">General / Chapter</option>
-              <option value="rush">Rush</option>
-              <option value="brotherhood">Brotherhood Pillar</option>
-              <option value="professional">Professional Development</option>
-              <option value="service">Community Service</option>
-              <option value="concessions">Concessions</option>
-            </select>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="event-type" className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                Event Category
+              </Label>
+              {isRestrictedChair && (
+                <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold uppercase">
+                  Locked to your chair position
+                </span>
+              )}
+            </div>
+
+            {isRestrictedChair ? (
+              <div className="w-full h-10 px-3 py-2 text-sm rounded-md border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 font-bold capitalize flex items-center">
+                {type === 'rush' ? 'Rush' : `${type} Pillar`}
+              </div>
+            ) : (
+              <select
+                id="event-type"
+                value={type}
+                onChange={(e) => setType(e.target.value)}
+                className="w-full h-10 px-3 py-2 text-sm rounded-md border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-600"
+              >
+                <option value="general">General / Chapter</option>
+                <option value="rush">Rush</option>
+                <option value="brotherhood">Brotherhood Pillar</option>
+                <option value="professional">Professional Development</option>
+                <option value="service">Community Service</option>
+              </select>
+            )}
           </div>
 
           {/* Active Toggle */}

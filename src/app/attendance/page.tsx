@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import LoadingLink from '@/components/ui/loading-link';
 import { createClient } from '@/lib/supabase/server';
 import { getAttendanceInitialData } from './actions';
+import { parseAttendancePermissions } from '@/components/attendance/permissions';
 import ScribeAttendanceGrid from '@/components/attendance/scribe-attendance-grid';
 import MemberAttendanceView from '@/components/attendance/member-attendance-view';
 import { ArrowLeft, Shield, User } from 'lucide-react';
@@ -23,6 +24,7 @@ export default async function AttendancePage() {
   }
 
   const data = await getAttendanceInitialData();
+  const permissions = parseAttendancePermissions(data.profile?.role);
 
   const officerDisplayName = data.profile?.first_name && data.profile.first_name !== 'TEMP'
     ? `${data.profile.first_name} ${data.profile.last_name || ''}`.trim()
@@ -59,10 +61,10 @@ export default async function AttendancePage() {
                 )}
               </div>
 
-              {/* Officer Privileges Active (Right) */}
+              {/* Officer / Chair Privileges Active (Right) */}
               <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900/60 px-3 py-1 rounded-full self-start sm:self-auto">
                 <Shield className="h-3.5 w-3.5" />
-                <span>Officer Privileges Active</span>
+                <span>{permissions.badgeLabel}</span>
               </div>
             </>
           )}
@@ -74,6 +76,7 @@ export default async function AttendancePage() {
             initialMembers={data.members}
             initialEvents={data.events}
             initialRecords={data.attendanceRecords}
+            currentUserProfile={data.profile}
             tablesMissing={data.tablesMissing}
           />
         ) : (

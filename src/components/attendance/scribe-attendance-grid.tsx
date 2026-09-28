@@ -2,10 +2,15 @@
 
 import React, { useState, useMemo } from 'react';
 import { AttendanceEvent, AttendanceRecord, MemberProfile, EventCategory } from './types';
+import { parseAttendancePermissions } from './permissions';
 import CreateEventModal from './create-event-modal';
 import EventModal from './event-modal';
 import FullScreenQrView from './fullscreen-qr-view';
-import { toggleAttendanceRecordAction } from '@/app/attendance/actions';
+import {
+  toggleAttendanceRecordAction,
+  toggleDuesAction,
+  toggleConcessionsAction,
+} from '@/app/attendance/actions';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,7 +20,11 @@ import {
   CheckCircle2,
   Users,
   Loader2,
-  ShieldAlert
+  ShieldAlert,
+  Eye,
+  EyeOff,
+  DollarSign,
+  Award,
 } from 'lucide-react';
 
 interface ScribeAttendanceGridProps {
@@ -30,12 +39,21 @@ export default function ScribeAttendanceGrid({
   initialMembers,
   initialEvents,
   initialRecords,
+  currentUserProfile,
   tablesMissing = false,
 }: ScribeAttendanceGridProps) {
+  // Role & Permissions
+  const permissions = useMemo(() => {
+    return parseAttendancePermissions(currentUserProfile?.role);
+  }, [currentUserProfile?.role]);
+
   // Data State
   const [members, setMembers] = useState<MemberProfile[]>(initialMembers);
   const [events, setEvents] = useState<AttendanceEvent[]>(initialEvents);
   const [records, setRecords] = useState<AttendanceRecord[]>(initialRecords);
+
+  // Column Visibility: Dues and Consessions
+  const [showRequirementsColumns, setShowRequirementsColumns] = useState<boolean>(true);
 
   // Filter State
   const [memberSearch, setMemberSearch] = useState('');
@@ -50,8 +68,10 @@ export default function ScribeAttendanceGrid({
   const [selectedEventForModal, setSelectedEventForModal] = useState<AttendanceEvent | null>(null);
   const [fullScreenEvent, setFullScreenEvent] = useState<AttendanceEvent | null>(null);
 
-  // Cell Loading Tracker
+  // Cell Loading Trackers
   const [pendingToggles, setPendingToggles] = useState<Set<string>>(new Set());
+  const [pendingDues, setPendingDues] = useState<Set<string>>(new Set());
+  const [pendingConcessions, setPendingConcessions] = useState<Set<string>>(new Set());
 
   // Build fast O(1) attendance lookup set: `${eventId}:${userId}`
   const attendanceLookup = useMemo(() => {
@@ -64,16 +84,29 @@ export default function ScribeAttendanceGrid({
     return map;
   }, [records]);
 
-  // Filtered and sorted events (columns)
+  // Filtered and sorted events (columns): Hides non-applicable events for chairs
   const filteredEvents = useMemo(() => {
     return events
       .filter((ev) => {
+        // Chair Restriction: Hide non-applicable events for chairs
+        if (!permissions.isFullOfficer) {
+          if (permissions.allowedCategories.length > 0) {
+            // Category chair: only show their specific category events
+            if (!permissions.canManageCategory(ev.type)) {
+              return false;
+            }
+          } else if (permissions.canEditDues || permissions.canEditConcessions) {
+            // Dedicated financial chairs (Treasurer / Fundraising): hide regular events
+            return false;
+          }
+        }
+
         // Event search
         if (eventSearch.trim() && !ev.name.toLowerCase().includes(eventSearch.toLowerCase().trim())) {
           return false;
         }
-        // Type filter
-        if (typeFilter !== 'all' && ev.type.toLowerCase() !== typeFilter.toLowerCase()) {
+        // Type filter (only applicable if officer)
+        if (permissions.isFullOfficer && typeFilter !== 'all' && ev.type.toLowerCase() !== typeFilter.toLowerCase()) {
           return false;
         }
         // Points filter: Min and Max range
@@ -90,7 +123,7 @@ export default function ScribeAttendanceGrid({
         const timeB = new Date(b.created_at || b.date).getTime();
         return sortOrder === 'oldest' ? timeA - timeB : timeB - timeA;
       });
-  }, [events, eventSearch, typeFilter, minPoints, maxPoints, sortOrder]);
+  }, [events, eventSearch, typeFilter, minPoints, maxPoints, sortOrder, permissions]);
 
   // Filtered members (rows)
   const filteredMembers = useMemo(() => {
@@ -103,8 +136,11 @@ export default function ScribeAttendanceGrid({
     });
   }, [members, memberSearch]);
 
-  // Checkbox Toggle Handler
-  const handleToggle = async (eventId: string, userId: string) => {
+  // Attendance Checkbox Toggle Handler
+  const handleToggleAttendance = async (eventId: string, userId: string, eventType: string) => {
+    const canToggle = permissions.isFullOfficer || permissions.canManageCategory(eventType);
+    if (!canToggle) return;
+
     const key = `${eventId}:${userId}`;
     const isCurrentlyChecked = attendanceLookup.has(key);
     const newCheckedState = !isCurrentlyChecked;
@@ -133,10 +169,20 @@ export default function ScribeAttendanceGrid({
         throw new Error(res.error || 'Failed to update attendance');
       }
 
-      // Update local member points if returned
+      // Update local member points & medals if returned
       if (typeof res.newPoints === 'number') {
         setMembers((prev) =>
-          prev.map((m) => (m.id === userId ? { ...m, attendance_points: res.newPoints! } : m))
+          prev.map((m) =>
+            m.id === userId
+              ? {
+                ...m,
+                attendance_points: res.newPoints!,
+                brotherhood_met: res.brotherhoodMet ?? m.brotherhood_met,
+                prof_dev_met: res.profDevMet ?? m.prof_dev_met,
+                comm_service_met: res.commServiceMet ?? m.comm_service_met,
+              }
+              : m
+          )
         );
       }
     } catch (err) {
@@ -165,6 +211,66 @@ export default function ScribeAttendanceGrid({
     }
   };
 
+  // Dues Toggle Handler
+  const handleToggleDues = async (userId: string, currentDuesPaid?: boolean) => {
+    if (!permissions.canEditDues) return;
+    const newDuesState = !currentDuesPaid;
+
+    setPendingDues((prev) => new Set(prev).add(userId));
+    // Optimistic update
+    setMembers((prev) =>
+      prev.map((m) => (m.id === userId ? { ...m, dues_paid: newDuesState } : m))
+    );
+
+    try {
+      const res = await toggleDuesAction(userId, newDuesState);
+      if (!res.success) throw new Error(res.error || 'Failed to update dues');
+    } catch (err) {
+      console.error('Dues toggle failed:', err);
+      // Revert
+      setMembers((prev) =>
+        prev.map((m) => (m.id === userId ? { ...m, dues_paid: currentDuesPaid } : m))
+      );
+      alert('Could not update Dues. Please try again.');
+    } finally {
+      setPendingDues((prev) => {
+        const next = new Set(prev);
+        next.delete(userId);
+        return next;
+      });
+    }
+  };
+
+  // Concessions Toggle Handler
+  const handleToggleConcessions = async (userId: string, currentConcessionsDone?: boolean) => {
+    if (!permissions.canEditConcessions) return;
+    const newConcessionsState = !currentConcessionsDone;
+
+    setPendingConcessions((prev) => new Set(prev).add(userId));
+    // Optimistic update
+    setMembers((prev) =>
+      prev.map((m) => (m.id === userId ? { ...m, concessions_done: newConcessionsState } : m))
+    );
+
+    try {
+      const res = await toggleConcessionsAction(userId, newConcessionsState);
+      if (!res.success) throw new Error(res.error || 'Failed to update concessions');
+    } catch (err) {
+      console.error('Concessions toggle failed:', err);
+      // Revert
+      setMembers((prev) =>
+        prev.map((m) => (m.id === userId ? { ...m, concessions_done: currentConcessionsDone } : m))
+      );
+      alert('Could not update Consessions. Please try again.');
+    } finally {
+      setPendingConcessions((prev) => {
+        const next = new Set(prev);
+        next.delete(userId);
+        return next;
+      });
+    }
+  };
+
   // Event Created
   const handleEventCreated = (newEvent: AttendanceEvent) => {
     setEvents((prev) => [...prev, newEvent]);
@@ -187,6 +293,9 @@ export default function ScribeAttendanceGrid({
     }
   };
 
+  const totalDuesPaidCount = members.filter((m) => m.dues_paid).length;
+  const totalConcessionsDoneCount = members.filter((m) => m.concessions_done).length;
+
   return (
     <div className="space-y-6">
       {/* Top Banner Notice if Tables Need Migration */}
@@ -208,27 +317,30 @@ export default function ScribeAttendanceGrid({
 
       {/* Header and Controls */}
       <div className="bg-white dark:bg-zinc-900 rounded-2xl p-5 shadow-sm border border-gray-200 dark:border-zinc-800 space-y-4">
-        {/* Title and Top Row */}
+        {/* Title and Top Action */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-2.5">
               <span>Chapter Attendance Grid</span>
               <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-400 uppercase tracking-wider">
-                Scribe & Officer Portal
+                {permissions.badgeLabel}
               </span>
             </h1>
             <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Real-time attendance matrix. Check boxes to award points, click column headers to view/edit events, or launch full-screen QR codes.
+              Real-time attendance matrix. Dues and Consessions are highlighted in light gold. Check boxes to award attendance or update dues standing.
             </p>
           </div>
 
-          <Button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="bg-red-700 hover:bg-red-800 text-white font-bold text-sm px-4 py-2 rounded-xl flex items-center gap-2 shadow-sm active:scale-95 transition-all self-start sm:self-auto"
-          >
-            <Plus className="h-4 w-4" />
-            Make an Event
-          </Button>
+          {/* Make an Event Button */}
+          {permissions.canCreateEvents && (
+            <Button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="bg-red-700 hover:bg-red-800 text-white font-bold text-xs sm:text-sm h-10 px-4 rounded-xl flex items-center gap-2 shadow-sm active:scale-95 transition-all self-start sm:self-auto"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Make an Event</span>
+            </Button>
+          )}
         </div>
 
         {/* Search and Filters Bar */}
@@ -255,21 +367,30 @@ export default function ScribeAttendanceGrid({
             />
           </div>
 
-          {/* Type Filter */}
+          {/* Type Filter: Dropdown for officers, fixed indicator for category chairs */}
           <div className="md:col-span-2">
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value as EventCategory)}
-              className="w-full h-10 px-3 py-2 text-xs sm:text-sm rounded-md border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-600"
-            >
-              <option value="all">All Types</option>
-              <option value="rush">Rush</option>
-              <option value="general">General Chapter</option>
-              <option value="brotherhood">Brotherhood</option>
-              <option value="professional">Professional Dev</option>
-              <option value="service">Community Service</option>
-              <option value="concessions">Concessions</option>
-            </select>
+            {permissions.isFullOfficer ? (
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value as EventCategory)}
+                className="w-full h-10 px-3 py-2 text-xs sm:text-sm rounded-md border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-600"
+              >
+                <option value="all">All Types</option>
+                <option value="rush">Rush</option>
+                <option value="general">General Chapter</option>
+                <option value="brotherhood">Brotherhood</option>
+                <option value="professional">Professional Dev</option>
+                <option value="service">Community Service</option>
+              </select>
+            ) : (
+              <div className="w-full h-10 px-3 py-2 text-xs rounded-md border border-amber-200 dark:border-amber-900/60 bg-amber-50/70 dark:bg-amber-950/30 text-amber-900 dark:text-amber-200 font-bold capitalize flex items-center truncate">
+                {permissions.allowedCategories.length > 0
+                  ? `${permissions.allowedCategories.join(', ')} Pillar`
+                  : permissions.canEditDues
+                    ? 'Dues Scope'
+                    : 'Consessions Scope'}
+              </div>
+            )}
           </div>
 
           {/* Points Filter: Centered 'Points' label with side-by-side Min - Max inputs */}
@@ -310,20 +431,62 @@ export default function ScribeAttendanceGrid({
           </div>
         </div>
 
-        {/* Quick Stats Pill Bar */}
-        <div className="flex flex-wrap items-center gap-4 pt-2 text-xs font-medium text-gray-500 dark:text-gray-400">
-          <div className="flex items-center gap-1.5">
-            <Users className="h-4 w-4 text-red-600 dark:text-red-400" />
-            <span>{filteredMembers.length} Members listed</span>
+        {/* Quick Stats Pill Bar with Show/Hide Button on the Right */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 text-xs font-medium text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-zinc-800/80">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              <Users className="h-4 w-4 text-red-600 dark:text-red-400" />
+              <span>{filteredMembers.length} Members listed</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <span>{filteredEvents.length} Events shown</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+              <span>{records.filter((r) => r.status === 'present').length} Total check-ins</span>
+            </div>
+            {showRequirementsColumns && (
+              <>
+                <div className="flex items-center gap-1.5">
+                  <DollarSign className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                  <span>
+                    {totalDuesPaidCount} / {members.length} Dues paid
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Award className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                  <span>
+                    {totalConcessionsDoneCount} / {members.length} Consessions attended
+                  </span>
+                </div>
+              </>
+            )}
           </div>
-          <div className="flex items-center gap-1.5">
-            <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            <span>{filteredEvents.length} Events shown</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-            <span>{records.filter(r => r.status === 'present').length} Total check-ins recorded</span>
-          </div>
+
+          {/* Button on the right side in line with the stats, made a bit smaller */}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowRequirementsColumns((prev) => !prev)}
+            className={`h-7 px-2.5 text-[11px] font-semibold rounded-lg border flex items-center gap-1.5 transition-all shadow-xs self-start sm:self-auto shrink-0 ${showRequirementsColumns
+              ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/60'
+              : 'bg-gray-50 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-750'
+              }`}
+          >
+            {showRequirementsColumns ? (
+              <>
+                <EyeOff className="h-3.5 w-3.5 text-amber-700 dark:text-amber-400" />
+                <span>Hide Dues &amp; Consessions</span>
+              </>
+            ) : (
+              <>
+                <Eye className="h-3.5 w-3.5 text-gray-500" />
+                <span>Show Dues &amp; Consessions</span>
+              </>
+            )}
+          </Button>
         </div>
       </div>
 
@@ -334,51 +497,88 @@ export default function ScribeAttendanceGrid({
             {/* Table Header */}
             <thead>
               <tr className="bg-gray-100/90 dark:bg-zinc-800/90 text-gray-700 dark:text-gray-200 border-b border-gray-200 dark:border-zinc-700 text-xs">
-                {/* Fixed Sticky Column: Member Name */}
-                <th className="sticky left-0 z-20 bg-gray-100 dark:bg-zinc-800 p-3.5 min-w-[220px] max-w-[260px] font-bold uppercase tracking-wider shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
+                {/* 1. Fixed Sticky Column: Member Name */}
+                <th className="sticky left-0 z-30 bg-gray-100 dark:bg-zinc-800 p-3.5 w-[220px] min-w-[220px] max-w-[220px] font-bold uppercase tracking-wider shadow-[2px_0_5px_rgba(0,0,0,0.06)] border-r border-gray-200 dark:border-zinc-700">
                   <div className="flex items-center justify-between">
                     <span>Member Name</span>
                     <span className="text-[10px] text-gray-400 font-normal">Score</span>
                   </div>
                 </th>
 
-                {/* Event Columns */}
+                {/* 2. Scrolling Light Gold Column: Dues (When visible) */}
+                {showRequirementsColumns && (
+                  <th
+                    className="p-2.5 w-[84px] min-w-[84px] max-w-[84px] bg-amber-100/90 dark:bg-amber-950/60 border-r border-amber-200/80 dark:border-amber-900/60 font-bold text-center select-none"
+                    title={permissions.canEditDues ? 'Treasurer & Officers can edit Dues' : 'Managed by Treasurer'}
+                  >
+                    <div className="flex flex-col items-center justify-center">
+                      <span className="font-bold text-amber-950 dark:text-amber-200 text-xs">Dues</span>
+                      <span className="text-[10px] text-amber-700/80 dark:text-amber-400 font-semibold tracking-tight">Req</span>
+                    </div>
+                  </th>
+                )}
+
+                {/* 3. Scrolling Light Gold Column: Consessions (When visible) */}
+                {showRequirementsColumns && (
+                  <th
+                    className="p-2.5 w-[104px] min-w-[104px] max-w-[104px] bg-amber-100/90 dark:bg-amber-950/60 border-r border-amber-200/80 dark:border-amber-900/60 font-bold text-center select-none"
+                    title={permissions.canEditConcessions ? 'Fundraising Chair & Officers can edit Consessions' : 'Managed by Fundraising Chair'}
+                  >
+                    <div className="flex flex-col items-center justify-center">
+                      <span className="font-bold text-amber-950 dark:text-amber-200 text-xs">Consessions</span>
+                      <span className="text-[10px] text-amber-700/80 dark:text-amber-400 font-semibold tracking-tight">Req</span>
+                    </div>
+                  </th>
+                )}
+
+                {/* Event Columns: Stacked Name, Active/Points, and Type */}
                 {filteredEvents.map((ev) => (
                   <th
                     key={ev.id}
-                    className="p-2.5 min-w-[130px] max-w-[170px] border-l border-gray-200 dark:border-zinc-700 font-semibold text-center select-none group hover:bg-gray-200/60 dark:hover:bg-zinc-750 transition-colors"
+                    className="p-2.5 min-w-[130px] max-w-[170px] border-r border-gray-200 dark:border-zinc-700 font-semibold text-center select-none group hover:bg-gray-200/60 dark:hover:bg-zinc-750 transition-colors"
                   >
                     <button
                       type="button"
                       onClick={() => setSelectedEventForModal(ev)}
-                      className="w-full text-center flex flex-col items-center gap-1 p-1 rounded hover:bg-white/50 dark:hover:bg-zinc-700/50 transition-all focus:outline-none"
+                      className="w-full text-center flex flex-col items-center gap-1.5 p-1 rounded hover:bg-white/50 dark:hover:bg-zinc-700/50 transition-all focus:outline-none"
                     >
-                      {/* Name */}
+                      {/* 1. Event Name */}
                       <span className="font-bold text-gray-900 dark:text-white text-xs truncate max-w-[150px] group-hover:text-red-700 dark:group-hover:text-red-400">
                         {ev.name}
                       </span>
 
-                      {/* Badges: Points & Active indicator */}
+                      {/* 2. Active Indicator & Points */}
                       <div className="flex items-center gap-1.5 text-[10px]">
-                        <span className={`w-1.5 h-1.5 rounded-full ${ev.is_active ? 'bg-green-500 ring-2 ring-green-500/20' : 'bg-gray-400'}`} />
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            ev.is_active ? 'bg-green-500 ring-2 ring-green-500/20' : 'bg-gray-400'
+                          }`}
+                        />
                         <span className="font-medium text-gray-500 dark:text-gray-400">
                           {ev.points === 0 ? '0 pts' : `${ev.points} pt${ev.points > 1 ? 's' : ''}`}
                         </span>
                       </div>
+
+                      {/* 3. Type Category */}
+                      <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-gray-200/70 dark:bg-zinc-700 text-gray-600 dark:text-gray-300 font-semibold tracking-wide">
+                        {ev.type}
+                      </span>
                     </button>
                   </th>
                 ))}
 
                 {/* Far Right "Add Event" Column Header */}
-                <th className="p-3 border-l border-gray-200 dark:border-zinc-700 text-center min-w-[90px]">
-                  <button
-                    onClick={() => setIsCreateModalOpen(true)}
-                    className="flex items-center justify-center gap-1 text-xs font-semibold text-red-700 dark:text-red-400 hover:text-red-800 transition-colors mx-auto"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    <span>Add</span>
-                  </button>
-                </th>
+                {permissions.canCreateEvents && (
+                  <th className="p-3 border-r border-gray-200 dark:border-zinc-700 text-center min-w-[90px]">
+                    <button
+                      onClick={() => setIsCreateModalOpen(true)}
+                      className="flex items-center justify-center gap-1 text-xs font-semibold text-red-700 dark:text-red-400 hover:text-red-800 transition-colors mx-auto"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>Add</span>
+                    </button>
+                  </th>
+                )}
               </tr>
             </thead>
 
@@ -386,23 +586,32 @@ export default function ScribeAttendanceGrid({
             <tbody className="divide-y divide-gray-100 dark:divide-zinc-800 text-xs sm:text-sm">
               {filteredMembers.length === 0 ? (
                 <tr>
-                  <td colSpan={filteredEvents.length + 2} className="p-8 text-center text-gray-400 text-xs italic">
+                  <td
+                    colSpan={
+                      filteredEvents.length + (showRequirementsColumns ? 3 : 1) + (permissions.canCreateEvents ? 1 : 0)
+                    }
+                    className="p-8 text-center text-gray-400 text-xs italic"
+                  >
                     No members found matching &quot;{memberSearch}&quot;.
                   </td>
                 </tr>
               ) : (
                 filteredMembers.map((member) => {
-                  const displayName = member.first_name && member.first_name !== 'TEMP'
-                    ? `${member.first_name} ${member.last_name || ''}`
-                    : member.username;
+                  const displayName =
+                    member.first_name && member.first_name !== 'TEMP'
+                      ? `${member.first_name} ${member.last_name || ''}`
+                      : member.username;
+
+                  const isPendingDues = pendingDues.has(member.id);
+                  const isPendingConcessions = pendingConcessions.has(member.id);
 
                   return (
                     <tr
                       key={member.id}
                       className="hover:bg-red-50/30 dark:hover:bg-red-950/10 transition-colors group"
                     >
-                      {/* Sticky Member Row Column */}
-                      <td className="sticky left-0 z-10 bg-white dark:bg-zinc-900 group-hover:bg-red-50/60 dark:group-hover:bg-zinc-850 p-3 min-w-[220px] max-w-[260px] border-r border-gray-200 dark:border-zinc-800 transition-colors shadow-[2px_0_5px_rgba(0,0,0,0.03)]">
+                      {/* 1. Sticky Member Row Column (100% Solid Opaque Background to Prevent See-Through) */}
+                      <td className="sticky left-0 z-20 bg-white dark:bg-zinc-900 group-hover:bg-[#fef2f2] dark:group-hover:bg-[#201a1a] p-3 w-[220px] min-w-[220px] max-w-[220px] transition-colors border-r border-gray-200 dark:border-zinc-800 shadow-[2px_0_5px_rgba(0,0,0,0.04)]">
                         <div className="flex items-center justify-between gap-2">
                           <div className="truncate">
                             <div className="font-bold text-gray-900 dark:text-white truncate">
@@ -421,26 +630,103 @@ export default function ScribeAttendanceGrid({
                         </div>
                       </td>
 
+                      {/* 2. Scrolling Light Gold Column: Dues Checkbox (When visible) */}
+                      {showRequirementsColumns && (
+                        <td className="p-2.5 w-[84px] min-w-[84px] max-w-[84px] text-center bg-amber-50/70 dark:bg-amber-950/30 group-hover:bg-amber-100/70 dark:group-hover:bg-amber-900/40 border-r border-amber-200/70 dark:border-amber-900/40 transition-colors">
+                          <div className="flex items-center justify-center">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleDues(member.id, member.dues_paid)}
+                              disabled={!permissions.canEditDues || isPendingDues}
+                              title={
+                                !permissions.canEditDues
+                                  ? 'Only the Treasurer or Executive Officers can edit Dues'
+                                  : member.dues_paid
+                                    ? 'Dues Paid (Click to uncheck)'
+                                    : 'Mark Dues as Paid'
+                              }
+                              className={`w-6 h-6 rounded-md flex items-center justify-center transition-all ${member.dues_paid
+                                ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-xs ring-2 ring-amber-500/20'
+                                : 'bg-white/80 dark:bg-zinc-800 border border-amber-300 dark:border-amber-800/80 hover:border-amber-500'
+                                } ${!permissions.canEditDues
+                                  ? 'opacity-40 cursor-not-allowed'
+                                  : 'active:scale-90 cursor-pointer'
+                                }`}
+                            >
+                              {isPendingDues ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-current" />
+                              ) : member.dues_paid ? (
+                                <CheckCircle2 className="h-4 w-4 stroke-[2.5]" />
+                              ) : null}
+                            </button>
+                          </div>
+                        </td>
+                      )}
+
+                      {/* 3. Scrolling Light Gold Column: Consessions Checkbox (When visible) */}
+                      {showRequirementsColumns && (
+                        <td className="p-2.5 w-[104px] min-w-[104px] max-w-[104px] text-center bg-amber-50/70 dark:bg-amber-950/30 group-hover:bg-amber-100/70 dark:group-hover:bg-amber-900/40 border-r border-amber-200/70 dark:border-amber-900/40 transition-colors">
+                          <div className="flex items-center justify-center">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleConcessions(member.id, member.concessions_done)}
+                              disabled={!permissions.canEditConcessions || isPendingConcessions}
+                              title={
+                                !permissions.canEditConcessions
+                                  ? 'Only the Fundraising Chair or Executive Officers can edit Consessions'
+                                  : member.concessions_done
+                                    ? 'Consessions Attended (Click to uncheck)'
+                                    : 'Mark Consessions as Completed'
+                              }
+                              className={`w-6 h-6 rounded-md flex items-center justify-center transition-all ${member.concessions_done
+                                ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-xs ring-2 ring-amber-500/20'
+                                : 'bg-white/80 dark:bg-zinc-800 border border-amber-300 dark:border-amber-800/80 hover:border-amber-500'
+                                } ${!permissions.canEditConcessions
+                                  ? 'opacity-40 cursor-not-allowed'
+                                  : 'active:scale-90 cursor-pointer'
+                                }`}
+                            >
+                              {isPendingConcessions ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-current" />
+                              ) : member.concessions_done ? (
+                                <CheckCircle2 className="h-4 w-4 stroke-[2.5]" />
+                              ) : null}
+                            </button>
+                          </div>
+                        </td>
+                      )}
+
                       {/* Event Checkbox Cells */}
                       {filteredEvents.map((ev) => {
                         const cellKey = `${ev.id}:${member.id}`;
                         const isChecked = attendanceLookup.has(cellKey);
                         const isPending = pendingToggles.has(cellKey);
+                        const canToggleEvent = permissions.isFullOfficer || permissions.canManageCategory(ev.type);
 
                         return (
                           <td
                             key={ev.id}
-                            className="p-2.5 text-center border-l border-gray-100 dark:border-zinc-800"
+                            className="p-2.5 text-center border-r border-gray-100 dark:border-zinc-800"
                           >
                             <div className="flex items-center justify-center">
                               <button
                                 type="button"
-                                onClick={() => handleToggle(ev.id, member.id)}
-                                disabled={isPending}
+                                onClick={() => handleToggleAttendance(ev.id, member.id, ev.type)}
+                                disabled={!canToggleEvent || isPending}
+                                title={
+                                  !canToggleEvent
+                                    ? `Only ${ev.type} chair or officers can check members off for this event`
+                                    : isChecked
+                                      ? 'Present (Click to uncheck)'
+                                      : 'Mark Present'
+                                }
                                 className={`w-6 h-6 rounded-md flex items-center justify-center transition-all ${isChecked
                                   ? 'bg-red-700 hover:bg-red-800 text-white shadow-sm ring-2 ring-red-700/20'
                                   : 'bg-gray-100 dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 hover:border-red-400 dark:hover:border-red-500'
-                                  } active:scale-90`}
+                                  } ${!canToggleEvent
+                                    ? 'opacity-35 cursor-not-allowed'
+                                    : 'active:scale-90 cursor-pointer'
+                                  }`}
                               >
                                 {isPending ? (
                                   <Loader2 className="h-3.5 w-3.5 animate-spin text-current" />
@@ -454,7 +740,9 @@ export default function ScribeAttendanceGrid({
                       })}
 
                       {/* Empty Placeholder for right Add Column */}
-                      <td className="p-2.5 border-l border-gray-100 dark:border-zinc-800" />
+                      {permissions.canCreateEvents && (
+                        <td className="p-2.5 border-r border-gray-100 dark:border-zinc-800" />
+                      )}
                     </tr>
                   );
                 })
@@ -465,17 +753,21 @@ export default function ScribeAttendanceGrid({
       </div>
 
       {/* Create Event Modal */}
-      <CreateEventModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onEventCreated={handleEventCreated}
-      />
+      {permissions.canCreateEvents && (
+        <CreateEventModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onEventCreated={handleEventCreated}
+          currentUserProfile={currentUserProfile}
+        />
+      )}
 
       {/* Event Details & Edit Modal */}
       <EventModal
         event={selectedEventForModal}
         isOpen={!!selectedEventForModal}
         totalMembersCount={members.length}
+        currentUserProfile={currentUserProfile}
         totalCheckedInCount={
           selectedEventForModal
             ? records.filter((r) => r.event_id === selectedEventForModal.id && r.status === 'present').length

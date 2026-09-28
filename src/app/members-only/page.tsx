@@ -3,6 +3,7 @@ import LoadingLink from '@/components/ui/loading-link'
 import { Calendar, Users, ExternalLink, Megaphone, Shield, Link as LinkIcon, CheckCircle2, XCircle, Award, UserPlus, Table, QrCode } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getCalendarFromSheet, getLinksFromSheet } from '@/lib/google-sheets'
+import { parseAttendancePermissions } from '@/components/attendance/permissions'
 import SyncPanel from '@/components/members/sync-panel'
 import AccountIntakePanel from '@/components/members/account-intake-panel'
 import { Medal } from '@/components/members/medal'
@@ -28,6 +29,44 @@ export default async function MembersOnlyPage() {
     .eq('id', user.id)
     .single()
 
+  // Fetch current user's attended events directly from Supabase attendance system
+  const { data: attendedEvents } = await supabase
+    .from('event_attendance')
+    .select(`
+      status,
+      attendance_events (
+        type
+      )
+    `)
+    .eq('user_id', user.id)
+    .eq('status', 'present')
+
+  type AttendedEventRecord = {
+    status?: string | null;
+    attendance_events?: {
+      type?: string | null;
+    } | null;
+  }
+
+  const typedAttended = (attendedEvents || []) as unknown as AttendedEventRecord[]
+
+  // Pillar medals populate if any events of that category have been checked off
+  const brotherhoodEarned =
+    !!profile?.brotherhood_met ||
+    typedAttended.some((r) => r.attendance_events?.type?.toLowerCase() === 'brotherhood')
+
+  const profDevEarned =
+    !!profile?.prof_dev_met ||
+    typedAttended.some((r) => r.attendance_events?.type?.toLowerCase() === 'professional')
+
+  const commServiceEarned =
+    !!profile?.comm_service_met ||
+    typedAttended.some((r) => r.attendance_events?.type?.toLowerCase() === 'service')
+
+  // Dues and Concessions status
+  const duesEarned = !!profile?.dues_paid
+  const concessionsEarned = !!profile?.concessions_done
+
   // Fetch initial community links
   const { data: rawCommunityLinks } = await supabase
     .from('community_links')
@@ -44,6 +83,7 @@ export default async function MembersOnlyPage() {
     .limit(10)
 
   const dbRole = profile?.role || 'Member'
+  const attendancePermissions = parseAttendancePermissions(dbRole)
 
   // Map database role to UI role
   const getUIRole = (role: string): 'member' | 'exec' | 'rush' | 'admin' => {
@@ -103,7 +143,7 @@ export default async function MembersOnlyPage() {
                       <div className="flex flex-col space-y-2">
                         {/* Dues Status */}
                         <div className="flex items-center gap-2 font-bold tracking-wider text-sm sm:text-base">
-                          {profile.dues_paid ? (
+                          {duesEarned ? (
                             <span className="text-green-600 dark:text-green-400 flex items-center gap-2 uppercase">
                               Dues <CheckCircle2 className="h-6 w-6 stroke-[2.5]" />
                             </span>
@@ -116,7 +156,7 @@ export default async function MembersOnlyPage() {
 
                         {/* Concessions Status */}
                         <div className="flex items-center gap-2 font-bold tracking-wider text-sm sm:text-base">
-                          {profile.concessions_done ? (
+                          {concessionsEarned ? (
                             <span className="text-green-600 dark:text-green-400 flex items-center gap-2 uppercase">
                               Concessions <CheckCircle2 className="h-6 w-6 stroke-[2.5]" />
                             </span>
@@ -147,7 +187,7 @@ export default async function MembersOnlyPage() {
                       {/* Brotherhood - Top Center */}
                       <div className="absolute top-2 left-1/2 -translate-x-1/2">
                         <Medal
-                          earned={!!profile.brotherhood_met}
+                          earned={brotherhoodEarned}
                           name="Brotherhood"
                           showLabel={false}
                         >
@@ -158,7 +198,7 @@ export default async function MembersOnlyPage() {
                       {/* Professional Development - Bottom Left (Higher and wider) */}
                       <div className="absolute top-[40%] left-0">
                         <Medal
-                          earned={!!profile.prof_dev_met}
+                          earned={profDevEarned}
                           name="Professional Development"
                           showLabel={false}
                         >
@@ -169,7 +209,7 @@ export default async function MembersOnlyPage() {
                       {/* Community Service - Bottom Right (Higher and wider) */}
                       <div className="absolute top-[40%] right-0">
                         <Medal
-                          earned={!!profile.comm_service_met}
+                          earned={commServiceEarned}
                           name="Community Service"
                           showLabel={false}
                         >
@@ -273,7 +313,7 @@ export default async function MembersOnlyPage() {
                         <Table className="h-4 w-4 text-red-700 dark:text-red-500" />
                         Google Sheets Sync
                       </h3>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Sync member status, roster, calendar, and sheet data with Supabase.</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Sync roster, calendar, and chapter data with Supabase.</p>
                       <SyncPanel userRole={dbRole} />
                     </div>
 
@@ -285,6 +325,38 @@ export default async function MembersOnlyPage() {
                       <button className="text-sm font-medium text-red-700 hover:text-red-800 dark:text-red-400">Open Dashboard &rarr;</button>
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Role Specific Section: Officer & Chair Attendance Tools (for Chairs and Treasurer) */}
+            {userRole !== 'admin' && attendancePermissions.canAccessGrid && (
+              <div className="pt-2 border-t border-gray-200 dark:border-zinc-800">
+                <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-red-700 dark:text-red-500" />
+                  Officer &amp; Chair Tools
+                </h2>
+                <div className="bg-white dark:bg-zinc-900 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                        <QrCode className="h-4 w-4 text-red-700 dark:text-red-500" />
+                        Chapter Attendance &amp; Event Grid
+                      </h3>
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-950/60 text-red-800 dark:text-red-400">
+                        {attendancePermissions.badgeLabel}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Access your privileged attendance controls: check in attendees, edit status, or project live QR codes.
+                    </p>
+                  </div>
+                  <LoadingLink
+                    href="/attendance"
+                    className="text-sm font-medium text-red-700 hover:text-red-800 dark:text-red-400 whitespace-nowrap ml-4 flex items-center gap-1"
+                  >
+                    <span>Open Grid</span> &rarr;
+                  </LoadingLink>
                 </div>
               </div>
             )}
@@ -416,7 +488,6 @@ export default async function MembersOnlyPage() {
               </ul>
             </div>
 
-
           </div>
 
         </div>
@@ -424,4 +495,3 @@ export default async function MembersOnlyPage() {
     </div>
   )
 }
-

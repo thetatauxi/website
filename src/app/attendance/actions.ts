@@ -5,29 +5,24 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { AttendanceEvent, AttendanceRecord, MemberProfile } from '@/components/attendance/types';
-
-const PRIVILEGED_ATTENDANCE_ROLES = [
-  'regent',
-  'vice regent',
-  'scribe',
-  'website chair',
-  'web chair',
-  'website',
-  'admin'
-];
+import { parseAttendancePermissions, AttendancePermissions } from '@/components/attendance/permissions';
 
 /**
- * Helper to check if a user role is authorized to manage chapter attendance
+ * Helper to check if a user role is authorized to manage chapter attendance or view grid
  */
 export async function isUserAuthorizedOfficer(role?: string | null): Promise<boolean> {
   if (!role) return false;
-  return PRIVILEGED_ATTENDANCE_ROLES.includes(role.trim().toLowerCase());
+  return parseAttendancePermissions(role).canAccessGrid;
 }
 
 /**
- * Asserts the current user is an authorized officer
+ * Fetches authenticated user, profile, and computed permissions
  */
-async function assertOfficer() {
+async function getAuthenticatedUserAndPermissions(): Promise<{
+  user: { id: string; email?: string };
+  profile: MemberProfile | null;
+  permissions: AttendancePermissions;
+}> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -35,18 +30,26 @@ async function assertOfficer() {
     throw new Error('Unauthorized: You must be logged in.');
   }
 
-  const { data: profile } = await supabase
+  const admin = createAdminClient();
+  const { data: profile } = await admin
     .from('profiles')
-    .select('role, username')
+    .select('id, first_name, last_name, username, role, attendance_points, dues_paid, concessions_done, brotherhood_met, prof_dev_met, comm_service_met')
     .eq('id', user.id)
     .single();
 
-  const isOfficer = await isUserAuthorizedOfficer(profile?.role);
-  if (!isOfficer) {
-    throw new Error('Forbidden: Only the Scribe, Regent, Vice Regent, or Website Chair can edit attendance.');
-  }
+  const permissions = parseAttendancePermissions(profile?.role);
+  return { user, profile: profile as MemberProfile | null, permissions };
+}
 
-  return { user, profile };
+/**
+ * Asserts the current user has access to the attendance management grid
+ */
+async function assertAuthorizedManager() {
+  const auth = await getAuthenticatedUserAndPermissions();
+  if (!auth.permissions.canAccessGrid) {
+    throw new Error('Forbidden: You do not have permission to manage attendance.');
+  }
+  return auth;
 }
 
 interface EventAttendanceWithEvent {
@@ -55,16 +58,22 @@ interface EventAttendanceWithEvent {
   status?: string | null;
   attendance_events?: {
     points?: number | null;
+    type?: string | null;
   } | null;
 }
 
 /**
- * Recalculates and updates the total attendance points for a given user
+ * Recalculates and updates the total attendance points and medal completions for a given user
  */
-export async function recalculateUserPoints(userId: string): Promise<number> {
+export async function recalculateUserPoints(userId: string): Promise<{
+  totalPoints: number;
+  brotherhoodMet: boolean;
+  profDevMet: boolean;
+  commServiceMet: boolean;
+}> {
   const admin = createAdminClient();
 
-  // Fetch all present attendance records with event points
+  // Fetch all present attendance records with event points and type
   const { data: records, error } = await admin
     .from('event_attendance')
     .select(`
@@ -72,7 +81,8 @@ export async function recalculateUserPoints(userId: string): Promise<number> {
       points_awarded,
       status,
       attendance_events (
-        points
+        points,
+        type
       )
     `)
     .eq('user_id', userId)
@@ -80,7 +90,7 @@ export async function recalculateUserPoints(userId: string): Promise<number> {
 
   if (error) {
     console.error('Error fetching records for recalculation:', error);
-    return 0;
+    return { totalPoints: 0, brotherhoodMet: false, profDevMet: false, commServiceMet: false };
   }
 
   // Calculate sum of points from events
@@ -91,13 +101,23 @@ export async function recalculateUserPoints(userId: string): Promise<number> {
     return sum + points;
   }, 0);
 
-  // Update profile
+  // Compute pillar requirements based on attended events
+  const brotherhoodMet = typedRecords.some(r => r.attendance_events?.type?.toLowerCase() === 'brotherhood');
+  const profDevMet = typedRecords.some(r => r.attendance_events?.type?.toLowerCase() === 'professional');
+  const commServiceMet = typedRecords.some(r => r.attendance_events?.type?.toLowerCase() === 'service');
+
+  // Update profile in Supabase
   await admin
     .from('profiles')
-    .update({ attendance_points: totalPoints })
+    .update({
+      attendance_points: totalPoints,
+      brotherhood_met: brotherhoodMet,
+      prof_dev_met: profDevMet,
+      comm_service_met: commServiceMet,
+    })
     .eq('id', userId);
 
-  return totalPoints;
+  return { totalPoints, brotherhoodMet, profDevMet, commServiceMet };
 }
 
 /**
@@ -131,11 +151,12 @@ export async function getAttendanceInitialData(): Promise<{
   // 1. Fetch current profile
   const { data: profile } = await admin
     .from('profiles')
-    .select('id, first_name, last_name, username, role, attendance_points')
+    .select('id, first_name, last_name, username, role, attendance_points, dues_paid, concessions_done, brotherhood_met, prof_dev_met, comm_service_met')
     .eq('id', user.id)
     .single();
 
-  const isOfficer = await isUserAuthorizedOfficer(profile?.role);
+  const permissions = parseAttendancePermissions(profile?.role);
+  const canAccessGrid = permissions.canAccessGrid;
 
   // 2. Fetch all events
   const { data: events, error: eventsError } = await admin
@@ -146,7 +167,7 @@ export async function getAttendanceInitialData(): Promise<{
   if (eventsError) {
     console.warn('Attendance tables may not be created yet:', eventsError.message);
     return {
-      isOfficer,
+      isOfficer: canAccessGrid,
       currentUser: { id: user.id, email: user.email },
       profile: profile as MemberProfile,
       members: [],
@@ -156,11 +177,11 @@ export async function getAttendanceInitialData(): Promise<{
     };
   }
 
-  // 3. If officer, fetch all active members and all attendance records
-  if (isOfficer) {
+  // 3. If officer/chair, fetch all active members and all attendance records
+  if (canAccessGrid) {
     const { data: members } = await admin
       .from('profiles')
-      .select('id, first_name, last_name, username, role, attendance_points')
+      .select('id, first_name, last_name, username, role, attendance_points, dues_paid, concessions_done, brotherhood_met, prof_dev_met, comm_service_met')
       .order('first_name', { ascending: true });
 
     const { data: records } = await admin
@@ -194,7 +215,7 @@ export async function getAttendanceInitialData(): Promise<{
 }
 
 /**
- * Officer Action: Create a new event
+ * Officer / Category Chair Action: Create a new event
  */
 export async function createAttendanceEventAction(data: {
   name: string;
@@ -204,10 +225,20 @@ export async function createAttendanceEventAction(data: {
   is_active: boolean;
 }): Promise<{ success: boolean; event?: AttendanceEvent; error?: string }> {
   try {
-    await assertOfficer();
+    const { permissions } = await assertAuthorizedManager();
 
     if (!data.name || !data.name.trim()) {
       return { success: false, error: 'Event name is required.' };
+    }
+
+    const eventType = data.type || 'general';
+
+    // Verify category permissions
+    if (!permissions.isFullOfficer && !permissions.canManageCategory(eventType)) {
+      return {
+        success: false,
+        error: `Forbidden: You only have permission to create '${permissions.allowedCategories.join(', ')}' events.`,
+      };
     }
 
     const admin = createAdminClient();
@@ -228,7 +259,7 @@ export async function createAttendanceEventAction(data: {
         name: data.name.trim(),
         date: data.date.trim() || new Date().toISOString().split('T')[0],
         points: Math.max(0, Math.floor(Number(data.points) || 0)),
-        type: data.type || 'general',
+        type: eventType,
         is_active: data.is_active ?? true,
         code,
       })
@@ -240,6 +271,7 @@ export async function createAttendanceEventAction(data: {
     }
 
     revalidatePath('/attendance');
+    revalidatePath('/members-only');
     return { success: true, event: newEvent as AttendanceEvent };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Failed to create event.';
@@ -248,7 +280,7 @@ export async function createAttendanceEventAction(data: {
 }
 
 /**
- * Officer Action: Update an existing event
+ * Officer / Category Chair Action: Update an existing event
  */
 export async function updateAttendanceEventAction(
   eventId: string,
@@ -261,16 +293,38 @@ export async function updateAttendanceEventAction(
   }
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await assertOfficer();
-
+    const { permissions } = await assertAuthorizedManager();
     const admin = createAdminClient();
 
-    // Check existing event to see if points changed
+    // Check existing event to see if user has permission
     const { data: existingEvent } = await admin
       .from('attendance_events')
-      .select('points')
+      .select('*')
       .eq('id', eventId)
       .single();
+
+    if (!existingEvent) {
+      return { success: false, error: 'Event not found.' };
+    }
+
+    if (!permissions.isFullOfficer && !permissions.canManageCategory(existingEvent.type)) {
+      return {
+        success: false,
+        error: `Forbidden: You only have permission to manage '${permissions.allowedCategories.join(', ')}' events.`,
+      };
+    }
+
+    if (
+      updates.type &&
+      updates.type !== existingEvent.type &&
+      !permissions.isFullOfficer &&
+      !permissions.canManageCategory(updates.type)
+    ) {
+      return {
+        success: false,
+        error: `Forbidden: You cannot change event type to '${updates.type}'.`,
+      };
+    }
 
     const payload: {
       updated_at: string;
@@ -296,15 +350,19 @@ export async function updateAttendanceEventAction(
       return { success: false, error: error.message };
     }
 
-    // If point value changed, update points_awarded and recalculate for all attendees
-    if (updates.points !== undefined && existingEvent && existingEvent.points !== payload.points) {
-      // Update records
-      await admin
-        .from('event_attendance')
-        .update({ points_awarded: payload.points })
-        .eq('event_id', eventId);
+    // If point value or type changed, update points_awarded and recalculate for all attendees
+    const pointsChanged = updates.points !== undefined && existingEvent.points !== payload.points;
+    const typeChanged = updates.type !== undefined && existingEvent.type !== payload.type;
 
-      // Find all attendees
+    if (pointsChanged || typeChanged) {
+      if (pointsChanged) {
+        await admin
+          .from('event_attendance')
+          .update({ points_awarded: payload.points })
+          .eq('event_id', eventId);
+      }
+
+      // Find all attendees and recalculate their profile points & medals
       const { data: attendees } = await admin
         .from('event_attendance')
         .select('user_id')
@@ -318,6 +376,7 @@ export async function updateAttendanceEventAction(
     }
 
     revalidatePath('/attendance');
+    revalidatePath('/members-only');
     return { success: true };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Failed to update event.';
@@ -326,17 +385,33 @@ export async function updateAttendanceEventAction(
 }
 
 /**
- * Officer Action: Delete an event
+ * Officer / Category Chair Action: Delete an event
  */
 export async function deleteAttendanceEventAction(
   eventId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await assertOfficer();
-
+    const { permissions } = await assertAuthorizedManager();
     const admin = createAdminClient();
 
-    // Find affected members to update points after deletion
+    const { data: existingEvent } = await admin
+      .from('attendance_events')
+      .select('type')
+      .eq('id', eventId)
+      .single();
+
+    if (!existingEvent) {
+      return { success: false, error: 'Event not found.' };
+    }
+
+    if (!permissions.isFullOfficer && !permissions.canManageCategory(existingEvent.type)) {
+      return {
+        success: false,
+        error: `Forbidden: You only have permission to delete '${permissions.allowedCategories.join(', ')}' events.`,
+      };
+    }
+
+    // Find affected members to update points and medals after deletion
     const { data: attendees } = await admin
       .from('event_attendance')
       .select('user_id')
@@ -351,7 +426,7 @@ export async function deleteAttendanceEventAction(
       return { success: false, error: error.message };
     }
 
-    // Recalculate points for members
+    // Recalculate points and status for members
     if (attendees && attendees.length > 0) {
       for (const att of attendees) {
         await recalculateUserPoints(att.user_id);
@@ -359,6 +434,7 @@ export async function deleteAttendanceEventAction(
     }
 
     revalidatePath('/attendance');
+    revalidatePath('/members-only');
     return { success: true };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Failed to delete event.';
@@ -367,23 +443,41 @@ export async function deleteAttendanceEventAction(
 }
 
 /**
- * Officer Action: Toggle attendance checkbox for a member
+ * Officer / Category Chair Action: Toggle attendance checkbox for a member
  */
 export async function toggleAttendanceRecordAction(
   eventId: string,
   userId: string,
   isAttended: boolean
-): Promise<{ success: boolean; newPoints?: number; error?: string }> {
+): Promise<{
+  success: boolean;
+  newPoints?: number;
+  brotherhoodMet?: boolean;
+  profDevMet?: boolean;
+  commServiceMet?: boolean;
+  error?: string;
+}> {
   try {
-    const { profile } = await assertOfficer();
+    const { permissions, profile } = await assertAuthorizedManager();
     const admin = createAdminClient();
 
-    // Fetch event points
+    // Fetch event points and type
     const { data: event } = await admin
       .from('attendance_events')
-      .select('points')
+      .select('points, type')
       .eq('id', eventId)
       .single();
+
+    if (!event) {
+      return { success: false, error: 'Event not found.' };
+    }
+
+    if (!permissions.isFullOfficer && !permissions.canManageCategory(event.type)) {
+      return {
+        success: false,
+        error: `Forbidden: You only have permission to check off '${permissions.allowedCategories.join(', ')}' events.`,
+      };
+    }
 
     const eventPoints = event?.points || 0;
 
@@ -397,7 +491,7 @@ export async function toggleAttendanceRecordAction(
             user_id: userId,
             status: 'present',
             points_awarded: eventPoints,
-            verified_by: profile?.username || 'officer',
+            verified_by: profile?.username || 'chair',
           },
           { onConflict: 'event_id,user_id' }
         );
@@ -418,13 +512,92 @@ export async function toggleAttendanceRecordAction(
       }
     }
 
-    // Recalculate user points
-    const newPoints = await recalculateUserPoints(userId);
+    // Recalculate user points and pillar medals
+    const recalc = await recalculateUserPoints(userId);
 
     revalidatePath('/attendance');
-    return { success: true, newPoints };
+    revalidatePath('/members-only');
+    return {
+      success: true,
+      newPoints: recalc.totalPoints,
+      brotherhoodMet: recalc.brotherhoodMet,
+      profDevMet: recalc.profDevMet,
+      commServiceMet: recalc.commServiceMet,
+    };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Failed to toggle attendance.';
+    return { success: false, error: errorMsg };
+  }
+}
+
+/**
+ * Treasurer / Officer Action: Toggle Dues paid status
+ */
+export async function toggleDuesAction(
+  userId: string,
+  duesPaid: boolean
+): Promise<{ success: boolean; duesPaid?: boolean; error?: string }> {
+  try {
+    const { permissions } = await getAuthenticatedUserAndPermissions();
+
+    if (!permissions.canEditDues) {
+      return {
+        success: false,
+        error: 'Forbidden: Only the Treasurer or Executive Officers can edit Dues.',
+      };
+    }
+
+    const admin = createAdminClient();
+    const { error } = await admin
+      .from('profiles')
+      .update({ dues_paid: duesPaid })
+      .eq('id', userId);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    revalidatePath('/attendance');
+    revalidatePath('/members-only');
+    return { success: true, duesPaid };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Failed to update dues.';
+    return { success: false, error: errorMsg };
+  }
+}
+
+/**
+ * Fundraising Chair / Officer Action: Toggle Concessions completed status
+ */
+export async function toggleConcessionsAction(
+  userId: string,
+  concessionsDone: boolean
+): Promise<{ success: boolean; concessionsDone?: boolean; error?: string }> {
+  try {
+    const { permissions } = await getAuthenticatedUserAndPermissions();
+
+    if (!permissions.canEditConcessions) {
+      return {
+        success: false,
+        error: 'Forbidden: Only the Fundraising Chair or Executive Officers can edit Consessions.',
+      };
+    }
+
+    const admin = createAdminClient();
+    const { error } = await admin
+      .from('profiles')
+      .update({ concessions_done: concessionsDone })
+      .eq('id', userId);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    revalidatePath('/attendance');
+    revalidatePath('/members-only');
+    return { success: true, concessionsDone };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Failed to update consessions.';
     return { success: false, error: errorMsg };
   }
 }
@@ -477,7 +650,7 @@ export async function checkInWithQrCodeAction(code: string): Promise<{
         status: 'inactive',
         eventName: event.name,
         points: event.points,
-        message: 'Check-in is currently closed for this event. Please ask the Scribe to activate it.',
+        message: 'Check-in is currently closed for this event. Please ask the event organizer to activate it.',
       };
     }
 
@@ -521,8 +694,8 @@ export async function checkInWithQrCodeAction(code: string): Promise<{
       };
     }
 
-    // 5. Update user's points
-    const newTotalPoints = await recalculateUserPoints(user.id);
+    // 5. Update user's points and status medals
+    const recalc = await recalculateUserPoints(user.id);
 
     revalidatePath('/attendance');
     revalidatePath('/members-only');
@@ -533,7 +706,7 @@ export async function checkInWithQrCodeAction(code: string): Promise<{
       eventName: event.name,
       points: event.points,
       scannedAt: nowIso,
-      newTotalPoints,
+      newTotalPoints: recalc.totalPoints,
       message: event.points > 0
         ? `Checked into ${event.name}! +${event.points} attendance point${event.points > 1 ? 's' : ''} added to your profile.`
         : `Checked into ${event.name}!`,
@@ -545,5 +718,38 @@ export async function checkInWithQrCodeAction(code: string): Promise<{
       status: 'error',
       message: errorMsg,
     };
+  }
+}
+
+/**
+ * Chapter Admin Action: Sync all members' points and medals from existing attendance records
+ */
+export async function syncAllMembersAttendanceStatusAction(): Promise<{
+  success: boolean;
+  updatedCount: number;
+  error?: string;
+}> {
+  try {
+    const { permissions } = await assertAuthorizedManager();
+    if (!permissions.isFullOfficer) {
+      return { success: false, updatedCount: 0, error: 'Forbidden: Only executive officers can run chapter sync.' };
+    }
+
+    const admin = createAdminClient();
+    const { data: profiles } = await admin.from('profiles').select('id');
+    let count = 0;
+    if (profiles && profiles.length > 0) {
+      for (const p of profiles) {
+        await recalculateUserPoints(p.id);
+        count++;
+      }
+    }
+
+    revalidatePath('/attendance');
+    revalidatePath('/members-only');
+    return { success: true, updatedCount: count };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Failed to sync members.';
+    return { success: false, updatedCount: 0, error: errorMsg };
   }
 }

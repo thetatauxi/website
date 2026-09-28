@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { AttendanceEvent, AttendanceRecord, MemberProfile, EventCategory } from './types';
-import { Calendar, CheckCircle2, XCircle, QrCode, Search, Radio, Shield } from 'lucide-react';
+import { Calendar, CheckCircle2, XCircle, QrCode, Search, Radio, Shield, Award } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 interface MemberAttendanceViewProps {
@@ -19,15 +19,35 @@ export default function MemberAttendanceView({
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<EventCategory>('all');
 
-  const attendedEventIds = useMemo(() => {
+  const { attendedIds, hasBrotherhood, hasProfDev, hasCommService } = useMemo(() => {
     const set = new Set<string>();
+    let brotherhood = !!profile?.brotherhood_met;
+    let profDev = !!profile?.prof_dev_met;
+    let commService = !!profile?.comm_service_met;
+
     for (const r of records) {
       if (r.status === 'present') {
         set.add(r.event_id);
+        const ev = events.find((e) => e.id === r.event_id);
+        if (ev) {
+          const t = ev.type.toLowerCase();
+          if (t === 'brotherhood') brotherhood = true;
+          if (t === 'professional') profDev = true;
+          if (t === 'service') commService = true;
+        }
       }
     }
-    return set;
-  }, [records]);
+
+    return {
+      attendedIds: set,
+      hasBrotherhood: brotherhood,
+      hasProfDev: profDev,
+      hasCommService: commService,
+    };
+  }, [records, events, profile]);
+
+  const duesPaid = !!profile?.dues_paid;
+  const concessionsDone = !!profile?.concessions_done;
 
   // Filter events
   const filteredEvents = useMemo(() => {
@@ -44,7 +64,7 @@ export default function MemberAttendanceView({
       .sort((a, b) => new Date(b.date || b.created_at).getTime() - new Date(a.date || a.created_at).getTime());
   }, [events, search, typeFilter]);
 
-  const totalAttendedCount = attendedEventIds.size;
+  const totalAttendedCount = attendedIds.size;
   const activeEventsCount = events.filter((e) => e.is_active).length;
   const currentPoints = profile?.attendance_points || 0;
 
@@ -104,16 +124,146 @@ export default function MemberAttendanceView({
         </div>
       </div>
 
+      {/* Semester Standing & Requirements Cards */}
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl p-5 shadow-sm border border-gray-200 dark:border-zinc-800">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+          <Award className="h-4 w-4 text-red-600 dark:text-red-400" />
+          <span>Active Member Requirements Status</span>
+        </h2>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {/* Dues */}
+          <div className={`p-3.5 rounded-xl border flex flex-col justify-between ${
+            duesPaid
+              ? 'bg-green-50/70 dark:bg-green-950/20 border-green-200 dark:border-green-800/60'
+              : 'bg-red-50/70 dark:bg-red-950/20 border-red-200 dark:border-red-800/60'
+          }`}>
+            <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+              Dues
+            </span>
+            <div className="mt-2 flex items-center gap-1.5">
+              {duesPaid ? (
+                <>
+                  <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  <span className="font-bold text-sm text-green-700 dark:text-green-300">Paid</span>
+                </>
+              ) : (
+                <>
+                  <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                  <span className="font-bold text-sm text-red-700 dark:text-red-300">Unpaid</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Concessions */}
+          <div className={`p-3.5 rounded-xl border flex flex-col justify-between ${
+            concessionsDone
+              ? 'bg-green-50/70 dark:bg-green-950/20 border-green-200 dark:border-green-800/60'
+              : 'bg-red-50/70 dark:bg-red-950/20 border-red-200 dark:border-red-800/60'
+          }`}>
+            <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+              Consessions
+            </span>
+            <div className="mt-2 flex items-center gap-1.5">
+              {concessionsDone ? (
+                <>
+                  <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  <span className="font-bold text-sm text-green-700 dark:text-green-300">Completed</span>
+                </>
+              ) : (
+                <>
+                  <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                  <span className="font-bold text-sm text-red-700 dark:text-red-300">Pending</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Brotherhood */}
+          <div className={`p-3.5 rounded-xl border flex flex-col justify-between ${
+            hasBrotherhood
+              ? 'bg-green-50/70 dark:bg-green-950/20 border-green-200 dark:border-green-800/60'
+              : 'bg-zinc-50 dark:bg-zinc-800/50 border-gray-200 dark:border-zinc-700'
+          }`}>
+            <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+              Brotherhood
+            </span>
+            <div className="mt-2 flex items-center gap-1.5">
+              {hasBrotherhood ? (
+                <>
+                  <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  <span className="font-bold text-sm text-green-700 dark:text-green-300">Medal Met</span>
+                </>
+              ) : (
+                <>
+                  <div className="w-5 h-5 rounded-full border-2 border-gray-300 dark:border-zinc-600" />
+                  <span className="font-semibold text-sm text-gray-500 dark:text-gray-400">0 events</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Professional Development */}
+          <div className={`p-3.5 rounded-xl border flex flex-col justify-between ${
+            hasProfDev
+              ? 'bg-green-50/70 dark:bg-green-950/20 border-green-200 dark:border-green-800/60'
+              : 'bg-zinc-50 dark:bg-zinc-800/50 border-gray-200 dark:border-zinc-700'
+          }`}>
+            <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider truncate">
+              Prof. Development
+            </span>
+            <div className="mt-2 flex items-center gap-1.5">
+              {hasProfDev ? (
+                <>
+                  <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  <span className="font-bold text-sm text-green-700 dark:text-green-300">Medal Met</span>
+                </>
+              ) : (
+                <>
+                  <div className="w-5 h-5 rounded-full border-2 border-gray-300 dark:border-zinc-600" />
+                  <span className="font-semibold text-sm text-gray-500 dark:text-gray-400">0 events</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Community Service */}
+          <div className={`p-3.5 rounded-xl border flex flex-col justify-between col-span-2 sm:col-span-1 ${
+            hasCommService
+              ? 'bg-green-50/70 dark:bg-green-950/20 border-green-200 dark:border-green-800/60'
+              : 'bg-zinc-50 dark:bg-zinc-800/50 border-gray-200 dark:border-zinc-700'
+          }`}>
+            <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider truncate">
+              Comm. Service
+            </span>
+            <div className="mt-2 flex items-center gap-1.5">
+              {hasCommService ? (
+                <>
+                  <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  <span className="font-bold text-sm text-green-700 dark:text-green-300">Medal Met</span>
+                </>
+              ) : (
+                <>
+                  <div className="w-5 h-5 rounded-full border-2 border-gray-300 dark:border-zinc-600" />
+                  <span className="font-semibold text-sm text-gray-500 dark:text-gray-400">0 events</span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Read-Only Informational Callout */}
       <div className="p-4 rounded-xl bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-xs text-gray-600 dark:text-gray-400 flex items-center justify-between gap-4">
         <div className="flex items-center gap-2.5">
           <QrCode className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0" />
           <span>
-            <strong>How to check in:</strong> Scan the QR code displayed by the Scribe on the projector during meetings. Attendance will instantly appear on this page.
+            <strong>How to check in:</strong> Scan the QR code displayed on the screen during meetings or events. Attendance and pillar medals populate immediately.
           </span>
         </div>
         <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider hidden sm:inline">
-          Read-Only Mode
+          Personal Ledger
         </span>
       </div>
 
@@ -140,7 +290,6 @@ export default function MemberAttendanceView({
           <option value="brotherhood">Brotherhood</option>
           <option value="professional">Professional Dev</option>
           <option value="service">Community Service</option>
-          <option value="concessions">Concessions</option>
         </select>
       </div>
 
@@ -162,7 +311,7 @@ export default function MemberAttendanceView({
             </div>
           ) : (
             filteredEvents.map((ev) => {
-              const isAttended = attendedEventIds.has(ev.id);
+              const isAttended = attendedIds.has(ev.id);
               return (
                 <div
                   key={ev.id}

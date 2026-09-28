@@ -27,6 +27,11 @@ export interface MemberProfile {
   username: string;
   role?: string | null;
   attendance_points: number;
+  dues_paid?: boolean;
+  concessions_done?: boolean;
+  brotherhood_met?: boolean;
+  prof_dev_met?: boolean;
+  comm_service_met?: boolean;
 }
 
 export type EventCategory =
@@ -35,7 +40,6 @@ export type EventCategory =
   | 'brotherhood'
   | 'professional'
   | 'service'
-  | 'concessions'
   | 'general';
 
 export interface AttendanceFilterState {
