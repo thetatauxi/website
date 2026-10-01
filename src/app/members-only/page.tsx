@@ -1,11 +1,12 @@
 import { redirect } from 'next/navigation'
 import LoadingLink from '@/components/ui/loading-link'
-import { Calendar, Users, ExternalLink, Megaphone, Shield, Link as LinkIcon, CheckCircle2, XCircle, Award, UserPlus, Table, QrCode } from 'lucide-react'
+import { Calendar, Users, ExternalLink, Megaphone, Shield, Link as LinkIcon, CheckCircle2, XCircle, Award, UserPlus, Table, QrCode, Send } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getCalendarFromSheet, getLinksFromSheet } from '@/lib/google-sheets'
 import { parseAttendancePermissions } from '@/components/attendance/permissions'
 import SyncPanel from '@/components/members/sync-panel'
 import AccountIntakePanel from '@/components/members/account-intake-panel'
+import AccountDispatchPanel from '@/components/members/account-dispatch-panel'
 import { Medal } from '@/components/members/medal'
 import CommunityLinks, { type CommunityLink } from '@/components/members/community-links'
 
@@ -28,6 +29,12 @@ export default async function MembersOnlyPage() {
     .select('*')
     .eq('id', user.id)
     .single()
+
+  // PNMs / Pledging Members are restricted to the attendance portal
+  const currentRole = (profile?.role || '').toLowerCase();
+  if (currentRole === 'pnm' || currentRole === 'pledging member' || currentRole.includes('pledg')) {
+    redirect('/attendance')
+  }
 
   // Fetch current user's attended events directly from Supabase attendance system
   const { data: attendedEvents } = await supabase
@@ -281,16 +288,31 @@ export default async function MembersOnlyPage() {
                   E-Board Tools
                 </h2>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {/* Dedicated Block: Sync New Account Intake */}
-                  <div className="bg-white dark:bg-zinc-900 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all">
-                    <h3 className="font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
-                      <UserPlus className="h-4 w-4 text-red-700 dark:text-red-500" />
-                      Sync New Account Intake
-                    </h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3.5">
-                      Batch process onboarding invitations and manage member account setup recovery.
-                    </p>
-                    <AccountIntakePanel userRole={dbRole} />
+                  {/* Left Column: Account Dispatch & Sync New Account Intake */}
+                  <div className="space-y-4">
+                    {/* Dedicated Block: Account Dispatch */}
+                    <div className="bg-white dark:bg-zinc-900 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all">
+                      <h3 className="font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+                        <Send className="h-4 w-4 text-red-700 dark:text-red-500" />
+                        Account Dispatch
+                      </h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3.5">
+                        Directly dispatch invitations, onboard PNMs with bids, or send password recovery links.
+                      </p>
+                      <AccountDispatchPanel userRole={dbRole} />
+                    </div>
+
+                    {/* Dedicated Block: Sync New Account Intake */}
+                    <div className="bg-white dark:bg-zinc-900 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all">
+                      <h3 className="font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+                        <UserPlus className="h-4 w-4 text-red-700 dark:text-red-500" />
+                        Sync New Account Intake
+                      </h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3.5">
+                        Batch process onboarding invitations from Google Sheets and manage pending account re-invitations.
+                      </p>
+                      <AccountIntakePanel userRole={dbRole} />
+                    </div>
                   </div>
 
                   {/* Attendance Manager, Google Sheets Sync & Finances */}

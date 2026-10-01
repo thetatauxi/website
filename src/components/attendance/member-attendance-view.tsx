@@ -50,7 +50,9 @@ export default function MemberAttendanceView({
   const duesPaid = !!profile?.dues_paid;
   const duesExcused = !!profile?.dues_excused;
   const concessionsDone = !!profile?.concessions_done;
-  const concessionsExcused = !!profile?.concessions_excused;
+  const userRole = (profile?.role || '').toLowerCase();
+  const isPnm = userRole === 'pnm' || userRole === 'pledging member' || userRole.includes('pledg');
+  const concessionsExcused = isPnm || !!profile?.concessions_excused;
 
   // Filter events
   const filteredEvents = useMemo(() => {

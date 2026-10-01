@@ -45,7 +45,7 @@ export default function AttendanceStatusCell({
   return (
     <div
       title={title}
-      className={`group/cell relative w-full h-full min-h-[50px] flex flex-col justify-between overflow-hidden select-none transition-colors ${
+      className={`group/cell relative w-full h-full flex flex-col justify-between overflow-hidden select-none transition-colors ${
         disabled ? 'opacity-40 cursor-not-allowed' : ''
       }`}
     >

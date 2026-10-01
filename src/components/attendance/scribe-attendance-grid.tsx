@@ -840,23 +840,25 @@ export default function ScribeAttendanceGrid({
                         return (
                           <td
                             key={ev.id}
-                            className="p-0 text-center border-r border-gray-200/80 dark:border-zinc-800 h-full align-stretch"
+                            className="p-0 text-center border-r border-gray-200/80 dark:border-zinc-800 relative h-full"
                           >
-                            <AttendanceStatusCell
-                              status={currentStatus}
-                              isPending={isPending}
-                              disabled={!canToggleEvent}
-                              onSelect={(newStatus) =>
-                                handleSetAttendanceStatus(ev.id, member.id, newStatus, ev.type)
-                              }
-                              title={
-                                !canToggleEvent
-                                  ? `Only ${ev.type} chair or officers can update attendance for this event`
-                                  : currentStatus === 'empty'
-                                  ? `Record attendance for ${member.first_name || member.username}`
-                                  : `Currently: ${currentStatus.toUpperCase()} (Click active letter to clear)`
-                              }
-                            />
+                            <div className="absolute inset-0 w-full h-full">
+                              <AttendanceStatusCell
+                                status={currentStatus}
+                                isPending={isPending}
+                                disabled={!canToggleEvent}
+                                onSelect={(newStatus) =>
+                                  handleSetAttendanceStatus(ev.id, member.id, newStatus, ev.type)
+                                }
+                                title={
+                                  !canToggleEvent
+                                    ? `Only ${ev.type} chair or officers can update attendance for this event`
+                                    : currentStatus === 'empty'
+                                    ? `Record attendance for ${member.first_name || member.username}`
+                                    : `Currently: ${currentStatus.toUpperCase()} (Click active letter to clear)`
+                                }
+                              />
+                            </div>
                           </td>
                         );
                       })}

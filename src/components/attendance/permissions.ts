@@ -96,7 +96,8 @@ export function parseAttendancePermissions(rawRole?: string | null): AttendanceP
 
   // Human-friendly badge label
   let badgeLabel = 'Member View';
-  if (isTreasurer) badgeLabel = 'Treasurer Active';
+  if (role === 'pnm' || role === 'pledging member' || role.includes('pledg')) badgeLabel = 'Pledging Member View';
+  else if (isTreasurer) badgeLabel = 'Treasurer Active';
   else if (isFundraising) badgeLabel = 'Fundraising Chair Active';
   else if (isBrotherhoodChair) badgeLabel = 'Brotherhood Chair Active';
   else if (isPdChair) badgeLabel = 'PD Chair Active';

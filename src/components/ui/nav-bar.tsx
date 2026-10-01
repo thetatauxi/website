@@ -2,17 +2,48 @@
 
 import type React from "react"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { X, LogOut } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { logoutAction } from "@/app/actions"
 import { useAuthLoading } from "@/components/providers/auth-loading-provider"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { createClient } from "@/lib/supabase/client"
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
+  const [isPnm, setIsPnm] = useState(false)
   const pathname = usePathname()
   const { showAuthLoading } = useAuthLoading()
+
+  useEffect(() => {
+    let isMounted = true
+    const supabase = createClient()
+    const checkRole = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!isMounted || !user) {
+          if (isMounted) setIsPnm(false)
+          return
+        }
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle()
+        if (isMounted) {
+          const r = (profile?.role || '').toLowerCase();
+          setIsPnm(r === 'pnm' || r === 'pledging member' || r.includes('pledg'))
+        }
+      } catch {
+        if (isMounted) setIsPnm(false)
+      }
+    }
+    checkRole()
+    return () => {
+      isMounted = false
+    }
+  }, [pathname])
 
   return (
     <>
@@ -131,15 +162,17 @@ export default function Navbar() {
                 >
                   <span className="text-lg">Attendance</span>
                 </NavLink>
-                <NavLink
-                  href="/members-only"
-                  onClick={() => {
-                    setIsOpen(false)
-                    showAuthLoading()
-                  }}
-                >
-                  <span className="text-lg font-semibold text-red-800 dark:text-red-400">Member Portal</span>
-                </NavLink>
+                {!isPnm && (
+                  <NavLink
+                    href="/members-only"
+                    onClick={() => {
+                      setIsOpen(false)
+                      showAuthLoading()
+                    }}
+                  >
+                    <span className="text-lg font-semibold text-red-800 dark:text-red-400">Member Portal</span>
+                  </NavLink>
+                )}
               </nav>
             </div>
 

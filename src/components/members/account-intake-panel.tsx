@@ -10,15 +10,11 @@ import {
   Trash2,
   Mail,
   MailCheck,
-  KeyRound,
   Copy,
   Check,
-  ExternalLink
 } from 'lucide-react';
 import {
   processNewAccountIntakeAction,
-  sendPasswordResetEmailAction,
-  generateMemberDirectLinkAction,
   resendUnclaimedSetupEmailsAction,
   type ResendUnclaimedResult
 } from '@/app/actions';
@@ -45,12 +41,7 @@ export default function AccountIntakePanel({ userRole }: AccountIntakePanelProps
   const [intakeResult, setIntakeResult] = useState<AccountIntakeResult | null>(null);
   const [intakeInlineStatus, setIntakeInlineStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  // Manual Reset / Direct Link state
-  const [resetInput, setResetInput] = useState('');
-  const [resetLoading, setResetLoading] = useState(false);
-  const [resetMessage, setResetMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [directLink, setDirectLink] = useState<string | null>(null);
-  const [copiedLink, setCopiedLink] = useState(false);
+
 
   // Resend Unclaimed Setup Emails state
   const [resendLoading, setResendLoading] = useState(false);
@@ -88,46 +79,7 @@ export default function AccountIntakePanel({ userRole }: AccountIntakePanelProps
     }
   };
 
-  const handleSendResetEmail = async () => {
-    if (!resetInput.trim()) return;
-    setResetLoading(true);
-    setResetMessage(null);
-    setDirectLink(null);
-    try {
-      const res = await sendPasswordResetEmailAction(resetInput);
-      if (!res) {
-        throw new Error('No response from server. Check that Vercel environment variables are configured.');
-      }
-      setResetMessage({ type: res.success ? 'success' : 'error', text: res.message });
-    } catch (err: unknown) {
-      setResetMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to send' });
-    } finally {
-      setResetLoading(false);
-    }
-  };
 
-  const handleGenerateDirectLink = async () => {
-    if (!resetInput.trim()) return;
-    setResetLoading(true);
-    setResetMessage(null);
-    setDirectLink(null);
-    try {
-      const res = await generateMemberDirectLinkAction(resetInput, 'recovery');
-      if (!res) {
-        throw new Error('No response from server. Check that Vercel environment variables are configured.');
-      }
-      if (res.success && res.link) {
-        setDirectLink(res.link);
-        setResetMessage({ type: 'success', text: res.message });
-      } else {
-        setResetMessage({ type: 'error', text: res.message });
-      }
-    } catch (err: unknown) {
-      setResetMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to generate link' });
-    } finally {
-      setResetLoading(false);
-    }
-  };
 
   const handleResendUnclaimedSetupEmails = async () => {
     setResendLoading(true);
@@ -183,71 +135,7 @@ export default function AccountIntakePanel({ userRole }: AccountIntakePanelProps
         </button>
       </div>
 
-      {/* Option 2: Member Password Reset & Link Recovery */}
-      <div className="p-3.5 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 transition-colors">
-        <div className="flex items-center gap-1.5 mb-1">
-          <KeyRound className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-          <h4 className="text-xs font-bold text-gray-900 dark:text-gray-100">
-            Member Password Reset & Link Recovery
-          </h4>
-        </div>
-        <p className="text-[11px] text-gray-600 dark:text-gray-400 mb-2.5 leading-relaxed">
-          Sends a link to reset password and update info on <code className="font-mono text-[10px] px-1 py-0.5 rounded bg-amber-100/60 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300">/setup-profile</code>. Use &ldquo;Generate Direct Link&rdquo; to copy and DM the link directly if campus email scanners expire their email link.
-        </p>
 
-        <div className="flex flex-col sm:flex-row gap-2">
-          <input
-            type="text"
-            value={resetInput}
-            onChange={(e) => setResetInput(e.target.value)}
-            placeholder="NetID or email (e.g. brbutler or brbutler@wisc.edu)"
-            className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
-          />
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={handleSendResetEmail}
-              disabled={resetLoading || !resetInput.trim()}
-              className="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-white dark:bg-zinc-800 border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200 hover:bg-amber-50 dark:hover:bg-zinc-700 transition-colors disabled:opacity-50 flex items-center gap-1 shadow-sm"
-            >
-              <Send className="h-3 w-3" />
-              {resetLoading ? 'Sending...' : 'Send Reset Email'}
-            </button>
-            <button
-              onClick={handleGenerateDirectLink}
-              disabled={resetLoading || !resetInput.trim()}
-              className="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-amber-800 text-white hover:bg-amber-700 transition-colors disabled:opacity-50 flex items-center gap-1 shadow-sm"
-            >
-              <ExternalLink className="h-3 w-3" />
-              {resetLoading ? 'Generating...' : 'Generate Direct Link'}
-            </button>
-          </div>
-        </div>
-
-        {resetMessage && (
-          <p className={`text-[11px] mt-2 font-medium ${resetMessage.type === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-            {resetMessage.text}
-          </p>
-        )}
-
-        {directLink && (
-          <div className="mt-2.5 p-2 rounded-lg bg-white dark:bg-zinc-800 border border-amber-300 dark:border-amber-700 flex items-center justify-between gap-2 shadow-sm">
-            <span className="font-mono text-[10px] text-gray-800 dark:text-gray-200 truncate select-all flex-1">
-              {directLink}
-            </span>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(directLink);
-                setCopiedLink(true);
-                setTimeout(() => setCopiedLink(false), 2000);
-              }}
-              className="px-2.5 py-1 text-xs font-medium rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 hover:bg-amber-200 dark:hover:bg-amber-900 flex items-center gap-1 flex-shrink-0 transition-colors"
-            >
-              {copiedLink ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
-              {copiedLink ? 'Copied' : 'Copy'}
-            </button>
-          </div>
-        )}
-      </div>
 
       {/* Option 3: Resend Pending Account Setup Emails */}
       <div className="p-3.5 rounded-xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/80 dark:border-blue-900/40 transition-colors">

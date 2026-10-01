@@ -24,6 +24,8 @@ export default async function AttendancePage() {
   }
 
   const data = await getAttendanceInitialData();
+  const roleLower = (data.profile?.role || '').toLowerCase();
+  const isPnm = roleLower === 'pnm' || roleLower === 'pledging member' || roleLower.includes('pledg');
   const permissions = parseAttendancePermissions(data.profile?.role);
 
   const officerDisplayName = data.profile?.first_name && data.profile.first_name !== 'TEMP'
@@ -35,13 +37,15 @@ export default async function AttendancePage() {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Navigation Breadcrumb and Officer Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <LoadingLink
-            href="/members-only"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-red-700 dark:text-gray-400 dark:hover:text-red-400 transition-colors self-start sm:self-auto"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Back to Member Portal</span>
-          </LoadingLink>
+          {!isPnm && (
+            <LoadingLink
+              href="/members-only"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-red-700 dark:text-gray-400 dark:hover:text-red-400 transition-colors self-start sm:self-auto"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back to Member Portal</span>
+            </LoadingLink>
+          )}
 
           {data.isOfficer && (
             <>

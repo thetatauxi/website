@@ -3,6 +3,7 @@ import LoadingLink from '@/components/ui/loading-link';
 import { checkInWithQrCodeAction } from '@/app/attendance/actions';
 import { CheckCircle2, XCircle, LogIn, ArrowRight, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,6 +18,19 @@ export default async function QrScanPage({ params }: PageProps) {
 
   // Run the check-in server action
   const result = await checkInWithQrCodeAction(code);
+
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  let isPnm = false;
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle();
+    const r = (profile?.role || '').toLowerCase();
+    isPnm = r === 'pnm' || r === 'pledging member' || r.includes('pledg');
+  }
 
   const formattedTime = result.scannedAt
     ? new Date(result.scannedAt).toLocaleTimeString('en-US', {
@@ -84,11 +98,13 @@ export default async function QrScanPage({ params }: PageProps) {
                   View My Attendance
                 </Button>
               </LoadingLink>
-              <LoadingLink href="/members-only">
-                <Button variant="ghost" className="w-full text-xs text-gray-500">
-                  Return to Member Portal
-                </Button>
-              </LoadingLink>
+              {!isPnm && (
+                <LoadingLink href="/members-only">
+                  <Button variant="ghost" className="w-full text-xs text-gray-500">
+                    Return to Member Portal
+                  </Button>
+                </LoadingLink>
+              )}
             </div>
           </div>
         )}
@@ -152,11 +168,13 @@ export default async function QrScanPage({ params }: PageProps) {
                   View Attendance Score
                 </Button>
               </LoadingLink>
-              <LoadingLink href="/members-only">
-                <Button variant="ghost" className="w-full text-xs text-gray-500">
-                  Return to Member Portal
-                </Button>
-              </LoadingLink>
+              {!isPnm && (
+                <LoadingLink href="/members-only">
+                  <Button variant="ghost" className="w-full text-xs text-gray-500">
+                    Return to Member Portal
+                  </Button>
+                </LoadingLink>
+              )}
             </div>
           </div>
         )}
@@ -204,11 +222,13 @@ export default async function QrScanPage({ params }: PageProps) {
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
               </LoadingLink>
-              <LoadingLink href="/members-only">
-                <Button variant="ghost" className="w-full text-xs text-gray-500">
-                  Return to Member Portal
-                </Button>
-              </LoadingLink>
+              {!isPnm && (
+                <LoadingLink href="/members-only">
+                  <Button variant="ghost" className="w-full text-xs text-gray-500">
+                    Return to Member Portal
+                  </Button>
+                </LoadingLink>
+              )}
             </div>
           </div>
         )}

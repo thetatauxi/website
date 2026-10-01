@@ -26,13 +26,25 @@ export async function loginAction(formData: FormData) {
   }
 
   const supabase = createClient()
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data: signInData, error } = await supabase.auth.signInWithPassword({
     email,
     password: passwordInput,
   })
 
-  if (error) {
+  if (error || !signInData.user) {
     redirect('/login?error=1')
+  }
+
+  // Check if user is a PNM and redirect directly to attendance
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', signInData.user.id)
+    .maybeSingle()
+
+  const userRole = (profile?.role || '').toLowerCase();
+  if (userRole === 'pnm' || userRole === 'pledging member' || userRole.includes('pledg')) {
+    redirect('/attendance')
   }
 
   redirect('/members-only')
@@ -194,19 +206,24 @@ export async function processNewAccountIntakeAction(): Promise<AccountIntakeResu
 /**
  * Helper to find or create a user and profile row, ensuring they have an auth ID
  */
-async function getOrCreateUserAndProfile(email: string) {
+async function getOrCreateUserAndProfile(email: string, targetRole: string = 'Member') {
   const adminSupabase = createAdminClient();
   const username = email.split('@')[0];
 
   // 1. Check profiles table first
   const { data: profile } = await adminSupabase
     .from('profiles')
-    .select('id, username')
+    .select('id, username, role, concessions_excused')
     .ilike('username', username)
     .maybeSingle();
 
   if (profile) {
-    return { userId: profile.id, username: profile.username || username };
+    return {
+      userId: profile.id,
+      username: profile.username || username,
+      existing: true,
+      role: profile.role || 'Member',
+    };
   }
 
   // 2. Check auth users
@@ -214,8 +231,10 @@ async function getOrCreateUserAndProfile(email: string) {
   const authUser = (usersData?.users || []).find(u => u.email?.toLowerCase() === email.toLowerCase());
 
   let userId: string;
+  let isExistingAuthUser = false;
   if (authUser) {
     userId = authUser.id;
+    isExistingAuthUser = true;
   } else {
     // 3. Create auth user
     const { data: newUser, error: createError } = await adminSupabase.auth.admin.createUser({
@@ -228,16 +247,183 @@ async function getOrCreateUserAndProfile(email: string) {
     userId = newUser.user.id;
   }
 
+  const roleLower = targetRole.toLowerCase();
+  const isPnm = roleLower === 'pnm' || roleLower === 'pledging member' || roleLower.includes('pledg');
+
   // Ensure row exists in profiles
   await adminSupabase.from('profiles').upsert({
     id: userId,
     username,
-    role: 'Member',
+    role: targetRole,
     first_name: 'TEMP',
     last_name: 'TEMP',
+    concessions_excused: isPnm ? true : false,
   }, { onConflict: 'id' });
 
-  return { userId, username };
+  return {
+    userId,
+    username,
+    existing: isExistingAuthUser,
+    role: targetRole,
+  };
+}
+
+export interface DispatchAccountsPayload {
+  type: 'member' | 'reset' | 'pnm';
+  rawInput: string;
+}
+
+export interface DispatchAccountsItemResult {
+  email: string;
+  success: boolean;
+  message: string;
+  alreadyExisted?: boolean;
+  link?: string;
+  error?: string;
+}
+
+export interface DispatchAccountsResult {
+  success: boolean;
+  message: string;
+  count: number;
+  directLink?: string;
+  items: DispatchAccountsItemResult[];
+}
+
+/**
+ * Dispatches account invites or password recovery links directly via NetID/email
+ */
+export async function dispatchAccountsAction(
+  payload: DispatchAccountsPayload
+): Promise<DispatchAccountsResult> {
+  try {
+    await verifySyncPermission();
+
+    const { type, rawInput } = payload;
+    if (!rawInput || typeof rawInput !== 'string' || !rawInput.trim()) {
+      throw new Error('Please enter at least one valid NetID or email address.');
+    }
+
+    const rawTokens = rawInput.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    if (rawTokens.length === 0) {
+      throw new Error('Please enter at least one valid NetID or email address.');
+    }
+
+    const emailList = Array.from(new Set(rawTokens.map(token => {
+      return token.includes('@') ? token : `${token}@wisc.edu`;
+    })));
+
+    const results: DispatchAccountsItemResult[] = [];
+    const adminSupabase = createAdminClient();
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thetatauxi.org';
+
+    for (const email of emailList) {
+      try {
+        const targetRole = type === 'pnm' ? 'Pledging Member' : 'Member';
+        const userResult = await getOrCreateUserAndProfile(email, targetRole);
+        const { userId, username, existing, role } = userResult;
+
+        // Generate 64-character unguessable token
+        const setupToken = crypto.randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 days
+
+        const { error: updateError } = await adminSupabase
+          .from('profiles')
+          .update({
+            setup_token: setupToken,
+            setup_token_expires_at: expiresAt,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', userId);
+
+        if (updateError) {
+          throw new Error(`Failed to save setup token: ${updateError.message}`);
+        }
+
+        const setupUrl = `${siteUrl.replace(/\/+$/, '')}/setup-profile?token=${setupToken}`;
+
+        const isResetType = type === 'reset';
+        const shouldSendReset = isResetType || existing;
+
+        let noticeMsg = '';
+        if (isResetType) {
+          noticeMsg = `Password recovery email dispatched to ${email}.`;
+        } else if (existing) {
+          noticeMsg = `Account already exists for ${email} (Role: ${role || 'Member'}). Sent password reset link instead.`;
+        } else if (type === 'pnm') {
+          noticeMsg = `New PNM invitation dispatched to ${email}.`;
+        } else {
+          noticeMsg = `New Member invitation dispatched to ${email}.`;
+        }
+
+        const resendResult = await sendSetupEmail({
+          to: email,
+          setupUrl,
+          username,
+          isReset: shouldSendReset,
+          accountType: isResetType ? 'reset' : existing ? 'reset' : type,
+        });
+
+        if (!resendResult.success) {
+          const isSandbox = resendResult.error?.includes('testing emails');
+          if (isSandbox) {
+            results.push({
+              email,
+              success: true,
+              message: `${noticeMsg} (Resend testing mode)`,
+              alreadyExisted: existing,
+              link: setupUrl,
+            });
+            continue;
+          }
+          throw new Error(`Token generated, but email delivery failed: ${resendResult.error}`);
+        }
+
+        results.push({
+          email,
+          success: true,
+          message: noticeMsg,
+          alreadyExisted: existing,
+          link: setupUrl,
+        });
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : 'Processing failed';
+        results.push({
+          email,
+          success: false,
+          message: errorMsg,
+          error: errorMsg,
+        });
+      }
+    }
+
+    const successCount = results.filter(r => r.success).length;
+    const isSingle = emailList.length === 1;
+    const singleResult = isSingle ? results[0] : null;
+
+    let overallMessage = '';
+    if (isSingle && singleResult) {
+      overallMessage = singleResult.message;
+    } else {
+      overallMessage = `Processed ${emailList.length} account${emailList.length > 1 ? 's' : ''}: ${successCount} sent successfully${emailList.length > successCount ? `, ${emailList.length - successCount} failed` : ''}.`;
+    }
+
+    return {
+      success: successCount > 0,
+      message: overallMessage,
+      count: successCount,
+      directLink: (isSingle && singleResult?.success) ? singleResult.link : undefined,
+      items: results,
+    };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Dispatch failed';
+    return {
+      success: false,
+      message: errorMsg,
+      count: 0,
+      items: [],
+    };
+  }
 }
 
 /**
@@ -518,6 +704,7 @@ export interface SetupTokenVerification {
   userId?: string;
   email?: string;
   username?: string;
+  role?: string;
   firstName?: string;
   lastName?: string;
   major?: string;
@@ -538,7 +725,7 @@ export async function verifySetupTokenAction(token: string): Promise<SetupTokenV
     const adminSupabase = createAdminClient();
     const { data: profile, error } = await adminSupabase
       .from('profiles')
-      .select('id, username, first_name, last_name, major, pledge_class, graduation_year, setup_token_expires_at')
+      .select('id, username, role, first_name, last_name, major, pledge_class, graduation_year, setup_token_expires_at')
       .eq('setup_token', token.trim())
       .maybeSingle();
 
@@ -573,6 +760,7 @@ export async function verifySetupTokenAction(token: string): Promise<SetupTokenV
       userId: profile.id,
       email: userEmail,
       username: defaultUsername,
+      role: profile.role || 'Member',
       firstName: profile.first_name === 'TEMP' ? '' : (profile.first_name || ''),
       lastName: profile.last_name === 'TEMP' ? '' : (profile.last_name || ''),
       major: profile.major === 'TEMP' ? '' : (profile.major || ''),
@@ -601,7 +789,7 @@ export interface CompleteSetupPayload {
  */
 export async function completeProfileSetupAction(
   payload: CompleteSetupPayload
-): Promise<{ success: boolean; message?: string; email?: string }> {
+): Promise<{ success: boolean; message?: string; email?: string; role?: string }> {
   const { token, password, firstName, lastName, major, pledgeClass, graduationYear } = payload;
 
   if (!token || token.trim().length < 16) {
@@ -622,7 +810,7 @@ export async function completeProfileSetupAction(
     // 1. Locate the profile with this active token
     const { data: profile, error: fetchErr } = await adminSupabase
       .from('profiles')
-      .select('id, username, setup_token_expires_at')
+      .select('id, username, role, setup_token_expires_at')
       .eq('setup_token', token.trim())
       .maybeSingle();
 
@@ -687,6 +875,7 @@ export async function completeProfileSetupAction(
     return {
       success: true,
       email: userEmail,
+      role: profile.role || 'Member',
     };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Unknown error during profile setup';

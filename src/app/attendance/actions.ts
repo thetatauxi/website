@@ -52,6 +52,13 @@ async function getAuthenticatedUserAndPermissions(): Promise<{
     profile = fallbackP ? ({ ...fallbackP, status: 'ACTIVE', dues_excused: false, concessions_excused: false } as unknown as MemberProfile) : null;
   }
 
+  if (profile && profile.role) {
+    const r = profile.role.toLowerCase();
+    if (r === 'pnm' || r === 'pledging member' || r.includes('pledg')) {
+      profile.concessions_excused = true;
+    }
+  }
+
   const permissions = parseAttendancePermissions(profile?.role);
   return { user, profile: profile as MemberProfile | null, permissions };
 }
@@ -237,6 +244,15 @@ export async function getAttendanceInitialData(): Promise<{
         concessions_excused: !!m.concessions_excused,
       })) as unknown as MemberProfile[];
     }
+
+    membersList = membersList.map((m) => {
+      const r = (m.role || '').toLowerCase();
+      const isPnm = r === 'pnm' || r === 'pledging member' || r.includes('pledg');
+      return {
+        ...m,
+        concessions_excused: isPnm || !!m.concessions_excused,
+      };
+    });
 
     const { data: records } = await admin
       .from('event_attendance')

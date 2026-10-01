@@ -25,8 +25,9 @@ export default function SetupProfilePage() {
   const [pledgeClass, setPledgeClass] = useState('')
   const [graduationYear, setGraduationYear] = useState('')
 
-  // Fixed role
-  const role = 'Member'
+  // Role
+  const [userRole, setUserRole] = useState<string>('Member')
+  const role = userRole || 'Member'
 
   const router = useRouter()
   const supabase = createClient()
@@ -52,6 +53,9 @@ export default function SetupProfilePage() {
           .maybeSingle()
 
         if (isMounted && profile) {
+          if (profile.role) {
+            setUserRole(profile.role)
+          }
           if (profile.username) {
             setUsername(profile.username)
           }
@@ -96,6 +100,7 @@ export default function SetupProfilePage() {
             if (result.valid) {
               setUserId(result.userId || '')
               setUsername(result.username || '')
+              if (result.role) setUserRole(result.role)
               if (result.firstName) setFirstName(result.firstName)
               if (result.lastName) setLastName(result.lastName)
               if (result.major) setMajor(result.major)
@@ -251,8 +256,11 @@ export default function SetupProfilePage() {
 
         setSuccess(true)
         setSaving(false)
+        const effRole = (res.role || userRole).toLowerCase();
+        const isPnm = effRole === 'pnm' || effRole === 'pledging member' || effRole.includes('pledg');
+        const targetPath = isPnm ? '/attendance' : '/members-only'
         setTimeout(() => {
-          router.push('/members-only')
+          router.push(targetPath)
         }, 2000)
         return
       } catch (err: unknown) {
@@ -306,8 +314,11 @@ export default function SetupProfilePage() {
     } else {
       setSuccess(true)
       setSaving(false)
+      const effRole = userRole.toLowerCase();
+      const isPnm = effRole === 'pnm' || effRole === 'pledging member' || effRole.includes('pledg');
+      const targetPath = isPnm ? '/attendance' : '/members-only'
       setTimeout(() => {
-        router.push('/members-only')
+        router.push(targetPath)
       }, 2000)
     }
   }

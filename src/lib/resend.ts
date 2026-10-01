@@ -5,6 +5,7 @@ interface SendSetupEmailParams {
   setupUrl: string;
   username?: string;
   isReset?: boolean;
+  accountType?: 'member' | 'pnm' | 'reset';
 }
 
 /**
@@ -15,6 +16,7 @@ export async function sendSetupEmail({
   setupUrl,
   username,
   isReset = false,
+  accountType = 'member',
 }: SendSetupEmailParams): Promise<{ success: boolean; id?: string; error?: string }> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
@@ -30,14 +32,31 @@ export async function sendSetupEmail({
 
   const resend = new Resend(apiKey);
 
-  const subject = isReset
+  const isPnm = accountType === 'pnm';
+  const effectiveReset = isReset || accountType === 'reset';
+
+  const subject = effectiveReset
     ? 'Reset Your Theta Tau Account Password'
+    : isPnm
+    ? 'Welcome to Theta Tau – Set Up Your PNM Account'
     : 'Welcome to Theta Tau – Set Up Your Member Account';
 
-  const actionTitle = isReset ? 'Reset Your Password' : 'Set Up Your Profile & Password';
-  const headingText = isReset ? 'Account Password Reset' : 'Welcome to Theta Tau!';
-  const messageText = isReset
+  const actionTitle = effectiveReset
+    ? 'Reset Your Password'
+    : isPnm
+    ? 'Activate Account & Access Attendance'
+    : 'Set Up Your Profile & Password';
+
+  const headingText = effectiveReset
+    ? 'Account Password Reset'
+    : isPnm
+    ? 'Welcome to Theta Tau!'
+    : 'Welcome to Theta Tau!';
+
+  const messageText = effectiveReset
     ? `A password reset and profile update link was requested for your account (${username || to}). Click the button below to choose a new password and update your information:`
+    : isPnm
+    ? `Congratulations on receiving a bid to Theta Tau – Xi Chapter! You have been added to the chapter portal. Click the button below to set up your password and access the chapter attendance tracker:`
     : `You have been added to the Theta Tau – Xi Chapter member registry. Click the button below to activate your account, set your password, and finish setting up your member profile:`;
 
   const htmlContent = `
