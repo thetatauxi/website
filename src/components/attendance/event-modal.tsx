@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { AttendanceEvent, MemberProfile } from './types';
 import { parseAttendancePermissions } from './permissions';
 import { updateAttendanceEventAction, deleteAttendanceEventAction } from '@/app/attendance/actions';
+import { STANDARD_EVENT_TYPES, getDefaultPointsForEventType } from './event-types';
 import { Maximize2, Trash2, Copy, Check, Loader2, Users, Save, ShieldAlert } from 'lucide-react';
 
 interface EventModalProps {
@@ -41,7 +42,8 @@ export default function EventModal({
   const [name, setName] = useState('');
   const [date, setDate] = useState('');
   const [points, setPoints] = useState<number>(0);
-  const [type, setType] = useState('general');
+  const [type, setType] = useState('Meetings');
+  const [isSpecialValue, setIsSpecialValue] = useState(false);
   const [isActive, setIsActive] = useState(true);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -53,10 +55,17 @@ export default function EventModal({
   // Sync state when event opens
   useEffect(() => {
     if (event) {
-      setName(event.name || '');
-      setDate(event.date || '');
-      setPoints(typeof event.points === 'number' ? event.points : 0);
-      setType(event.type || 'general');
+      const evName = event.name || '';
+      const evDate = event.date || '';
+      const evType = event.type || 'Meetings';
+      const evPoints = typeof event.points === 'number' ? event.points : 0;
+      const standardPts = getDefaultPointsForEventType(evType);
+
+      setName(evName);
+      setDate(evDate);
+      setType(evType);
+      setPoints(evPoints);
+      setIsSpecialValue(evPoints !== standardPts);
       setIsActive(event.is_active ?? true);
       setError(null);
       setShowConfirmDelete(false);
@@ -151,8 +160,8 @@ export default function EventModal({
               <span>Event Details &amp; Settings</span>
             </DialogTitle>
             <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider ${isActive
-                ? 'bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-400 border border-green-200 dark:border-green-800'
-                : 'bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-gray-400 border border-gray-200 dark:border-zinc-700'
+              ? 'bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-400 border border-green-200 dark:border-green-800'
+              : 'bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-gray-400 border border-gray-200 dark:border-zinc-700'
               }`}>
               {isActive ? 'Active for Scans' : 'Inactive / Closed'}
             </span>
@@ -227,9 +236,11 @@ export default function EventModal({
               {/* Date & Points in 2 sub-columns */}
               <div className="grid grid-cols-2 gap-2.5">
                 <div className="space-y-1">
-                  <Label htmlFor="edit-date" className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
-                    Date
-                  </Label>
+                  <div className="h-5 flex items-center">
+                    <Label htmlFor="edit-date" className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                      Date
+                    </Label>
+                  </div>
                   <Input
                     id="edit-date"
                     type="date"
@@ -241,9 +252,27 @@ export default function EventModal({
                 </div>
 
                 <div className="space-y-1">
-                  <Label htmlFor="edit-points" className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
-                    Points Value
-                  </Label>
+                  <div className="h-5 flex items-center justify-between">
+                    <Label htmlFor="edit-points" className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                      Points
+                    </Label>
+                    <label className="inline-flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={isSpecialValue}
+                        disabled={!canEditThisEvent}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setIsSpecialValue(checked);
+                          if (!checked) {
+                            setPoints(getDefaultPointsForEventType(type));
+                          }
+                        }}
+                        className="w-3.5 h-3.5 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                      />
+                      <span className="font-semibold text-[10px] uppercase text-red-700 dark:text-red-400">Special Value</span>
+                    </label>
+                  </div>
                   <Input
                     id="edit-points"
                     type="number"
@@ -251,8 +280,12 @@ export default function EventModal({
                     step="1"
                     value={points}
                     onChange={(e) => setPoints(Math.max(0, parseInt(e.target.value) || 0))}
-                    disabled={!canEditThisEvent}
-                    className="bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 font-bold h-9 text-xs sm:text-sm disabled:opacity-75"
+                    disabled={!canEditThisEvent || !isSpecialValue}
+                    title={!isSpecialValue ? "Automatically set by Event Type. Check 'Special Value' to edit." : "Custom points value"}
+                    className={`border-gray-200 dark:border-zinc-700 font-bold h-9 text-xs sm:text-sm ${!isSpecialValue || !canEditThisEvent
+                        ? 'bg-gray-100 dark:bg-zinc-800/60 opacity-80 cursor-not-allowed text-gray-500 dark:text-gray-400'
+                        : 'bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white'
+                      }`}
                   />
                 </div>
               </div>
@@ -260,21 +293,26 @@ export default function EventModal({
               {/* Event Type / Category */}
               <div className="space-y-1">
                 <Label htmlFor="edit-type" className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
-                  Category / Pillar
+                  Event Type
                 </Label>
                 <select
                   id="edit-type"
                   value={type}
-                  onChange={(e) => setType(e.target.value)}
+                  onChange={(e) => {
+                    const newType = e.target.value;
+                    setType(newType);
+                    if (!isSpecialValue) {
+                      setPoints(getDefaultPointsForEventType(newType));
+                    }
+                  }}
                   disabled={!canEditThisEvent}
                   className="w-full h-9 px-3 py-1 text-xs sm:text-sm rounded-md border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-600 disabled:opacity-75"
                 >
-                  <option value="general">General / Chapter</option>
-                  <option value="rush">Rush</option>
-                  <option value="brotherhood">Brotherhood Pillar</option>
-                  <option value="professional">Professional Development</option>
-                  <option value="service">Community Service</option>
-                  <option value="study tables">Study Tables</option>
+                  {STANDARD_EVENT_TYPES.map((et) => (
+                    <option key={et.name} value={et.name}>
+                      {et.name} ({et.defaultPoints} pts)
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

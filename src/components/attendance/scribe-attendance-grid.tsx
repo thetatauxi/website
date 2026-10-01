@@ -1,13 +1,17 @@
 'use client'
 
 import React, { useState, useMemo } from 'react';
-import { AttendanceEvent, AttendanceRecord, MemberProfile, EventCategory } from './types';
+import { AttendanceEvent, AttendanceRecord, MemberProfile, EventCategory, AttendanceStatus } from './types';
 import { parseAttendancePermissions } from './permissions';
 import CreateEventModal from './create-event-modal';
 import EventModal from './event-modal';
 import FullScreenQrView from './fullscreen-qr-view';
+import AttendanceStatusCell from './attendance-status-cell';
+import MemberStatusModal from './member-status-modal';
+import ExportQueryModal from './export-query-modal';
+import { STANDARD_EVENT_TYPES } from './event-types';
 import {
-  toggleAttendanceRecordAction,
+  setAttendanceStatusAction,
   toggleDuesAction,
   toggleConcessionsAction,
 } from '@/app/attendance/actions';
@@ -25,6 +29,7 @@ import {
   EyeOff,
   DollarSign,
   Award,
+  Download,
 } from 'lucide-react';
 
 interface ScribeAttendanceGridProps {
@@ -67,18 +72,22 @@ export default function ScribeAttendanceGrid({
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedEventForModal, setSelectedEventForModal] = useState<AttendanceEvent | null>(null);
   const [fullScreenEvent, setFullScreenEvent] = useState<AttendanceEvent | null>(null);
+  const [selectedMemberForStatus, setSelectedMemberForStatus] = useState<MemberProfile | null>(null);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   // Cell Loading Trackers
   const [pendingToggles, setPendingToggles] = useState<Set<string>>(new Set());
   const [pendingDues, setPendingDues] = useState<Set<string>>(new Set());
   const [pendingConcessions, setPendingConcessions] = useState<Set<string>>(new Set());
 
-  // Build fast O(1) attendance lookup set: `${eventId}:${userId}`
-  const attendanceLookup = useMemo(() => {
-    const map = new Map<string, AttendanceRecord>();
+  // Fast O(1) attendance status lookup: `${eventId}:${userId}` -> AttendanceStatus
+  const attendanceStatusMap = useMemo(() => {
+    const map = new Map<string, AttendanceStatus>();
     for (const r of records) {
-      if (r.status === 'present') {
-        map.set(`${r.event_id}:${r.user_id}`, r);
+      const s = (r.status || '').toLowerCase().trim();
+      if (s === 'present' || s === 'excused' || s === 'unexcused') {
+        map.set(`${r.event_id}:${r.user_id}`, s as AttendanceStatus);
       }
     }
     return map;
@@ -106,8 +115,12 @@ export default function ScribeAttendanceGrid({
           return false;
         }
         // Type filter (only applicable if officer)
-        if (permissions.isFullOfficer && typeFilter !== 'all' && ev.type.toLowerCase() !== typeFilter.toLowerCase()) {
-          return false;
+        if (permissions.isFullOfficer && typeFilter !== 'all') {
+          const t = ev.type.toLowerCase();
+          const f = typeFilter.toLowerCase();
+          if (t !== f && !t.includes(f) && !f.includes(t)) {
+            return false;
+          }
         }
         // Points filter: Min and Max range
         if (minPoints.trim() !== '' && !isNaN(Number(minPoints))) {
@@ -132,39 +145,53 @@ export default function ScribeAttendanceGrid({
       const q = memberSearch.toLowerCase().trim();
       const fullName = `${m.first_name || ''} ${m.last_name || ''}`.toLowerCase();
       const username = (m.username || '').toLowerCase();
-      return fullName.includes(q) || username.includes(q);
+      const status = (m.status || '').toLowerCase();
+      return fullName.includes(q) || username.includes(q) || status.includes(q);
     });
   }, [members, memberSearch]);
 
-  // Attendance Checkbox Toggle Handler
-  const handleToggleAttendance = async (eventId: string, userId: string, eventType: string) => {
-    const canToggle = permissions.isFullOfficer || permissions.canManageCategory(eventType);
-    if (!canToggle) return;
+  // Attendance Status Selection Handler
+  const handleSetAttendanceStatus = async (
+    eventId: string,
+    userId: string,
+    newStatus: AttendanceStatus,
+    eventType?: string
+  ) => {
+    if (!permissions.isFullOfficer && eventType && !permissions.canManageCategory(eventType)) {
+      alert(`You do not have permission to manage '${eventType}' events.`);
+      return;
+    }
 
     const key = `${eventId}:${userId}`;
-    const isCurrentlyChecked = attendanceLookup.has(key);
-    const newCheckedState = !isCurrentlyChecked;
+    const prevStatus = attendanceStatusMap.get(key) || 'empty';
+    if (prevStatus === newStatus) return;
 
-    // Track loading
     setPendingToggles((prev) => new Set(prev).add(key));
 
     // Optimistic update of local records
-    if (newCheckedState) {
-      const tempRecord: AttendanceRecord = {
-        id: `temp-${Date.now()}`,
-        event_id: eventId,
-        user_id: userId,
-        status: 'present',
-        points_awarded: events.find((e) => e.id === eventId)?.points || 0,
-        scanned_at: new Date().toISOString(),
-      };
-      setRecords((prev) => [...prev, tempRecord]);
-    } else {
+    if (newStatus === 'empty') {
       setRecords((prev) => prev.filter((r) => !(r.event_id === eventId && r.user_id === userId)));
+    } else {
+      const targetEvent = events.find((e) => e.id === eventId);
+      const points = newStatus === 'present' ? (targetEvent?.points || 0) : 0;
+      setRecords((prev) => {
+        const remaining = prev.filter((r) => !(r.event_id === eventId && r.user_id === userId));
+        return [
+          ...remaining,
+          {
+            id: `temp-${Date.now()}`,
+            event_id: eventId,
+            user_id: userId,
+            status: newStatus as AttendanceStatus,
+            points_awarded: points,
+            scanned_at: new Date().toISOString(),
+          },
+        ];
+      });
     }
 
     try {
-      const res = await toggleAttendanceRecordAction(eventId, userId, newCheckedState);
+      const res = await setAttendanceStatusAction(eventId, userId, newStatus);
       if (!res.success) {
         throw new Error(res.error || 'Failed to update attendance');
       }
@@ -175,33 +202,40 @@ export default function ScribeAttendanceGrid({
           prev.map((m) =>
             m.id === userId
               ? {
-                ...m,
-                attendance_points: res.newPoints!,
-                brotherhood_met: res.brotherhoodMet ?? m.brotherhood_met,
-                prof_dev_met: res.profDevMet ?? m.prof_dev_met,
-                comm_service_met: res.commServiceMet ?? m.comm_service_met,
-              }
+                  ...m,
+                  attendance_points: res.newPoints!,
+                  brotherhood_met: res.brotherhoodMet ?? m.brotherhood_met,
+                  prof_dev_met: res.profDevMet ?? m.prof_dev_met,
+                  comm_service_met: res.commServiceMet ?? m.comm_service_met,
+                }
               : m
           )
         );
       }
     } catch (err) {
-      console.error('Attendance toggle failed:', err);
+      console.error('Attendance status update failed:', err);
       // Revert optimistic update
-      if (newCheckedState) {
+      if (prevStatus === 'empty') {
         setRecords((prev) => prev.filter((r) => !(r.event_id === eventId && r.user_id === userId)));
       } else {
-        const revertRecord: AttendanceRecord = {
-          id: `revert-${Date.now()}`,
-          event_id: eventId,
-          user_id: userId,
-          status: 'present',
-          points_awarded: events.find((e) => e.id === eventId)?.points || 0,
-          scanned_at: new Date().toISOString(),
-        };
-        setRecords((prev) => [...prev, revertRecord]);
+        const targetEvent = events.find((e) => e.id === eventId);
+        const points = prevStatus === 'present' ? (targetEvent?.points || 0) : 0;
+        setRecords((prev) => {
+          const remaining = prev.filter((r) => !(r.event_id === eventId && r.user_id === userId));
+          return [
+            ...remaining,
+            {
+              id: `revert-${Date.now()}`,
+              event_id: eventId,
+              user_id: userId,
+              status: prevStatus as AttendanceStatus,
+              points_awarded: points,
+              scanned_at: new Date().toISOString(),
+            },
+          ];
+        });
       }
-      alert('Could not update attendance. Please try again.');
+      alert('Could not update attendance status. Please try again.');
     } finally {
       setPendingToggles((prev) => {
         const next = new Set(prev);
@@ -394,12 +428,11 @@ export default function ScribeAttendanceGrid({
                 className="w-full h-10 px-3 py-2 text-xs sm:text-sm rounded-md border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-600"
               >
                 <option value="all">All Types</option>
-                <option value="rush">Rush</option>
-                <option value="general">General Chapter</option>
-                <option value="brotherhood">Brotherhood</option>
-                <option value="professional">Professional Dev</option>
-                <option value="service">Community Service</option>
-                <option value="study tables">Study Tables</option>
+                {STANDARD_EVENT_TYPES.map((et) => (
+                  <option key={et.name} value={et.name}>
+                    {et.name} ({et.defaultPoints} pts)
+                  </option>
+                ))}
               </select>
             ) : (
               <div className="w-full h-10 px-3 py-2 text-xs rounded-md border border-amber-200 dark:border-amber-900/60 bg-amber-50/70 dark:bg-amber-950/30 text-amber-900 dark:text-amber-200 font-bold capitalize flex items-center truncate">
@@ -491,31 +524,46 @@ export default function ScribeAttendanceGrid({
             )}
           </div>
 
-          {/* Button on the right side in line with the stats, made a bit smaller */}
-          {canSeeAnyRequirements && (
+          {/* Action Buttons on the right side in line with stats */}
+          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+            {/* Export Button */}
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setShowRequirementsColumns((prev) => !prev)}
-              className={`h-7 px-2.5 text-[11px] font-semibold rounded-lg border flex items-center gap-1.5 transition-all shadow-xs self-start sm:self-auto shrink-0 ${showRequirementsColumns
-                ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/60'
-                : 'bg-gray-50 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-750'
-                }`}
+              onClick={() => setIsExportModalOpen(true)}
+              className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-750 flex items-center gap-1.5 transition-all shadow-xs"
             >
-              {showRequirementsColumns ? (
-                <>
-                  <EyeOff className="h-3.5 w-3.5 text-amber-700 dark:text-amber-400" />
-                  <span>{requirementsButtonLabel}</span>
-                </>
-              ) : (
-                <>
-                  <Eye className="h-3.5 w-3.5 text-gray-500" />
-                  <span>{requirementsButtonLabel}</span>
-                </>
-              )}
+              <Download className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
+              <span>Export</span>
             </Button>
-          )}
+
+            {/* Button on the right side in line with the stats, made a bit smaller */}
+            {canSeeAnyRequirements && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowRequirementsColumns((prev) => !prev)}
+                className={`h-7 px-2.5 text-[11px] font-semibold rounded-lg border flex items-center gap-1.5 transition-all shadow-xs ${showRequirementsColumns
+                  ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/60'
+                  : 'bg-gray-50 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-750'
+                  }`}
+              >
+                {showRequirementsColumns ? (
+                  <>
+                    <EyeOff className="h-3.5 w-3.5 text-amber-700 dark:text-amber-400" />
+                    <span>{requirementsButtonLabel}</span>
+                  </>
+                ) : (
+                  <>
+                    <Eye className="h-3.5 w-3.5 text-gray-500" />
+                    <span>{requirementsButtonLabel}</span>
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -646,14 +694,39 @@ export default function ScribeAttendanceGrid({
                       {/* 1. Sticky Member Row Column (100% Solid Opaque Background to Prevent See-Through) */}
                       <td className="sticky left-0 z-20 bg-white dark:bg-zinc-900 group-hover:bg-[#fef2f2] dark:group-hover:bg-[#201a1a] p-3 w-[220px] min-w-[220px] max-w-[220px] transition-colors border-r border-gray-200 dark:border-zinc-800 shadow-[2px_0_5px_rgba(0,0,0,0.04)]">
                         <div className="flex items-center justify-between gap-2">
-                          <div className="truncate">
-                            <div className="font-bold text-gray-900 dark:text-white truncate">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedMemberForStatus(member);
+                              setIsStatusModalOpen(true);
+                            }}
+                            className="truncate text-left focus:outline-none group/name"
+                            title="Click to view/edit member status or excuse dues/concessions"
+                          >
+                            <div className="font-bold text-gray-900 dark:text-white truncate group-hover/name:text-red-700 dark:group-hover/name:text-red-400 group-hover/name:underline transition-colors">
                               {displayName}
                             </div>
-                            <div className="text-[11px] text-gray-400 font-mono truncate">
-                              @{member.username}
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="text-[10px] text-gray-400 font-mono truncate">
+                                @{member.username}
+                              </span>
+                              {member.status && member.status !== 'ACTIVE' && (
+                                <span className={`px-1 py-0.2 rounded text-[8px] font-black uppercase tracking-tight ${
+                                  member.status === 'ACTIVE_COOP'
+                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
+                                    : member.status === 'INACTIVE_COOP'
+                                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                                    : member.status === 'ABROAD'
+                                    ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300'
+                                    : member.status === 'ALUMNI'
+                                    ? 'bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300'
+                                    : 'bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-gray-300'
+                                }`}>
+                                  {member.status.replace('_', ' ')}
+                                </span>
+                              )}
                             </div>
-                          </div>
+                          </button>
 
                           {/* Points Score Badge */}
                           <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-950/60 text-red-800 dark:text-red-400 font-extrabold text-xs flex-shrink-0">
@@ -667,31 +740,45 @@ export default function ScribeAttendanceGrid({
                       {canSeeDues && showRequirementsColumns && (
                         <td className="p-2.5 w-[84px] min-w-[84px] max-w-[84px] text-center bg-amber-50/70 dark:bg-amber-950/30 group-hover:bg-amber-100/70 dark:group-hover:bg-amber-900/40 border-r border-amber-200/70 dark:border-amber-900/40 transition-colors">
                           <div className="flex items-center justify-center">
-                            <button
-                              type="button"
-                              onClick={() => handleToggleDues(member.id, member.dues_paid)}
-                              disabled={!permissions.canEditDues || isPendingDues}
-                              title={
-                                !permissions.canEditDues
-                                  ? 'Only the Treasurer or Executive Officers can edit Dues'
-                                  : member.dues_paid
-                                    ? 'Dues Paid (Click to uncheck)'
-                                    : 'Mark Dues as Paid'
-                              }
-                              className={`w-6 h-6 rounded-md flex items-center justify-center transition-all ${member.dues_paid
-                                ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-xs ring-2 ring-amber-500/20'
-                                : 'bg-white/80 dark:bg-zinc-800 border border-amber-300 dark:border-amber-800/80 hover:border-amber-500'
-                                } ${!permissions.canEditDues
-                                  ? 'opacity-40 cursor-not-allowed'
-                                  : 'active:scale-90 cursor-pointer'
-                                }`}
-                            >
-                              {isPendingDues ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin text-current" />
-                              ) : member.dues_paid ? (
-                                <CheckCircle2 className="h-4 w-4 stroke-[2.5]" />
-                              ) : null}
-                            </button>
+                            {member.dues_excused ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedMemberForStatus(member);
+                                  setIsStatusModalOpen(true);
+                                }}
+                                title="Dues Excused for this member (Click to edit in status modal)"
+                                className="w-full py-1 rounded bg-gray-200/90 dark:bg-zinc-800/90 border border-gray-300 dark:border-zinc-700 text-gray-500 dark:text-gray-400 text-[10px] font-extrabold uppercase tracking-tight shadow-2xs hover:border-gray-400 transition-colors"
+                              >
+                                Excused
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleToggleDues(member.id, member.dues_paid)}
+                                disabled={!permissions.canEditDues || isPendingDues}
+                                title={
+                                  !permissions.canEditDues
+                                    ? 'Only the Treasurer or Executive Officers can edit Dues'
+                                    : member.dues_paid
+                                      ? 'Dues Paid (Click to uncheck)'
+                                      : 'Mark Dues as Paid'
+                                }
+                                className={`w-6 h-6 rounded-md flex items-center justify-center transition-all ${member.dues_paid
+                                  ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-xs ring-2 ring-amber-500/20'
+                                  : 'bg-white/80 dark:bg-zinc-800 border border-amber-300 dark:border-amber-800/80 hover:border-amber-500'
+                                  } ${!permissions.canEditDues
+                                    ? 'opacity-40 cursor-not-allowed'
+                                    : 'active:scale-90 cursor-pointer'
+                                  }`}
+                              >
+                                {isPendingDues ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin text-current" />
+                                ) : member.dues_paid ? (
+                                  <CheckCircle2 className="h-4 w-4 stroke-[2.5]" />
+                                ) : null}
+                              </button>
+                            )}
                           </div>
                         </td>
                       )}
@@ -700,74 +787,76 @@ export default function ScribeAttendanceGrid({
                       {canSeeConcessions && showRequirementsColumns && (
                         <td className="p-2.5 w-[104px] min-w-[104px] max-w-[104px] text-center bg-amber-50/70 dark:bg-amber-950/30 group-hover:bg-amber-100/70 dark:group-hover:bg-amber-900/40 border-r border-amber-200/70 dark:border-amber-900/40 transition-colors">
                           <div className="flex items-center justify-center">
-                            <button
-                              type="button"
-                              onClick={() => handleToggleConcessions(member.id, member.concessions_done)}
-                              disabled={!permissions.canEditConcessions || isPendingConcessions}
-                              title={
-                                !permissions.canEditConcessions
-                                  ? 'Only the Fundraising Chair or Executive Officers can edit Consessions'
-                                  : member.concessions_done
-                                    ? 'Consessions Attended (Click to uncheck)'
-                                    : 'Mark Consessions as Completed'
-                              }
-                              className={`w-6 h-6 rounded-md flex items-center justify-center transition-all ${member.concessions_done
-                                ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-xs ring-2 ring-amber-500/20'
-                                : 'bg-white/80 dark:bg-zinc-800 border border-amber-300 dark:border-amber-800/80 hover:border-amber-500'
-                                } ${!permissions.canEditConcessions
-                                  ? 'opacity-40 cursor-not-allowed'
-                                  : 'active:scale-90 cursor-pointer'
-                                }`}
-                            >
-                              {isPendingConcessions ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin text-current" />
-                              ) : member.concessions_done ? (
-                                <CheckCircle2 className="h-4 w-4 stroke-[2.5]" />
-                              ) : null}
-                            </button>
+                            {member.concessions_excused ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedMemberForStatus(member);
+                                  setIsStatusModalOpen(true);
+                                }}
+                                title="Consessions Excused for this member (Click to edit in status modal)"
+                                className="w-full py-1 rounded bg-gray-200/90 dark:bg-zinc-800/90 border border-gray-300 dark:border-zinc-700 text-gray-500 dark:text-gray-400 text-[10px] font-extrabold uppercase tracking-tight shadow-2xs hover:border-gray-400 transition-colors"
+                              >
+                                Excused
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleToggleConcessions(member.id, member.concessions_done)}
+                                disabled={!permissions.canEditConcessions || isPendingConcessions}
+                                title={
+                                  !permissions.canEditConcessions
+                                    ? 'Only the Fundraising Chair or Executive Officers can edit Consessions'
+                                    : member.concessions_done
+                                      ? 'Consessions Attended (Click to uncheck)'
+                                      : 'Mark Consessions as Completed'
+                                }
+                                className={`w-6 h-6 rounded-md flex items-center justify-center transition-all ${member.concessions_done
+                                  ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-xs ring-2 ring-amber-500/20'
+                                  : 'bg-white/80 dark:bg-zinc-800 border border-amber-300 dark:border-amber-800/80 hover:border-amber-500'
+                                  } ${!permissions.canEditConcessions
+                                    ? 'opacity-40 cursor-not-allowed'
+                                    : 'active:scale-90 cursor-pointer'
+                                  }`}
+                              >
+                                {isPendingConcessions ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin text-current" />
+                                ) : member.concessions_done ? (
+                                  <CheckCircle2 className="h-4 w-4 stroke-[2.5]" />
+                                ) : null}
+                              </button>
+                            )}
                           </div>
                         </td>
                       )}
 
-                      {/* Event Checkbox Cells */}
+                      {/* Event Attendance Status Cells */}
                       {filteredEvents.map((ev) => {
                         const cellKey = `${ev.id}:${member.id}`;
-                        const isChecked = attendanceLookup.has(cellKey);
+                        const currentStatus = attendanceStatusMap.get(cellKey) || 'empty';
                         const isPending = pendingToggles.has(cellKey);
                         const canToggleEvent = permissions.isFullOfficer || permissions.canManageCategory(ev.type);
 
                         return (
                           <td
                             key={ev.id}
-                            className="p-2.5 text-center border-r border-gray-100 dark:border-zinc-800"
+                            className="p-0 text-center border-r border-gray-200/80 dark:border-zinc-800 h-full align-stretch"
                           >
-                            <div className="flex items-center justify-center">
-                              <button
-                                type="button"
-                                onClick={() => handleToggleAttendance(ev.id, member.id, ev.type)}
-                                disabled={!canToggleEvent || isPending}
-                                title={
-                                  !canToggleEvent
-                                    ? `Only ${ev.type} chair or officers can check members off for this event`
-                                    : isChecked
-                                      ? 'Present (Click to uncheck)'
-                                      : 'Mark Present'
-                                }
-                                className={`w-6 h-6 rounded-md flex items-center justify-center transition-all ${isChecked
-                                  ? 'bg-red-700 hover:bg-red-800 text-white shadow-sm ring-2 ring-red-700/20'
-                                  : 'bg-gray-100 dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 hover:border-red-400 dark:hover:border-red-500'
-                                  } ${!canToggleEvent
-                                    ? 'opacity-35 cursor-not-allowed'
-                                    : 'active:scale-90 cursor-pointer'
-                                  }`}
-                              >
-                                {isPending ? (
-                                  <Loader2 className="h-3.5 w-3.5 animate-spin text-current" />
-                                ) : isChecked ? (
-                                  <CheckCircle2 className="h-4 w-4 stroke-[2.5]" />
-                                ) : null}
-                              </button>
-                            </div>
+                            <AttendanceStatusCell
+                              status={currentStatus}
+                              isPending={isPending}
+                              disabled={!canToggleEvent}
+                              onSelect={(newStatus) =>
+                                handleSetAttendanceStatus(ev.id, member.id, newStatus, ev.type)
+                              }
+                              title={
+                                !canToggleEvent
+                                  ? `Only ${ev.type} chair or officers can update attendance for this event`
+                                  : currentStatus === 'empty'
+                                  ? `Record attendance for ${member.first_name || member.username}`
+                                  : `Currently: ${currentStatus.toUpperCase()} (Click active letter to clear)`
+                              }
+                            />
                           </td>
                         );
                       })}
@@ -784,6 +873,22 @@ export default function ScribeAttendanceGrid({
           </table>
         </div>
       </div>
+
+      {/* Member Status & Excuses Modal */}
+      <MemberStatusModal
+        member={selectedMemberForStatus}
+        isOpen={isStatusModalOpen}
+        onClose={() => {
+          setIsStatusModalOpen(false);
+          setSelectedMemberForStatus(null);
+        }}
+        onUpdated={(updated) => {
+          setMembers((prev) =>
+            prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m))
+          );
+        }}
+        permissions={permissions}
+      />
 
       {/* Create Event Modal */}
       {permissions.canCreateEvents && (
@@ -825,6 +930,15 @@ export default function ScribeAttendanceGrid({
           onEventStatusChange={handleEventUpdated}
         />
       )}
+
+      {/* Export & Query Evaluation Modal */}
+      <ExportQueryModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        members={members}
+        events={events}
+        records={records}
+      />
     </div>
   );
 }

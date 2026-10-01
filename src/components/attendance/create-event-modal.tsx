@@ -10,6 +10,8 @@ import { parseAttendancePermissions } from './permissions';
 import { createAttendanceEventAction } from '@/app/attendance/actions';
 import { Calendar, Plus, Loader2 } from 'lucide-react';
 
+import { STANDARD_EVENT_TYPES, getDefaultPointsForEventType } from './event-types';
+
 interface CreateEventModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -25,24 +27,53 @@ export default function CreateEventModal({
 }: CreateEventModalProps) {
   const permissions = parseAttendancePermissions(currentUserProfile?.role);
 
-  // Default type based on chair role
-  const defaultCategory = permissions.isFullOfficer
-    ? 'general'
-    : (permissions.allowedCategories[0] || 'general');
+  // Available event types based on chair role
+  const availableEventTypes = permissions.isFullOfficer
+    ? STANDARD_EVENT_TYPES
+    : STANDARD_EVENT_TYPES.filter(
+        (t) =>
+          permissions.canManageCategory(t.name) ||
+          permissions.canManageCategory(t.category) ||
+          permissions.allowedCategories.some((c) =>
+            t.name.toLowerCase().includes(c.toLowerCase()) ||
+            c.toLowerCase().includes(t.name.toLowerCase())
+          )
+      );
+
+  const defaultCategory = availableEventTypes[0]?.name || 'Meetings';
 
   const [name, setName] = useState('');
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
-  const [points, setPoints] = useState<number>(1);
   const [type, setType] = useState<string>(defaultCategory);
+  const [isSpecialValue, setIsSpecialValue] = useState<boolean>(false);
+  const [points, setPoints] = useState<number>(() => getDefaultPointsForEventType(defaultCategory));
   const [isActive, setIsActive] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
-      setType(defaultCategory);
+      const initialType = availableEventTypes[0]?.name || 'Meetings';
+      setType(initialType);
+      setIsSpecialValue(false);
+      setPoints(getDefaultPointsForEventType(initialType));
+      setError(null);
     }
-  }, [isOpen, defaultCategory]);
+  }, [isOpen, availableEventTypes]);
+
+  const handleTypeChange = (newType: string) => {
+    setType(newType);
+    if (!isSpecialValue) {
+      setPoints(getDefaultPointsForEventType(newType));
+    }
+  };
+
+  const handleSpecialValueToggle = (checked: boolean) => {
+    setIsSpecialValue(checked);
+    if (!checked) {
+      setPoints(getDefaultPointsForEventType(type));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,8 +104,9 @@ export default function CreateEventModal({
       // Reset form
       setName('');
       setDate(new Date().toISOString().split('T')[0]);
-      setPoints(1);
       setType(defaultCategory);
+      setIsSpecialValue(false);
+      setPoints(getDefaultPointsForEventType(defaultCategory));
       setIsActive(true);
       onClose();
     } catch (err: unknown) {
@@ -85,7 +117,7 @@ export default function CreateEventModal({
     }
   };
 
-  const isRestrictedChair = !permissions.isFullOfficer && permissions.allowedCategories.length > 0;
+  const isRestrictedChair = !permissions.isFullOfficer && availableEventTypes.length <= 1;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -122,12 +154,48 @@ export default function CreateEventModal({
             />
           </div>
 
+          {/* Type / Category */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="event-type" className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                Event Type
+              </Label>
+              {isRestrictedChair && (
+                <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold uppercase">
+                  Locked to your chair position
+                </span>
+              )}
+            </div>
+
+            {isRestrictedChair ? (
+              <div className="w-full h-10 px-3 py-2 text-sm rounded-md border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 font-bold flex items-center justify-between">
+                <span>{type}</span>
+                <span className="text-xs font-semibold opacity-75">{getDefaultPointsForEventType(type)} pts default</span>
+              </div>
+            ) : (
+              <select
+                id="event-type"
+                value={type}
+                onChange={(e) => handleTypeChange(e.target.value)}
+                className="w-full h-10 px-3 py-2 text-sm rounded-md border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-600"
+              >
+                {availableEventTypes.map((et) => (
+                  <option key={et.name} value={et.name}>
+                    {et.name} ({et.defaultPoints} pts)
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
           {/* Date and Points Grid */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="event-date" className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
-                Date
-              </Label>
+              <div className="h-5 flex items-center">
+                <Label htmlFor="event-date" className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                  Date
+                </Label>
+              </div>
               <Input
                 id="event-date"
                 type="date"
@@ -138,53 +206,36 @@ export default function CreateEventModal({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="event-points" className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
-                Points Value
-              </Label>
+              <div className="h-5 flex items-center justify-between">
+                <Label htmlFor="event-points" className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                  Points
+                </Label>
+                <label className="inline-flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={isSpecialValue}
+                    onChange={(e) => handleSpecialValueToggle(e.target.checked)}
+                    className="w-3.5 h-3.5 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer"
+                  />
+                  <span className="font-semibold text-[10px] uppercase text-red-700 dark:text-red-400">Special Value</span>
+                </label>
+              </div>
               <Input
                 id="event-points"
                 type="number"
                 min="0"
                 step="1"
                 value={points}
+                disabled={!isSpecialValue}
                 onChange={(e) => setPoints(Math.max(0, parseInt(e.target.value) || 0))}
-                className="bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700"
+                title={!isSpecialValue ? "Automatically set by Event Type. Check 'Special Value' to edit." : "Custom points value"}
+                className={`border-gray-200 dark:border-zinc-700 font-mono font-bold ${
+                  !isSpecialValue
+                    ? 'bg-gray-100 dark:bg-zinc-800/60 opacity-80 cursor-not-allowed text-gray-500 dark:text-gray-400'
+                    : 'bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white'
+                }`}
               />
             </div>
-          </div>
-
-          {/* Type / Category */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="event-type" className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
-                Event Category
-              </Label>
-              {isRestrictedChair && (
-                <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold uppercase">
-                  Locked to your chair position
-                </span>
-              )}
-            </div>
-
-            {isRestrictedChair ? (
-              <div className="w-full h-10 px-3 py-2 text-sm rounded-md border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 font-bold capitalize flex items-center">
-                {type === 'rush' ? 'Rush' : type === 'study tables' ? 'Study Tables' : `${type} Pillar`}
-              </div>
-            ) : (
-              <select
-                id="event-type"
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                className="w-full h-10 px-3 py-2 text-sm rounded-md border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-600"
-              >
-                <option value="general">General / Chapter</option>
-                <option value="rush">Rush</option>
-                <option value="brotherhood">Brotherhood Pillar</option>
-                <option value="professional">Professional Development</option>
-                <option value="service">Community Service</option>
-                <option value="study tables">Study Tables</option>
-              </select>
-            )}
           </div>
 
           {/* Active Toggle */}

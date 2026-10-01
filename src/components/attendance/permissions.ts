@@ -58,17 +58,35 @@ export function parseAttendancePermissions(rawRole?: string | null): AttendanceP
     role.includes('study');
 
   const allowedCategories: string[] = [];
-  if (isBrotherhoodChair) allowedCategories.push('brotherhood');
-  if (isPdChair) allowedCategories.push('professional');
-  if (isServiceChair) allowedCategories.push('service');
-  if (isRushChair) allowedCategories.push('rush');
-  if (isAcademicChair) allowedCategories.push('study tables');
+  if (isBrotherhoodChair) {
+    allowedCategories.push('Brotherhood', 'Alumni');
+  }
+  if (isPdChair) {
+    allowedCategories.push('PD', 'PD w/ Company', 'Professional');
+  }
+  if (isServiceChair) {
+    allowedCategories.push('Community Service', 'Cleanup / Housing Corps', 'Service');
+  }
+  if (isRushChair) {
+    allowedCategories.push('Rush Events', 'Rush');
+  }
+  if (isAcademicChair) {
+    allowedCategories.push('Academics', 'Sending in HW', 'Study Tables');
+  }
+  if (isFundraising) {
+    allowedCategories.push('Fundraising', 'Concessions');
+  }
 
   const canCreateEvents = allowedCategories.length > 0;
   const canAccessGrid = isTreasurer || isFundraising || canCreateEvents;
 
   const canManageCategory = (category: string): boolean => {
-    return allowedCategories.includes(category.toLowerCase().trim());
+    if (isFullOfficer) return true;
+    const c = (category || '').toLowerCase().trim();
+    return allowedCategories.some((allowed) => {
+      const a = allowed.toLowerCase().trim();
+      return c === a || c.includes(a) || a.includes(c);
+    });
   };
 
   const canManageEvent = (event: { type?: string }): boolean => {

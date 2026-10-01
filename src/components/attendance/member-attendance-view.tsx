@@ -1,8 +1,9 @@
 'use client'
 
 import React, { useState, useMemo } from 'react';
-import { AttendanceEvent, AttendanceRecord, MemberProfile, EventCategory } from './types';
-import { Calendar, CheckCircle2, XCircle, QrCode, Search, Radio, Shield, Award } from 'lucide-react';
+import { AttendanceEvent, AttendanceRecord, MemberProfile } from './types';
+import { STANDARD_EVENT_TYPES } from './event-types';
+import { Calendar, CheckCircle2, XCircle, QrCode, Search, Radio, Shield, Award, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 interface MemberAttendanceViewProps {
@@ -17,29 +18,29 @@ export default function MemberAttendanceView({
   records,
 }: MemberAttendanceViewProps) {
   const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState<EventCategory>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
 
-  const { attendedIds, hasBrotherhood, hasProfDev, hasCommService } = useMemo(() => {
-    const set = new Set<string>();
+  const { recordMap, hasBrotherhood, hasProfDev, hasCommService } = useMemo(() => {
+    const map = new Map<string, AttendanceRecord>();
     let brotherhood = !!profile?.brotherhood_met;
     let profDev = !!profile?.prof_dev_met;
     let commService = !!profile?.comm_service_met;
 
     for (const r of records) {
+      map.set(r.event_id, r);
       if (r.status === 'present') {
-        set.add(r.event_id);
         const ev = events.find((e) => e.id === r.event_id);
         if (ev) {
           const t = ev.type.toLowerCase();
-          if (t === 'brotherhood') brotherhood = true;
-          if (t === 'professional') profDev = true;
-          if (t === 'service') commService = true;
+          if (t === 'brotherhood' || t === 'alumni') brotherhood = true;
+          if (t === 'professional' || t === 'pd' || t.includes('pd')) profDev = true;
+          if (t === 'service' || t === 'community service' || t.includes('cleanup')) commService = true;
         }
       }
     }
 
     return {
-      attendedIds: set,
+      recordMap: map,
       hasBrotherhood: brotherhood,
       hasProfDev: profDev,
       hasCommService: commService,
@@ -47,7 +48,9 @@ export default function MemberAttendanceView({
   }, [records, events, profile]);
 
   const duesPaid = !!profile?.dues_paid;
+  const duesExcused = !!profile?.dues_excused;
   const concessionsDone = !!profile?.concessions_done;
+  const concessionsExcused = !!profile?.concessions_excused;
 
   // Filter events
   const filteredEvents = useMemo(() => {
@@ -56,15 +59,19 @@ export default function MemberAttendanceView({
         if (search.trim() && !ev.name.toLowerCase().includes(search.toLowerCase().trim())) {
           return false;
         }
-        if (typeFilter !== 'all' && ev.type.toLowerCase() !== typeFilter.toLowerCase()) {
-          return false;
+        if (typeFilter !== 'all') {
+          const t = ev.type.toLowerCase();
+          const f = typeFilter.toLowerCase();
+          if (t !== f && !t.includes(f) && !f.includes(t)) {
+            return false;
+          }
         }
         return true;
       })
       .sort((a, b) => new Date(b.date || b.created_at).getTime() - new Date(a.date || a.created_at).getTime());
   }, [events, search, typeFilter]);
 
-  const totalAttendedCount = attendedIds.size;
+  const totalAttendedCount = records.filter(r => r.status === 'present').length;
   const activeEventsCount = events.filter((e) => e.is_active).length;
   const currentPoints = profile?.attendance_points || 0;
 
@@ -83,7 +90,12 @@ export default function MemberAttendanceView({
           <div>
             <div className="flex items-center gap-2 text-red-300 text-xs font-bold uppercase tracking-widest">
               <Shield className="h-4 w-4" />
-              Theta Tau Xi Chapter • Personal Attendance
+              <span>Theta Tau Xi Chapter • Personal Attendance</span>
+              {profile?.status && (
+                <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-white/20 text-white border border-white/20">
+                  {profile.status.replace('_', ' ')}
+                </span>
+              )}
             </div>
             <h1 className="text-3xl sm:text-4xl font-black mt-2 tracking-tight">
               {displayName}
@@ -134,7 +146,9 @@ export default function MemberAttendanceView({
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {/* Dues */}
           <div className={`p-3.5 rounded-xl border flex flex-col justify-between ${
-            duesPaid
+            duesExcused
+              ? 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/60'
+              : duesPaid
               ? 'bg-green-50/70 dark:bg-green-950/20 border-green-200 dark:border-green-800/60'
               : 'bg-red-50/70 dark:bg-red-950/20 border-red-200 dark:border-red-800/60'
           }`}>
@@ -142,7 +156,12 @@ export default function MemberAttendanceView({
               Dues
             </span>
             <div className="mt-2 flex items-center gap-1.5">
-              {duesPaid ? (
+              {duesExcused ? (
+                <>
+                  <AlertCircle className="h-5 w-5 text-amber-500 dark:text-amber-400" />
+                  <span className="font-bold text-sm text-amber-700 dark:text-amber-300">Excused</span>
+                </>
+              ) : duesPaid ? (
                 <>
                   <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
                   <span className="font-bold text-sm text-green-700 dark:text-green-300">Paid</span>
@@ -158,7 +177,9 @@ export default function MemberAttendanceView({
 
           {/* Concessions */}
           <div className={`p-3.5 rounded-xl border flex flex-col justify-between ${
-            concessionsDone
+            concessionsExcused
+              ? 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/60'
+              : concessionsDone
               ? 'bg-green-50/70 dark:bg-green-950/20 border-green-200 dark:border-green-800/60'
               : 'bg-red-50/70 dark:bg-red-950/20 border-red-200 dark:border-red-800/60'
           }`}>
@@ -166,7 +187,12 @@ export default function MemberAttendanceView({
               Consessions
             </span>
             <div className="mt-2 flex items-center gap-1.5">
-              {concessionsDone ? (
+              {concessionsExcused ? (
+                <>
+                  <AlertCircle className="h-5 w-5 text-amber-500 dark:text-amber-400" />
+                  <span className="font-bold text-sm text-amber-700 dark:text-amber-300">Excused</span>
+                </>
+              ) : concessionsDone ? (
                 <>
                   <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
                   <span className="font-bold text-sm text-green-700 dark:text-green-300">Completed</span>
@@ -281,16 +307,13 @@ export default function MemberAttendanceView({
 
         <select
           value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value as EventCategory)}
+          onChange={(e) => setTypeFilter(e.target.value)}
           className="w-full sm:w-48 h-10 px-3 py-2 text-xs sm:text-sm rounded-md border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-600"
         >
           <option value="all">All Event Types</option>
-          <option value="rush">Rush</option>
-          <option value="general">General Chapter</option>
-          <option value="brotherhood">Brotherhood</option>
-          <option value="professional">Professional Dev</option>
-          <option value="service">Community Service</option>
-          <option value="study tables">Study Tables</option>
+          {STANDARD_EVENT_TYPES.map((t) => (
+            <option key={t.name} value={t.name}>{t.name}</option>
+          ))}
         </select>
       </div>
 
@@ -312,7 +335,8 @@ export default function MemberAttendanceView({
             </div>
           ) : (
             filteredEvents.map((ev) => {
-              const isAttended = attendedIds.has(ev.id);
+              const rec = recordMap.get(ev.id);
+              const status = rec?.status || 'empty';
               return (
                 <div
                   key={ev.id}
@@ -340,14 +364,14 @@ export default function MemberAttendanceView({
                       </span>
                       <span>•</span>
                       <span>
-                        Value: {ev.points === 0 ? '0 points (Rush)' : `${ev.points} pt${ev.points > 1 ? 's' : ''}`}
+                        Value: {ev.points === 0 ? '0 points' : `${ev.points} pt${ev.points > 1 ? 's' : ''}`}
                       </span>
                     </div>
                   </div>
 
                   {/* Member Attendance Status */}
                   <div className="flex items-center self-start sm:self-auto">
-                    {isAttended ? (
+                    {status === 'present' ? (
                       <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800/60 text-green-700 dark:text-green-400 font-bold text-xs">
                         <CheckCircle2 className="h-4 w-4 stroke-[2.5]" />
                         <span>Present</span>
@@ -357,9 +381,19 @@ export default function MemberAttendanceView({
                           </span>
                         )}
                       </div>
+                    ) : status === 'excused' ? (
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-700 dark:text-amber-400 font-bold text-xs">
+                        <AlertCircle className="h-4 w-4" />
+                        <span>Excused</span>
+                      </div>
+                    ) : status === 'unexcused' ? (
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/60 text-red-700 dark:text-red-400 font-bold text-xs">
+                        <XCircle className="h-4 w-4" />
+                        <span>Unexcused</span>
+                      </div>
                     ) : (
                       <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-gray-400 text-xs font-medium border border-gray-200 dark:border-zinc-700">
-                        <XCircle className="h-4 w-4" />
+                        <div className="w-3.5 h-3.5 rounded-full border border-gray-400/50" />
                         <span>Not Recorded</span>
                       </div>
                     )}

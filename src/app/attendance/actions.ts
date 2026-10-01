@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { AttendanceEvent, AttendanceRecord, MemberProfile } from '@/components/attendance/types';
+import { AttendanceEvent, AttendanceRecord, MemberProfile, AttendanceStatus } from '@/components/attendance/types';
 import { parseAttendancePermissions, AttendancePermissions } from '@/components/attendance/permissions';
 
 /**
@@ -31,11 +31,26 @@ async function getAuthenticatedUserAndPermissions(): Promise<{
   }
 
   const admin = createAdminClient();
-  const { data: profile } = await admin
+  const fullCols = 'id, first_name, last_name, username, role, attendance_points, dues_paid, concessions_done, dues_excused, concessions_excused, status, brotherhood_met, prof_dev_met, comm_service_met';
+  const basicCols = 'id, first_name, last_name, username, role, attendance_points, dues_paid, concessions_done, brotherhood_met, prof_dev_met, comm_service_met';
+
+  let profile: MemberProfile | null = null;
+  const { data: pData, error: pError } = await admin
     .from('profiles')
-    .select('id, first_name, last_name, username, role, attendance_points, dues_paid, concessions_done, brotherhood_met, prof_dev_met, comm_service_met')
+    .select(fullCols)
     .eq('id', user.id)
     .single();
+
+  if (!pError && pData) {
+    profile = pData as unknown as MemberProfile;
+  } else {
+    const { data: fallbackP } = await admin
+      .from('profiles')
+      .select(basicCols)
+      .eq('id', user.id)
+      .single();
+    profile = fallbackP ? ({ ...fallbackP, status: 'ACTIVE', dues_excused: false, concessions_excused: false } as unknown as MemberProfile) : null;
+  }
 
   const permissions = parseAttendancePermissions(profile?.role);
   return { user, profile: profile as MemberProfile | null, permissions };
@@ -101,10 +116,19 @@ export async function recalculateUserPoints(userId: string): Promise<{
     return sum + points;
   }, 0);
 
-  // Compute pillar requirements based on attended events
-  const brotherhoodMet = typedRecords.some(r => r.attendance_events?.type?.toLowerCase() === 'brotherhood');
-  const profDevMet = typedRecords.some(r => r.attendance_events?.type?.toLowerCase() === 'professional');
-  const commServiceMet = typedRecords.some(r => r.attendance_events?.type?.toLowerCase() === 'service');
+  // Compute pillar requirements based on attended events (matching standard event types)
+  const brotherhoodMet = typedRecords.some(r => {
+    const t = (r.attendance_events?.type || '').toLowerCase();
+    return t === 'brotherhood' || t === 'alumni';
+  });
+  const profDevMet = typedRecords.some(r => {
+    const t = (r.attendance_events?.type || '').toLowerCase();
+    return t === 'professional' || t === 'pd' || t.includes('pd');
+  });
+  const commServiceMet = typedRecords.some(r => {
+    const t = (r.attendance_events?.type || '').toLowerCase();
+    return t === 'service' || t === 'community service' || t.includes('cleanup');
+  });
 
   // Update profile in Supabase
   await admin
@@ -147,13 +171,27 @@ export async function getAttendanceInitialData(): Promise<{
   }
 
   const admin = createAdminClient();
+  const fullCols = 'id, first_name, last_name, username, role, attendance_points, dues_paid, concessions_done, dues_excused, concessions_excused, status, brotherhood_met, prof_dev_met, comm_service_met';
+  const basicCols = 'id, first_name, last_name, username, role, attendance_points, dues_paid, concessions_done, brotherhood_met, prof_dev_met, comm_service_met';
 
-  // 1. Fetch current profile
-  const { data: profile } = await admin
+  // 1. Fetch current profile safely
+  let profile: MemberProfile | null = null;
+  const { data: pData, error: pError } = await admin
     .from('profiles')
-    .select('id, first_name, last_name, username, role, attendance_points, dues_paid, concessions_done, brotherhood_met, prof_dev_met, comm_service_met')
+    .select(fullCols)
     .eq('id', user.id)
     .single();
+
+  if (!pError && pData) {
+    profile = pData as unknown as MemberProfile;
+  } else {
+    const { data: fallbackP } = await admin
+      .from('profiles')
+      .select(basicCols)
+      .eq('id', user.id)
+      .single();
+    profile = fallbackP ? ({ ...fallbackP, status: 'ACTIVE', dues_excused: false, concessions_excused: false } as unknown as MemberProfile) : null;
+  }
 
   const permissions = parseAttendancePermissions(profile?.role);
   const canAccessGrid = permissions.canAccessGrid;
@@ -177,12 +215,28 @@ export async function getAttendanceInitialData(): Promise<{
     };
   }
 
-  // 3. If officer/chair, fetch all active members and all attendance records
+  // 3. If officer/chair, fetch all members and all attendance records
   if (canAccessGrid) {
-    const { data: members } = await admin
+    let membersList: MemberProfile[] = [];
+    const { data: mData, error: mError } = await admin
       .from('profiles')
-      .select('id, first_name, last_name, username, role, attendance_points, dues_paid, concessions_done, brotherhood_met, prof_dev_met, comm_service_met')
+      .select(fullCols)
       .order('first_name', { ascending: true });
+
+    if (!mError && mData) {
+      membersList = mData as unknown as MemberProfile[];
+    } else {
+      const { data: fallbackM } = await admin
+        .from('profiles')
+        .select(basicCols)
+        .order('first_name', { ascending: true });
+      membersList = (fallbackM || []).map((m: Record<string, unknown>) => ({
+        ...m,
+        status: (m.status as MemberProfile['status']) || 'ACTIVE',
+        dues_excused: !!m.dues_excused,
+        concessions_excused: !!m.concessions_excused,
+      })) as unknown as MemberProfile[];
+    }
 
     const { data: records } = await admin
       .from('event_attendance')
@@ -192,7 +246,7 @@ export async function getAttendanceInitialData(): Promise<{
       isOfficer: true,
       currentUser: { id: user.id, email: user.email },
       profile: profile as MemberProfile,
-      members: (members || []) as MemberProfile[],
+      members: membersList,
       events: (events || []) as AttendanceEvent[],
       attendanceRecords: (records || []) as AttendanceRecord[],
     };
@@ -443,12 +497,12 @@ export async function deleteAttendanceEventAction(
 }
 
 /**
- * Officer / Category Chair Action: Toggle attendance checkbox for a member
+ * Officer / Category Chair Action: Set attendance status for a member (PRESENT, EXCUSED, UNEXCUSED, EMPTY)
  */
-export async function toggleAttendanceRecordAction(
+export async function setAttendanceStatusAction(
   eventId: string,
   userId: string,
-  isAttended: boolean
+  newStatus: AttendanceStatus
 ): Promise<{
   success: boolean;
   newPoints?: number;
@@ -481,25 +535,7 @@ export async function toggleAttendanceRecordAction(
 
     const eventPoints = event?.points || 0;
 
-    if (isAttended) {
-      // Upsert attendance record
-      const { error: insertError } = await admin
-        .from('event_attendance')
-        .upsert(
-          {
-            event_id: eventId,
-            user_id: userId,
-            status: 'present',
-            points_awarded: eventPoints,
-            verified_by: profile?.username || 'chair',
-          },
-          { onConflict: 'event_id,user_id' }
-        );
-
-      if (insertError) {
-        return { success: false, error: insertError.message };
-      }
-    } else {
+    if (newStatus === 'empty') {
       // Remove attendance record
       const { error: deleteError } = await admin
         .from('event_attendance')
@@ -509,6 +545,25 @@ export async function toggleAttendanceRecordAction(
 
       if (deleteError) {
         return { success: false, error: deleteError.message };
+      }
+    } else {
+      // Upsert attendance record with new status
+      const awarded = newStatus === 'present' ? eventPoints : 0;
+      const { error: upsertError } = await admin
+        .from('event_attendance')
+        .upsert(
+          {
+            event_id: eventId,
+            user_id: userId,
+            status: newStatus,
+            points_awarded: awarded,
+            verified_by: profile?.username || 'chair',
+          },
+          { onConflict: 'event_id,user_id' }
+        );
+
+      if (upsertError) {
+        return { success: false, error: upsertError.message };
       }
     }
 
@@ -525,7 +580,78 @@ export async function toggleAttendanceRecordAction(
       commServiceMet: recalc.commServiceMet,
     };
   } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : 'Failed to toggle attendance.';
+    const errorMsg = err instanceof Error ? err.message : 'Failed to update attendance status.';
+    return { success: false, error: errorMsg };
+  }
+}
+
+/**
+ * Backwards compatibility wrapper for boolean toggle
+ */
+export async function toggleAttendanceRecordAction(
+  eventId: string,
+  userId: string,
+  isAttended: boolean
+): Promise<{
+  success: boolean;
+  newPoints?: number;
+  brotherhoodMet?: boolean;
+  profDevMet?: boolean;
+  commServiceMet?: boolean;
+  error?: string;
+}> {
+  return setAttendanceStatusAction(eventId, userId, isAttended ? 'present' : 'empty');
+}
+
+/**
+ * Officer Action: Update Member Status (ACTIVE, CO-OP, etc.) and Excuse Flags
+ */
+export async function updateMemberStatusAndExcusesAction(data: {
+  userId: string;
+  status: string;
+  duesExcused?: boolean;
+  concessionsExcused?: boolean;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { permissions } = await getAuthenticatedUserAndPermissions();
+    if (!permissions.canAccessGrid) {
+      return { success: false, error: 'Forbidden: Insufficient privileges.' };
+    }
+
+    const admin = createAdminClient();
+    const updates: Record<string, unknown> = {};
+
+    if (permissions.isFullOfficer) {
+      updates.status = data.status || 'ACTIVE';
+      updates.dues_excused = !!data.duesExcused;
+      updates.concessions_excused = !!data.concessionsExcused;
+    } else {
+      if (permissions.canEditDues) {
+        updates.dues_excused = !!data.duesExcused;
+      }
+      if (permissions.canEditConcessions) {
+        updates.concessions_excused = !!data.concessionsExcused;
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return { success: false, error: 'No authorized fields to update.' };
+    }
+
+    const { error } = await admin
+      .from('profiles')
+      .update(updates)
+      .eq('id', data.userId);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    revalidatePath('/attendance');
+    revalidatePath('/members-only');
+    return { success: true };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Failed to update member status.';
     return { success: false, error: errorMsg };
   }
 }
