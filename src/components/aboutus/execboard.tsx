@@ -15,8 +15,8 @@ const executives = [
   { name: 'Annika Chudy', position: 'Scribe', image: '/exec/fall26_headshots/Annika.jpg' },
   { name: 'Finley Moss', position: 'Treasurer', image: '/exec/fall26_headshots/Finley.jpg' },
   { name: 'Annie Zhao', position: 'Elder', image: '/exec/fall26_headshots/Annie.jpg' },
-  { name: 'Ben Bossman', position: 'Marshall', image: '/exec/fall26_headshots/Ben.jpg' },
-  { name: 'Violet Urdahl', position: 'Marshall', image: '/exec/fall26_headshots/Violet.jpg' },
+  { name: 'Ben Bossman', position: 'marshal', image: '/exec/fall26_headshots/Ben.jpg' },
+  { name: 'Violet Urdahl', position: 'marshal', image: '/exec/fall26_headshots/Violet.jpg' },
   { name: 'Julia Hyman', position: 'Rush Chair', image: '/exec/fall26_headshots/Julia.jpg' },
   { name: 'Philip Gu', position: 'Rush Chair', image: '/exec/fall26_headshots/Philip.jpg' },
 ]

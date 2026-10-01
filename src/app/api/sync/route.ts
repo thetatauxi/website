@@ -57,7 +57,7 @@ async function handleSync(req: NextRequest) {
           'corresponding secretary',
           'scribe',
           'treasurer',
-          'marshall',
+          'marshal',
           'general chair',
           'admin',
           'rush chair',

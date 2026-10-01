@@ -90,7 +90,7 @@ async function verifySyncPermission(sheetId?: string) {
     'corresponding secretary',
     'scribe',
     'treasurer',
-    'marshall',
+    'marshal',
     'general chair',
     'rush chair',
     'admin',

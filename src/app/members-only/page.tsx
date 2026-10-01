@@ -95,7 +95,7 @@ export default async function MembersOnlyPage() {
   // Map database role to UI role
   const getUIRole = (role: string): 'member' | 'exec' | 'rush' | 'admin' => {
     const r = role.toLowerCase()
-    if (['corresponding secretary', 'treasurer', 'marshall', 'general chair'].includes(r)) {
+    if (['corresponding secretary', 'treasurer', 'marshal', 'general chair'].includes(r)) {
       return 'exec'
     }
     if (r === 'rush chair') {

@@ -171,7 +171,7 @@ export const SHEET_CONFIGS: SheetConfig[] = [
       { sheetColumn: 'concessions_done', supabaseColumn: 'concessions_done', type: 'boolean', defaultValue: false },
       { sheetColumn: 'attendance_points', supabaseColumn: 'attendance_points', type: 'number', defaultValue: 0 }
     ],
-    allowedRoles: ['regent', 'vice regent', 'corresponding secretary', 'scribe', 'treasurer', 'marshall', 'general chair', 'admin', 'website chair', 'web chair', 'website']
+    allowedRoles: ['regent', 'vice regent', 'corresponding secretary', 'scribe', 'treasurer', 'marshal', 'general chair', 'admin', 'website chair', 'web chair', 'website']
   },
 
   // 2. Calendar and Links Spreadsheet -> Calendar Tab
