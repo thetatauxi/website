@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +38,33 @@ export default function EventModal({
   const canEditThisEvent = event
     ? permissions.isFullOfficer || permissions.canManageCategory(event.type)
     : false;
+
+  // Available event types restricted to chair's role
+  const availableEventTypes = useMemo(() => {
+    if (permissions.isFullOfficer) {
+      return STANDARD_EVENT_TYPES;
+    }
+    const filtered = STANDARD_EVENT_TYPES.filter(
+      (t) =>
+        t.name !== 'Other' &&
+        (permissions.canManageCategory(t.name) ||
+        permissions.canManageCategory(t.category) ||
+        permissions.allowedCategories.some((c) =>
+          t.name.toLowerCase().includes(c.toLowerCase()) ||
+          c.toLowerCase().includes(t.name.toLowerCase())
+        ))
+    );
+    // If the event currently has a type not in the chair's filtered list (e.g. full officer created it), include it so it displays correctly
+    if (event && !filtered.some((t) => t.name.toLowerCase() === event.type.toLowerCase())) {
+      filtered.unshift({
+        id: event.type,
+        name: event.type,
+        defaultPoints: event.points,
+        category: 'general' as const,
+      });
+    }
+    return filtered;
+  }, [permissions, event]);
 
   const [name, setName] = useState('');
   const [date, setDate] = useState('');
@@ -292,9 +319,16 @@ export default function EventModal({
 
               {/* Event Type / Category */}
               <div className="space-y-1">
-                <Label htmlFor="edit-type" className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
-                  Event Type
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="edit-type" className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                    Event Type
+                  </Label>
+                  {!permissions.isFullOfficer && (
+                    <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold uppercase">
+                      {availableEventTypes.length <= 1 ? 'Locked to your chair position' : 'Restricted to your chair position'}
+                    </span>
+                  )}
+                </div>
                 <select
                   id="edit-type"
                   value={type}
@@ -305,10 +339,10 @@ export default function EventModal({
                       setPoints(getDefaultPointsForEventType(newType));
                     }
                   }}
-                  disabled={!canEditThisEvent}
+                  disabled={!canEditThisEvent || availableEventTypes.length <= 1}
                   className="w-full h-9 px-3 py-1 text-xs sm:text-sm rounded-md border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-600 disabled:opacity-75"
                 >
-                  {STANDARD_EVENT_TYPES.map((et) => (
+                  {availableEventTypes.map((et) => (
                     <option key={et.name} value={et.name}>
                       {et.name} ({et.defaultPoints} pts)
                     </option>

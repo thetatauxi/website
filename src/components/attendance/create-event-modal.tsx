@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,17 +28,21 @@ export default function CreateEventModal({
   const permissions = parseAttendancePermissions(currentUserProfile?.role);
 
   // Available event types based on chair role
-  const availableEventTypes = permissions.isFullOfficer
-    ? STANDARD_EVENT_TYPES
-    : STANDARD_EVENT_TYPES.filter(
-        (t) =>
-          permissions.canManageCategory(t.name) ||
-          permissions.canManageCategory(t.category) ||
-          permissions.allowedCategories.some((c) =>
-            t.name.toLowerCase().includes(c.toLowerCase()) ||
-            c.toLowerCase().includes(t.name.toLowerCase())
-          )
-      );
+  const availableEventTypes = useMemo(() => {
+    if (permissions.isFullOfficer) {
+      return STANDARD_EVENT_TYPES;
+    }
+    return STANDARD_EVENT_TYPES.filter(
+      (t) =>
+        t.name !== 'Other' &&
+        (permissions.canManageCategory(t.name) ||
+        permissions.canManageCategory(t.category) ||
+        permissions.allowedCategories.some((c) =>
+          t.name.toLowerCase().includes(c.toLowerCase()) ||
+          c.toLowerCase().includes(t.name.toLowerCase())
+        ))
+    );
+  }, [permissions]);
 
   const defaultCategory = availableEventTypes[0]?.name || 'Meetings';
 
@@ -59,7 +63,8 @@ export default function CreateEventModal({
       setPoints(getDefaultPointsForEventType(initialType));
       setError(null);
     }
-  }, [isOpen, availableEventTypes]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handleTypeChange = (newType: string) => {
     setType(newType);
@@ -117,8 +122,6 @@ export default function CreateEventModal({
     }
   };
 
-  const isRestrictedChair = !permissions.isFullOfficer && availableEventTypes.length <= 1;
-
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-white">
@@ -160,32 +163,26 @@ export default function CreateEventModal({
               <Label htmlFor="event-type" className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
                 Event Type
               </Label>
-              {isRestrictedChair && (
+              {!permissions.isFullOfficer && (
                 <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold uppercase">
-                  Locked to your chair position
+                  {availableEventTypes.length <= 1 ? 'Locked to your chair position' : 'Restricted to your chair position'}
                 </span>
               )}
             </div>
 
-            {isRestrictedChair ? (
-              <div className="w-full h-10 px-3 py-2 text-sm rounded-md border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 font-bold flex items-center justify-between">
-                <span>{type}</span>
-                <span className="text-xs font-semibold opacity-75">{getDefaultPointsForEventType(type)} pts default</span>
-              </div>
-            ) : (
-              <select
-                id="event-type"
-                value={type}
-                onChange={(e) => handleTypeChange(e.target.value)}
-                className="w-full h-10 px-3 py-2 text-sm rounded-md border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-600"
-              >
-                {availableEventTypes.map((et) => (
-                  <option key={et.name} value={et.name}>
-                    {et.name} ({et.defaultPoints} pts)
-                  </option>
-                ))}
-              </select>
-            )}
+            <select
+              id="event-type"
+              value={type}
+              onChange={(e) => handleTypeChange(e.target.value)}
+              disabled={availableEventTypes.length <= 1}
+              className="w-full h-10 px-3 py-2 text-sm rounded-md border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-600 disabled:opacity-75"
+            >
+              {availableEventTypes.map((et) => (
+                <option key={et.name} value={et.name}>
+                  {et.name} ({et.defaultPoints} pts)
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Date and Points Grid */}

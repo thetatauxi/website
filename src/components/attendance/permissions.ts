@@ -56,6 +56,9 @@ export function parseAttendancePermissions(rawRole?: string | null): AttendanceP
     role.includes('scholarship') ||
     role.includes('study table') ||
     role.includes('study');
+  const isDeiChair = role.includes('dei') || role.includes('diversity');
+  const isPledgeChair = role.includes('pledge') || role.includes('marshal') || role.includes('trainer') || role.includes('alps');
+  const isHousingChair = role.includes('housing') || role.includes('house');
 
   const allowedCategories: string[] = [];
   if (isBrotherhoodChair) {
@@ -75,6 +78,15 @@ export function parseAttendancePermissions(rawRole?: string | null): AttendanceP
   }
   if (isFundraising) {
     allowedCategories.push('Fundraising', 'Concessions');
+  }
+  if (isDeiChair) {
+    allowedCategories.push('DEI Events');
+  }
+  if (isPledgeChair) {
+    allowedCategories.push('Pledge Events', 'ALPS Training');
+  }
+  if (isHousingChair) {
+    allowedCategories.push('Cleanup / Housing Corps');
   }
 
   const canCreateEvents = allowedCategories.length > 0;
@@ -104,6 +116,9 @@ export function parseAttendancePermissions(rawRole?: string | null): AttendanceP
   else if (isServiceChair) badgeLabel = 'Service Chair Active';
   else if (isRushChair) badgeLabel = 'Rush Chair Active';
   else if (isAcademicChair) badgeLabel = 'Academic Chair Active';
+  else if (isDeiChair) badgeLabel = 'DEI Chair Active';
+  else if (isPledgeChair) badgeLabel = 'Pledge Chair Active';
+  else if (isHousingChair) badgeLabel = 'Housing Chair Active';
 
   return {
     canAccessGrid,

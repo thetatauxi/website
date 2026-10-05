@@ -22,6 +22,7 @@ export const STANDARD_EVENT_TYPES: StandardEventType[] = [
   { id: 'Regionals', name: 'Regionals', defaultPoints: 35, category: 'general' },
   { id: 'Rush Events', name: 'Rush Events', defaultPoints: 15, category: 'rush' },
   { id: 'Sending in HW', name: 'Sending in HW', defaultPoints: 1, category: 'academics' },
+  { id: 'Other', name: 'Other', defaultPoints: 0, category: 'general' },
 ];
 
 export const EVENT_POINTS_MAP: Record<string, number> = Object.fromEntries(

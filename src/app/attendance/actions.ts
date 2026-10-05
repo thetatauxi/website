@@ -304,6 +304,13 @@ export async function createAttendanceEventAction(data: {
     const eventType = data.type || 'general';
 
     // Verify category permissions
+    if (eventType.toLowerCase() === 'other' && !permissions.isFullOfficer) {
+      return {
+        success: false,
+        error: 'Forbidden: Only executive officers (Regent, Vice Regent, Scribe, Website Chair) can create Other events.',
+      };
+    }
+
     if (!permissions.isFullOfficer && !permissions.canManageCategory(eventType)) {
       return {
         success: false,
@@ -381,6 +388,17 @@ export async function updateAttendanceEventAction(
       return {
         success: false,
         error: `Forbidden: You only have permission to manage '${permissions.allowedCategories.join(', ')}' events.`,
+      };
+    }
+
+    if (
+      updates.type &&
+      updates.type.toLowerCase() === 'other' &&
+      !permissions.isFullOfficer
+    ) {
+      return {
+        success: false,
+        error: 'Forbidden: Only executive officers (Regent, Vice Regent, Scribe, Website Chair) can select the Other event type.',
       };
     }
 
