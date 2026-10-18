@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { AttendanceEvent, AttendanceRecord, MemberProfile, EventCategory, AttendanceStatus } from './types';
 import { parseAttendancePermissions } from './permissions';
 import CreateEventModal from './create-event-modal';
@@ -38,6 +38,11 @@ interface ScribeAttendanceGridProps {
   initialRecords: AttendanceRecord[];
   currentUserProfile?: MemberProfile | null;
   tablesMissing?: boolean;
+  onDataChange?: (data: {
+    members: MemberProfile[];
+    events: AttendanceEvent[];
+    records: AttendanceRecord[];
+  }) => void;
 }
 
 export default function ScribeAttendanceGrid({
@@ -46,6 +51,7 @@ export default function ScribeAttendanceGrid({
   initialRecords,
   currentUserProfile,
   tablesMissing = false,
+  onDataChange,
 }: ScribeAttendanceGridProps) {
   // Role & Permissions
   const permissions = useMemo(() => {
@@ -56,6 +62,16 @@ export default function ScribeAttendanceGrid({
   const [members, setMembers] = useState<MemberProfile[]>(initialMembers);
   const [events, setEvents] = useState<AttendanceEvent[]>(initialEvents);
   const [records, setRecords] = useState<AttendanceRecord[]>(initialRecords);
+
+  // Sync state to parent if callback provided
+  const onDataChangeRef = React.useRef(onDataChange);
+  useEffect(() => {
+    onDataChangeRef.current = onDataChange;
+  }, [onDataChange]);
+
+  useEffect(() => {
+    onDataChangeRef.current?.({ members, events, records });
+  }, [members, events, records]);
 
   // Column Visibility: Dues and Consessions
   const [showRequirementsColumns, setShowRequirementsColumns] = useState<boolean>(true);

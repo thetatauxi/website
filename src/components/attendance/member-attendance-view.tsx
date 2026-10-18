@@ -10,15 +10,24 @@ interface MemberAttendanceViewProps {
   profile: MemberProfile | null;
   events: AttendanceEvent[];
   records: AttendanceRecord[];
+  onBackToEdit?: () => void;
 }
 
 export default function MemberAttendanceView({
   profile,
   events,
   records,
+  onBackToEdit,
 }: MemberAttendanceViewProps) {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+
+  // Filter records specifically for this member
+  const userRecords = useMemo(() => {
+    return profile?.id
+      ? records.filter((r) => !r.user_id || r.user_id === profile.id)
+      : records;
+  }, [records, profile?.id]);
 
   const { recordMap, hasBrotherhood, hasProfDev, hasCommService } = useMemo(() => {
     const map = new Map<string, AttendanceRecord>();
@@ -26,7 +35,7 @@ export default function MemberAttendanceView({
     let profDev = !!profile?.prof_dev_met;
     let commService = !!profile?.comm_service_met;
 
-    for (const r of records) {
+    for (const r of userRecords) {
       map.set(r.event_id, r);
       if (r.status === 'present') {
         const ev = events.find((e) => e.id === r.event_id);
@@ -45,7 +54,7 @@ export default function MemberAttendanceView({
       hasProfDev: profDev,
       hasCommService: commService,
     };
-  }, [records, events, profile]);
+  }, [userRecords, events, profile]);
 
   const duesPaid = !!profile?.dues_paid;
   const duesExcused = !!profile?.dues_excused;
@@ -73,7 +82,7 @@ export default function MemberAttendanceView({
       .sort((a, b) => new Date(b.date || b.created_at).getTime() - new Date(a.date || a.created_at).getTime());
   }, [events, search, typeFilter]);
 
-  const totalAttendedCount = records.filter(r => r.status === 'present').length;
+  const totalAttendedCount = userRecords.filter((r) => r.status === 'present').length;
   const activeEventsCount = events.filter((e) => e.is_active).length;
   const currentPoints = profile?.attendance_points || 0;
 
@@ -105,6 +114,18 @@ export default function MemberAttendanceView({
             <p className="text-red-200/80 text-xs sm:text-sm mt-1 max-w-lg">
               Your chapter attendance history and point accrual. Point values contribute directly to your active member standing and semester requirements.
             </p>
+            {onBackToEdit && (
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={onBackToEdit}
+                  className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-white bg-white/15 hover:bg-white/25 border border-white/20 px-3.5 py-1.5 rounded-xl transition-all cursor-pointer shadow-sm active:scale-95"
+                >
+                  <Shield className="h-4 w-4 text-red-300" />
+                  <span>Back to Attendance Editor</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Points Counter Badge */}
