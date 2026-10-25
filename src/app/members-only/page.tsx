@@ -1,12 +1,13 @@
 import { redirect } from 'next/navigation'
 import LoadingLink from '@/components/ui/loading-link'
-import { Calendar, Users, ExternalLink, Megaphone, Shield, Link as LinkIcon, CheckCircle2, XCircle, Award, UserPlus, Table, QrCode, Send } from 'lucide-react'
+import { Calendar, Users, ExternalLink, Megaphone, Shield, Link as LinkIcon, CheckCircle2, XCircle, Award, UserPlus, Table, QrCode, Send, GitFork } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getCalendarFromSheet, getLinksFromSheet } from '@/lib/google-sheets'
 import { parseAttendancePermissions } from '@/components/attendance/permissions'
 import SyncPanel from '@/components/members/sync-panel'
 import AccountIntakePanel from '@/components/members/account-intake-panel'
 import AccountDispatchPanel from '@/components/members/account-dispatch-panel'
+import DatabaseBackupPanel from '@/components/admin/database-backup-panel'
 import { Medal } from '@/components/members/medal'
 import CommunityLinks, { type CommunityLink } from '@/components/members/community-links'
 
@@ -245,28 +246,43 @@ export default async function MembersOnlyPage() {
             )}
 
             <div>
-              <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-6">Quick Access</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-6">Chapter Portals</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
-                <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all">
-                  <Award className="h-8 w-8 text-red-700 dark:text-red-500 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Chapter Attendance</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">View your attended events, points breakdown, and semester standing</p>
+                <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all flex flex-col justify-between">
+                  <div>
+                    <Award className="h-8 w-8 text-red-700 dark:text-red-500 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Chapter Attendance</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">View your attended events, points breakdown, and semester standing</p>
+                  </div>
                   <LoadingLink href="/attendance" className="inline-block text-sm font-medium text-red-700 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">Open Attendance &rarr;</LoadingLink>
                 </div>
 
-                <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all">
-                  <Users className="h-8 w-8 text-red-700 dark:text-red-500 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Rush Management Tool</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Track PNM attendance and generate summaries for deliberations</p>
-                  <a href="https://rmt.thetatauxi.org/" target="_blank" rel="noreferrer" className="inline-block text-sm font-medium text-red-700 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">Open RMT &rarr;</a>
+                <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all flex flex-col justify-between">
+                  <div>
+                    <GitFork className="h-8 w-8 text-red-700 dark:text-red-500 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Family Tree</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Explore chapter lineages, Big-Little trees, and alumni branches</p>
+                  </div>
+                  <LoadingLink href="/family-tree" className="inline-block text-sm font-medium text-red-700 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">Open Family Tree &rarr;</LoadingLink>
                 </div>
 
-                <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all">
-                  <Users className="h-8 w-8 text-red-700 dark:text-red-500 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Alumni Directory</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Access contact information for alumni</p>
-                  <a href="#" target="_blank" rel="noreferrer" className="inline-block text-sm font-medium text-red-700 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">View Alumni &rarr;</a>
+                <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all flex flex-col justify-between">
+                  <div>
+                    <Users className="h-8 w-8 text-red-700 dark:text-red-500 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Alumni Directory</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Access contact information, grad years, and alumni network</p>
+                  </div>
+                  <LoadingLink href="/alumni" className="inline-block text-sm font-medium text-red-700 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">View Alumni &rarr;</LoadingLink>
+                </div>
+
+                <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all flex flex-col justify-between">
+                  <div>
+                    <Users className="h-8 w-8 text-red-700 dark:text-red-500 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Rush Management</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Track PNM attendance and generate summaries for deliberations</p>
+                  </div>
+                  <a href="https://rmt.thetatauxi.org/" target="_blank" rel="noreferrer" className="inline-block text-sm font-medium text-red-700 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">Open RMT &rarr;</a>
                 </div>
 
               </div>
@@ -346,6 +362,9 @@ export default async function MembersOnlyPage() {
                       </div>
                       <button className="text-sm font-medium text-red-700 hover:text-red-800 dark:text-red-400">Open Dashboard &rarr;</button>
                     </div>
+
+                    {/* Database Backup & Disaster Recovery */}
+                    <DatabaseBackupPanel userRole={dbRole} />
                   </div>
                 </div>
               </div>

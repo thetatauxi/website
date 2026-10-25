@@ -54,10 +54,14 @@ export default function Navbar() {
               <LogoIcon className="h-10 w-10 text-primary transition-colors" />
             </Link>
 
-            {(pathname === "/members-only" || pathname === "/attendance") && (
+            {(pathname === "/members-only" || pathname === "/attendance" || pathname === "/alumni" || pathname === "/family-tree") && (
               <div className="absolute left-1/2 -translate-x-1/2 pointer-events-none select-none">
                 <span className="text-sm sm:text-lg md:text-xl font-bold text-red-800 dark:text-red-500 tracking-wider whitespace-nowrap">
-                  {pathname === "/attendance" ? "CHAPTER ATTENDANCE" : "MEMBER PORTAL"}
+                  {pathname === "/attendance"
+                    ? "CHAPTER ATTENDANCE"
+                    : pathname === "/alumni" || pathname === "/family-tree"
+                    ? "ALUMNI"
+                    : "MEMBER PORTAL"}
                 </span>
               </div>
             )}
@@ -66,7 +70,7 @@ export default function Navbar() {
               {/* Theme Switcher */}
               <ThemeToggle />
 
-              {(pathname === "/members-only" || pathname === "/attendance") && (
+              {(pathname === "/members-only" || pathname === "/attendance" || pathname === "/alumni") && (
                 <form action={logoutAction}>
                   <button
                     type="submit"
@@ -161,6 +165,15 @@ export default function Navbar() {
                   }}
                 >
                   <span className="text-lg">Attendance</span>
+                </NavLink>
+                <NavLink
+                  href="/alumni"
+                  onClick={() => {
+                    setIsOpen(false)
+                    showAuthLoading()
+                  }}
+                >
+                  <span className="text-lg">Alumni</span>
                 </NavLink>
                 {!isPnm && (
                   <NavLink

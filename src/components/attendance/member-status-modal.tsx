@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { MemberProfile, MemberStatus } from './types';
 import { AttendancePermissions } from './permissions';
 import { updateMemberStatusAndExcusesAction } from '@/app/attendance/actions';
-import { UserCheck, ShieldCheck, DollarSign, Award, Loader2 } from 'lucide-react';
+import { transitionMemberToAlumniAction } from '@/app/alumni/actions';
+import { UserCheck, ShieldCheck, DollarSign, Award, Loader2, GraduationCap, Download } from 'lucide-react';
 
 interface MemberStatusModalProps {
   member: MemberProfile | null;
@@ -54,6 +55,41 @@ export default function MemberStatusModal({
     setError(null);
 
     try {
+      if (status === 'ALUMNI') {
+        // Transition member to alumni: export CSV backup, transfer record, and hard delete from profiles
+        const res = await transitionMemberToAlumniAction({
+          userId: member.id,
+          status: 'ALUMNI',
+        });
+
+        if (!res.success) {
+          setError(res.error || 'Failed to transition member to alumni.');
+          setIsLoading(false);
+          return;
+        }
+
+        // Trigger client-side browser download of the exported CSV backup
+        if (res.csvContent) {
+          const blob = new Blob([res.csvContent], { type: 'text/csv;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.setAttribute('download', res.fileName || `backup_${member.username}.csv`);
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }
+
+        onUpdated({
+          ...member,
+          status: 'ALUMNI',
+        });
+        onClose();
+        return;
+      }
+
+      // Standard active status update
       const res = await updateMemberStatusAndExcusesAction({
         userId: member.id,
         status,
@@ -130,53 +166,73 @@ export default function MemberStatusModal({
             </p>
           </div>
 
-          {/* Dues & Concessions Exemptions */}
-          <div className="p-3.5 rounded-xl border border-amber-200/80 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/20 space-y-3">
-            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-900 dark:text-amber-200">
-              <ShieldCheck className="h-4 w-4 text-amber-600" />
-              Requirement Exemptions
+          {/* Special Graduation Notice when ALUMNI is selected */}
+          {status === 'ALUMNI' && (
+            <div className="p-3.5 rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50/70 dark:bg-red-950/30 space-y-2">
+              <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-red-800 dark:text-red-300">
+                <GraduationCap className="h-4 w-4 text-red-600" />
+                Member Graduation &amp; Archive
+              </div>
+              <p className="text-[11px] text-red-900/80 dark:text-red-200/80 leading-relaxed">
+                Saving as <strong>ALUMNI</strong> will automatically:
+              </p>
+              <ul className="text-[11px] text-red-900/80 dark:text-red-200/80 list-disc list-inside space-y-0.5">
+                <li>Download a complete <strong>.csv backup</strong> of their profile and attendance history.</li>
+                <li>Transfer their record into the <strong>Alumni Database</strong> (<code>alum_{member.id.slice(0, 8)}...</code>).</li>
+                <li>Hard delete their record from active rosters and revoke active portal login.</li>
+              </ul>
             </div>
+          )}
 
-            {/* Excuse Dues Checkbox */}
-            <label className="flex items-start gap-2.5 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={duesExcused}
-                onChange={(e) => setDuesExcused(e.target.checked)}
-                disabled={!canEditDuesExcuse}
-                className="mt-0.5 w-4 h-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
-              />
-              <div className="flex-1 text-xs">
-                <span className="font-bold text-gray-900 dark:text-white flex items-center gap-1">
-                  <DollarSign className="h-3.5 w-3.5 text-amber-600" />
-                  EXCUSE DUES
-                </span>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
-                  Greys out the Dues box on the attendance sheet and marks dues as excused.
-                </p>
+          {/* Dues & Concessions Exemptions (Hidden if ALUMNI) */}
+          {status !== 'ALUMNI' && (
+            <div className="p-3.5 rounded-xl border border-amber-200/80 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/20 space-y-3">
+              <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-900 dark:text-amber-200">
+                <ShieldCheck className="h-4 w-4 text-amber-600" />
+                Requirement Exemptions
               </div>
-            </label>
 
-            {/* Excuse Concessions Checkbox */}
-            <label className="flex items-start gap-2.5 cursor-pointer select-none pt-2 border-t border-amber-200/50 dark:border-amber-900/40">
-              <input
-                type="checkbox"
-                checked={concessionsExcused}
-                onChange={(e) => setConcessionsExcused(e.target.checked)}
-                disabled={!canEditConcessionsExcuse}
-                className="mt-0.5 w-4 h-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
-              />
-              <div className="flex-1 text-xs">
-                <span className="font-bold text-gray-900 dark:text-white flex items-center gap-1">
-                  <Award className="h-3.5 w-3.5 text-amber-600" />
-                  EXCUSE CONSESSIONS
-                </span>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
-                  Greys out the Consessions box on the attendance sheet and marks concessions as excused.
-                </p>
-              </div>
-            </label>
-          </div>
+              {/* Excuse Dues Checkbox */}
+              <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={duesExcused}
+                  onChange={(e) => setDuesExcused(e.target.checked)}
+                  disabled={!canEditDuesExcuse}
+                  className="mt-0.5 w-4 h-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                />
+                <div className="flex-1 text-xs">
+                  <span className="font-bold text-gray-900 dark:text-white flex items-center gap-1">
+                    <DollarSign className="h-3.5 w-3.5 text-amber-600" />
+                    EXCUSE DUES
+                  </span>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
+                    Greys out the Dues box on the attendance sheet and marks dues as excused.
+                  </p>
+                </div>
+              </label>
+
+              {/* Excuse Concessions Checkbox */}
+              <label className="flex items-start gap-2.5 cursor-pointer select-none pt-2 border-t border-amber-200/50 dark:border-amber-900/40">
+                <input
+                  type="checkbox"
+                  checked={concessionsExcused}
+                  onChange={(e) => setConcessionsExcused(e.target.checked)}
+                  disabled={!canEditConcessionsExcuse}
+                  className="mt-0.5 w-4 h-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                />
+                <div className="flex-1 text-xs">
+                  <span className="font-bold text-gray-900 dark:text-white flex items-center gap-1">
+                    <Award className="h-3.5 w-3.5 text-amber-600" />
+                    EXCUSE CONSESSIONS
+                  </span>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
+                    Greys out the Consessions box on the attendance sheet and marks concessions as excused.
+                  </p>
+                </div>
+              </label>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100 dark:border-zinc-800">
@@ -192,10 +248,21 @@ export default function MemberStatusModal({
             <Button
               type="submit"
               disabled={isLoading}
-              className="bg-red-700 hover:bg-red-800 text-white flex items-center gap-1.5"
+              className={`${
+                status === 'ALUMNI'
+                  ? 'bg-amber-700 hover:bg-amber-800 text-white'
+                  : 'bg-red-700 hover:bg-red-800 text-white'
+              } flex items-center gap-1.5`}
             >
               {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              Save Changes
+              {status === 'ALUMNI' ? (
+                <>
+                  <Download className="h-3.5 w-3.5" />
+                  Graduate &amp; Download Backup CSV
+                </>
+              ) : (
+                'Save Changes'
+              )}
             </Button>
           </div>
         </form>

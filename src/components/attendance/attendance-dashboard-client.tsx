@@ -112,7 +112,7 @@ export default function AttendanceDashboardClient({
                   className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/60 hover:bg-red-100 dark:hover:bg-red-900/60 border border-red-200 dark:border-red-900/60 px-3.5 py-1.5 rounded-full shadow-sm hover:shadow active:scale-95 transition-all self-start sm:self-auto cursor-pointer"
                 >
                   <UserCheck className="h-3.5 w-3.5" />
-                  <span>Show My Attendance</span>
+                  <span>View My Attendance</span>
                 </button>
               ) : (
                 <button
