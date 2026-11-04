@@ -227,7 +227,7 @@ export default function MemberStatusModal({
                     EXCUSE CONSESSIONS
                   </span>
                   <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
-                    Greys out the Consessions box on the attendance sheet and marks concessions as excused.
+                    Greys out the Concessions box on the attendance sheet and marks concessions as excused.
                   </p>
                 </div>
               </label>
@@ -248,11 +248,10 @@ export default function MemberStatusModal({
             <Button
               type="submit"
               disabled={isLoading}
-              className={`${
-                status === 'ALUMNI'
+              className={`${status === 'ALUMNI'
                   ? 'bg-amber-700 hover:bg-amber-800 text-white'
                   : 'bg-red-700 hover:bg-red-800 text-white'
-              } flex items-center gap-1.5`}
+                } flex items-center gap-1.5`}
             >
               {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               {status === 'ALUMNI' ? (

@@ -73,7 +73,7 @@ export default function ScribeAttendanceGrid({
     onDataChangeRef.current?.({ members, events, records });
   }, [members, events, records]);
 
-  // Column Visibility: Dues and Consessions
+  // Column Visibility: Dues and Concessions
   const [showRequirementsColumns, setShowRequirementsColumns] = useState<boolean>(true);
 
   // Filter State
@@ -218,12 +218,12 @@ export default function ScribeAttendanceGrid({
           prev.map((m) =>
             m.id === userId
               ? {
-                  ...m,
-                  attendance_points: res.newPoints!,
-                  brotherhood_met: res.brotherhoodMet ?? m.brotherhood_met,
-                  prof_dev_met: res.profDevMet ?? m.prof_dev_met,
-                  comm_service_met: res.commServiceMet ?? m.comm_service_met,
-                }
+                ...m,
+                attendance_points: res.newPoints!,
+                brotherhood_met: res.brotherhoodMet ?? m.brotherhood_met,
+                prof_dev_met: res.profDevMet ?? m.prof_dev_met,
+                comm_service_met: res.commServiceMet ?? m.comm_service_met,
+              }
               : m
           )
         );
@@ -311,7 +311,7 @@ export default function ScribeAttendanceGrid({
       setMembers((prev) =>
         prev.map((m) => (m.id === userId ? { ...m, concessions_done: currentConcessionsDone } : m))
       );
-      alert('Could not update Consessions. Please try again.');
+      alert('Could not update Concessions. Please try again.');
     } finally {
       setPendingConcessions((prev) => {
         const next = new Set(prev);
@@ -346,20 +346,20 @@ export default function ScribeAttendanceGrid({
   const totalDuesPaidCount = members.filter((m) => m.dues_paid).length;
   const totalConcessionsDoneCount = members.filter((m) => m.concessions_done).length;
 
-  // Dues and Consessions visibility restricted to respective chairs and executive officers
+  // Dues and Concessions visibility restricted to respective chairs and executive officers
   const canSeeDues = permissions.isFullOfficer || permissions.canEditDues;
   const canSeeConcessions = permissions.isFullOfficer || permissions.canEditConcessions;
   const canSeeAnyRequirements = canSeeDues || canSeeConcessions;
 
   const requirementsButtonLabel = useMemo(() => {
     if (canSeeDues && canSeeConcessions) {
-      return showRequirementsColumns ? 'Hide Dues & Consessions' : 'Show Dues & Consessions';
+      return showRequirementsColumns ? 'Hide Dues & Concessions' : 'Show Dues & Concessions';
     }
     if (canSeeDues) {
       return showRequirementsColumns ? 'Hide Dues' : 'Show Dues';
     }
     if (canSeeConcessions) {
-      return showRequirementsColumns ? 'Hide Consessions' : 'Show Consessions';
+      return showRequirementsColumns ? 'Hide Concessions' : 'Show Concessions';
     }
     return '';
   }, [canSeeDues, canSeeConcessions, showRequirementsColumns]);
@@ -395,7 +395,7 @@ export default function ScribeAttendanceGrid({
               </span>
             </h1>
             <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Real-time attendance matrix. Dues and Consessions are highlighted in light gold. Check boxes to award attendance or update dues standing.
+              Real-time attendance matrix. Dues and Concessions are highlighted in light gold. Check boxes to award attendance or update dues standing.
             </p>
           </div>
 
@@ -460,7 +460,7 @@ export default function ScribeAttendanceGrid({
                       : `${permissions.allowedCategories.join(', ')} Pillar`
                   : permissions.canEditDues
                     ? 'Dues Scope'
-                    : 'Consessions Scope'}
+                    : 'Concessions Scope'}
               </div>
             )}
           </div>
@@ -532,7 +532,7 @@ export default function ScribeAttendanceGrid({
                   <div className="flex items-center gap-1.5">
                     <Award className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                     <span>
-                      {totalConcessionsDoneCount} / {members.length} Consessions attended
+                      {totalConcessionsDoneCount} / {members.length} Concessions attended
                     </span>
                   </div>
                 )}
@@ -611,14 +611,14 @@ export default function ScribeAttendanceGrid({
                   </th>
                 )}
 
-                {/* 3. Scrolling Light Gold Column: Consessions (When visible and authorized) */}
+                {/* 3. Scrolling Light Gold Column: Concessions (When visible and authorized) */}
                 {canSeeConcessions && showRequirementsColumns && (
                   <th
                     className="p-2.5 w-[104px] min-w-[104px] max-w-[104px] bg-amber-100/90 dark:bg-amber-950/60 border-r border-amber-200/80 dark:border-amber-900/60 font-bold text-center select-none"
-                    title={permissions.canEditConcessions ? 'Fundraising Chair & Officers can edit Consessions' : 'Managed by Fundraising Chair'}
+                    title={permissions.canEditConcessions ? 'Fundraising Chair & Officers can edit Concessions' : 'Managed by Fundraising Chair'}
                   >
                     <div className="flex flex-col items-center justify-center">
-                      <span className="font-bold text-amber-950 dark:text-amber-200 text-xs">Consessions</span>
+                      <span className="font-bold text-amber-950 dark:text-amber-200 text-xs">Concessions</span>
                       <span className="text-[10px] text-amber-700/80 dark:text-amber-400 font-semibold tracking-tight">Req</span>
                     </div>
                   </th>
@@ -643,9 +643,8 @@ export default function ScribeAttendanceGrid({
                       {/* 2. Active Indicator & Points */}
                       <div className="flex items-center gap-1.5 text-[10px]">
                         <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            ev.is_active ? 'bg-green-500 ring-2 ring-green-500/20' : 'bg-gray-400'
-                          }`}
+                          className={`w-1.5 h-1.5 rounded-full ${ev.is_active ? 'bg-green-500 ring-2 ring-green-500/20' : 'bg-gray-400'
+                            }`}
                         />
                         <span className="font-medium text-gray-500 dark:text-gray-400">
                           {ev.points === 0 ? '0 pts' : `${ev.points} pt${ev.points > 1 ? 's' : ''}`}
@@ -727,17 +726,16 @@ export default function ScribeAttendanceGrid({
                                 @{member.username}
                               </span>
                               {member.status && member.status !== 'ACTIVE' && (
-                                <span className={`px-1 py-0.2 rounded text-[8px] font-black uppercase tracking-tight ${
-                                  member.status === 'ACTIVE_COOP'
+                                <span className={`px-1 py-0.2 rounded text-[8px] font-black uppercase tracking-tight ${member.status === 'ACTIVE_COOP'
                                     ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
                                     : member.status === 'INACTIVE_COOP'
-                                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
-                                    : member.status === 'ABROAD'
-                                    ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300'
-                                    : member.status === 'ALUMNI'
-                                    ? 'bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300'
-                                    : 'bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-gray-300'
-                                }`}>
+                                      ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                                      : member.status === 'ABROAD'
+                                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300'
+                                        : member.status === 'ALUMNI'
+                                          ? 'bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300'
+                                          : 'bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-gray-300'
+                                  }`}>
                                   {member.status.replace('_', ' ')}
                                 </span>
                               )}
@@ -799,7 +797,7 @@ export default function ScribeAttendanceGrid({
                         </td>
                       )}
 
-                      {/* 3. Scrolling Light Gold Column: Consessions Checkbox (When visible and authorized) */}
+                      {/* 3. Scrolling Light Gold Column: Concessions Checkbox (When visible and authorized) */}
                       {canSeeConcessions && showRequirementsColumns && (
                         <td className="p-2.5 w-[104px] min-w-[104px] max-w-[104px] text-center bg-amber-50/70 dark:bg-amber-950/30 group-hover:bg-amber-100/70 dark:group-hover:bg-amber-900/40 border-r border-amber-200/70 dark:border-amber-900/40 transition-colors">
                           <div className="flex items-center justify-center">
@@ -810,7 +808,7 @@ export default function ScribeAttendanceGrid({
                                   setSelectedMemberForStatus(member);
                                   setIsStatusModalOpen(true);
                                 }}
-                                title="Consessions Excused for this member (Click to edit in status modal)"
+                                title="Concessions Excused for this member (Click to edit in status modal)"
                                 className="w-full py-1 rounded bg-gray-200/90 dark:bg-zinc-800/90 border border-gray-300 dark:border-zinc-700 text-gray-500 dark:text-gray-400 text-[10px] font-extrabold uppercase tracking-tight shadow-2xs hover:border-gray-400 transition-colors"
                               >
                                 Excused
@@ -822,10 +820,10 @@ export default function ScribeAttendanceGrid({
                                 disabled={!permissions.canEditConcessions || isPendingConcessions}
                                 title={
                                   !permissions.canEditConcessions
-                                    ? 'Only the Fundraising Chair or Executive Officers can edit Consessions'
+                                    ? 'Only the Fundraising Chair or Executive Officers can edit Concessions'
                                     : member.concessions_done
-                                      ? 'Consessions Attended (Click to uncheck)'
-                                      : 'Mark Consessions as Completed'
+                                      ? 'Concessions Attended (Click to uncheck)'
+                                      : 'Mark Concessions as Completed'
                                 }
                                 className={`w-6 h-6 rounded-md flex items-center justify-center transition-all ${member.concessions_done
                                   ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-xs ring-2 ring-amber-500/20'
@@ -870,8 +868,8 @@ export default function ScribeAttendanceGrid({
                                   !canToggleEvent
                                     ? `Only ${ev.type} chair or officers can update attendance for this event`
                                     : currentStatus === 'empty'
-                                    ? `Record attendance for ${member.first_name || member.username}`
-                                    : `Currently: ${currentStatus.toUpperCase()} (Click active letter to clear)`
+                                      ? `Record attendance for ${member.first_name || member.username}`
+                                      : `Currently: ${currentStatus.toUpperCase()} (Click active letter to clear)`
                                 }
                               />
                             </div>

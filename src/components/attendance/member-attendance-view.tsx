@@ -168,13 +168,12 @@ export default function MemberAttendanceView({
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {/* Dues */}
-          <div className={`p-3.5 rounded-xl border flex flex-col justify-between ${
-            duesExcused
+          <div className={`p-3.5 rounded-xl border flex flex-col justify-between ${duesExcused
               ? 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/60'
               : duesPaid
-              ? 'bg-green-50/70 dark:bg-green-950/20 border-green-200 dark:border-green-800/60'
-              : 'bg-red-50/70 dark:bg-red-950/20 border-red-200 dark:border-red-800/60'
-          }`}>
+                ? 'bg-green-50/70 dark:bg-green-950/20 border-green-200 dark:border-green-800/60'
+                : 'bg-red-50/70 dark:bg-red-950/20 border-red-200 dark:border-red-800/60'
+            }`}>
             <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
               Dues
             </span>
@@ -199,15 +198,14 @@ export default function MemberAttendanceView({
           </div>
 
           {/* Concessions */}
-          <div className={`p-3.5 rounded-xl border flex flex-col justify-between ${
-            concessionsExcused
+          <div className={`p-3.5 rounded-xl border flex flex-col justify-between ${concessionsExcused
               ? 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/60'
               : concessionsDone
-              ? 'bg-green-50/70 dark:bg-green-950/20 border-green-200 dark:border-green-800/60'
-              : 'bg-red-50/70 dark:bg-red-950/20 border-red-200 dark:border-red-800/60'
-          }`}>
+                ? 'bg-green-50/70 dark:bg-green-950/20 border-green-200 dark:border-green-800/60'
+                : 'bg-red-50/70 dark:bg-red-950/20 border-red-200 dark:border-red-800/60'
+            }`}>
             <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
-              Consessions
+              Concessions
             </span>
             <div className="mt-2 flex items-center gap-1.5">
               {concessionsExcused ? (
@@ -230,11 +228,10 @@ export default function MemberAttendanceView({
           </div>
 
           {/* Brotherhood */}
-          <div className={`p-3.5 rounded-xl border flex flex-col justify-between ${
-            hasBrotherhood
+          <div className={`p-3.5 rounded-xl border flex flex-col justify-between ${hasBrotherhood
               ? 'bg-green-50/70 dark:bg-green-950/20 border-green-200 dark:border-green-800/60'
               : 'bg-zinc-50 dark:bg-zinc-800/50 border-gray-200 dark:border-zinc-700'
-          }`}>
+            }`}>
             <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
               Brotherhood
             </span>
@@ -254,11 +251,10 @@ export default function MemberAttendanceView({
           </div>
 
           {/* Professional Development */}
-          <div className={`p-3.5 rounded-xl border flex flex-col justify-between ${
-            hasProfDev
+          <div className={`p-3.5 rounded-xl border flex flex-col justify-between ${hasProfDev
               ? 'bg-green-50/70 dark:bg-green-950/20 border-green-200 dark:border-green-800/60'
               : 'bg-zinc-50 dark:bg-zinc-800/50 border-gray-200 dark:border-zinc-700'
-          }`}>
+            }`}>
             <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider truncate">
               Prof. Development
             </span>
@@ -278,11 +274,10 @@ export default function MemberAttendanceView({
           </div>
 
           {/* Community Service */}
-          <div className={`p-3.5 rounded-xl border flex flex-col justify-between col-span-2 sm:col-span-1 ${
-            hasCommService
+          <div className={`p-3.5 rounded-xl border flex flex-col justify-between col-span-2 sm:col-span-1 ${hasCommService
               ? 'bg-green-50/70 dark:bg-green-950/20 border-green-200 dark:border-green-800/60'
               : 'bg-zinc-50 dark:bg-zinc-800/50 border-gray-200 dark:border-zinc-700'
-          }`}>
+            }`}>
             <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider truncate">
               Comm. Service
             </span>

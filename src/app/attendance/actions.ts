@@ -739,7 +739,7 @@ export async function toggleConcessionsAction(
     if (!permissions.canEditConcessions) {
       return {
         success: false,
-        error: 'Forbidden: Only the Fundraising Chair or Executive Officers can edit Consessions.',
+        error: 'Forbidden: Only the Fundraising Chair or Executive Officers can edit Concessions.',
       };
     }
 
@@ -757,7 +757,7 @@ export async function toggleConcessionsAction(
     revalidatePath('/members-only');
     return { success: true, concessionsDone };
   } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : 'Failed to update consessions.';
+    const errorMsg = err instanceof Error ? err.message : 'Failed to update concessions.';
     return { success: false, error: errorMsg };
   }
 }

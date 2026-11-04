@@ -128,7 +128,7 @@ export default function ExportQueryModal({
       if (duesFilter === 'excused' && !member.dues_excused) return false;
       if (duesFilter === 'paid_or_excused' && !member.dues_paid && !member.dues_excused) return false;
 
-      // 3. Consessions filter
+      // 3. Concessions filter
       if (concessionsFilter === 'missing' && (member.concessions_done || member.concessions_excused))
         return false;
       if (concessionsFilter === 'completed' && !member.concessions_done) return false;
@@ -308,20 +308,20 @@ export default function ExportQueryModal({
               </select>
             </div>
 
-            {/* 3. Consessions */}
+            {/* 3. Concessions */}
             <div className="space-y-1">
               <Label className="text-[11px] font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
-                Consessions Status
+                Concessions Status
               </Label>
               <select
                 value={concessionsFilter}
                 onChange={(e) => setConcessionsFilter(e.target.value)}
                 className="w-full h-9 px-2.5 text-xs rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-600"
               >
-                <option value="all">Any / Ignore Consessions</option>
+                <option value="all">Any / Ignore Concessions</option>
                 <option value="missing">Missing / Pending (Not Excused)</option>
                 <option value="completed">Completed / Attended</option>
-                <option value="excused">Excused Consessions</option>
+                <option value="excused">Excused Concessions</option>
                 <option value="completed_or_excused">Completed or Excused</option>
               </select>
             </div>
