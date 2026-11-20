@@ -54,11 +54,13 @@ export default function Navbar() {
               <LogoIcon className="h-10 w-10 text-primary transition-colors" />
             </Link>
 
-            {(pathname === "/members-only" || pathname === "/attendance" || pathname === "/alumni" || pathname === "/family-tree") && (
+            {(pathname === "/members-only" || pathname === "/attendance" || pathname === "/alumni" || pathname === "/family-tree" || pathname === "/roster") && (
               <div className="absolute left-1/2 -translate-x-1/2 pointer-events-none select-none">
                 <span className="text-sm sm:text-lg md:text-xl font-bold text-red-800 dark:text-red-500 tracking-wider whitespace-nowrap">
                   {pathname === "/attendance"
                     ? "CHAPTER ATTENDANCE"
+                    : pathname === "/roster"
+                    ? "MEMBER ROSTER"
                     : pathname === "/alumni" || pathname === "/family-tree"
                     ? "ALUMNI"
                     : "MEMBER PORTAL"}
@@ -70,7 +72,7 @@ export default function Navbar() {
               {/* Theme Switcher */}
               <ThemeToggle />
 
-              {(pathname === "/members-only" || pathname === "/attendance" || pathname === "/alumni") && (
+              {(pathname === "/members-only" || pathname === "/attendance" || pathname === "/alumni" || pathname === "/roster") && (
                 <form action={logoutAction}>
                   <button
                     type="submit"

@@ -247,7 +247,7 @@ export default async function MembersOnlyPage() {
 
             <div>
               <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-6">Chapter Portals</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
                 <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all flex flex-col justify-between">
                   <div>
@@ -256,6 +256,15 @@ export default async function MembersOnlyPage() {
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">View your attended events, points breakdown, and semester standing</p>
                   </div>
                   <LoadingLink href="/attendance" className="inline-block text-sm font-medium text-red-700 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">Open Attendance &rarr;</LoadingLink>
+                </div>
+
+                <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all flex flex-col justify-between">
+                  <div>
+                    <Users className="h-8 w-8 text-red-700 dark:text-red-500 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Member Roster</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Browse active &amp; PNM directory, distribution charts, and export contacts</p>
+                  </div>
+                  <LoadingLink href="/roster" className="inline-block text-sm font-medium text-red-700 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">Open Roster &rarr;</LoadingLink>
                 </div>
 
                 <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 hover:shadow-md transition-all flex flex-col justify-between">
